@@ -259,7 +259,7 @@ public sealed class BasicMappingTests : UnitTest
         var source = new DateTimeSource
         {
             CreatedAt = default,
-            UpdatedAt = default
+            UpdatedAt = null // nullable DateTime
         };
 
         // Act
@@ -267,7 +267,7 @@ public sealed class BasicMappingTests : UnitTest
 
         // Assert
         result.CreatedAt.Should().Be(default(DateTime));
-        result.UpdatedAt.Should().Be(default(DateTime));
+        result.UpdatedAt.Should().BeNull(); // nullable property
     }
 
     [Fact]
