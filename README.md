@@ -41,7 +41,7 @@ public class UserModel
 
 // Map objects with a simple extension method
 var dto = new UserDto { Name = "John", Age = 30 };
-var model = dto.Adapt<UserModel>();
+UserModel model = dto.Adapt<UserModel>(); // just one line!
 ```
 
 ## What It Handles
@@ -54,7 +54,9 @@ If for some reason the source generator cannot build the extension method, you'l
 
 All mapping code is generated at compile time. No reflection, no runtime overhead. Mappers are cached as static delegates per source/destination type pair, so subsequent calls have virtually zero overhead beyond a direct property assignment.
 
-### Generated Code Example
+## What's being generated?
+
+Take the example above:
 
 ```csharp
 public static class GenAdaptExtensions
