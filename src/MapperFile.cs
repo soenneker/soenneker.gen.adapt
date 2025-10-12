@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Soenneker.Gen.Adapt;
@@ -148,14 +149,83 @@ internal static class MapperFile
         var dstProps = TypeProps.Build(dest);
         string dstFq = names.FullyQualified(dest);
 
-        sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("();");
+        // Find required properties
+        var requiredPropertyNames = GetRequiredPropertyNames(dest);
+        bool hasRequiredProps = requiredPropertyNames.Count > 0;
+
+        // Build list of property mappings
+        var simpleMappings = new List<(string propName, string value)>();
+        var complexMappings = new List<(Prop dp, Prop sp)>();
 
         for (int i = 0; i < dstProps.Settable.Count; i++)
         {
             Prop dp = dstProps.Settable[i];
             if (!srcProps.TryGet(dp.Name, out Prop sp))
+            {
+                // No source property - if required, add default
+                if (requiredPropertyNames.Contains(dp.Name))
+                {
+                    string defaultValue = GetDefaultValueForType(dp.Type);
+                    simpleMappings.Add((dp.Name, defaultValue));
+                }
                 continue;
+            }
 
+            // Check if it's a complex type that needs special handling
+            bool isComplexType = Types.IsAnyList(sp.Type, out _) || Types.IsAnyDictionary(sp.Type, out _, out _);
+            
+            if (isComplexType)
+            {
+                complexMappings.Add((dp, sp));
+                continue;
+            }
+
+            // Simple property assignment
+            string? rhs = Assignment.TryBuild("source." + sp.Name, sp.Type, dp.Type, enums);
+            if (rhs is null)
+            {
+                if (Types.IsString(sp.Type) && Types.IsGuid(dp.Type))
+                {
+                    // Special case - will handle after object creation
+                    complexMappings.Add((dp, sp));
+                }
+                continue;
+            }
+
+            simpleMappings.Add((dp.Name, rhs));
+        }
+
+        // Emit object creation
+        if (hasRequiredProps)
+        {
+            // Use object initializer syntax
+            sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine();
+            sb.Append(indent).AppendLine("{");
+            for (int i = 0; i < simpleMappings.Count; i++)
+            {
+                var (propName, value) = simpleMappings[i];
+                sb.Append(indent).Append("\t").Append(propName).Append(" = ").Append(value);
+                if (i < simpleMappings.Count - 1)
+                    sb.AppendLine(",");
+                else
+                    sb.AppendLine();
+            }
+            sb.Append(indent).AppendLine("};");
+        }
+        else
+        {
+            // Traditional approach
+            sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("();");
+            
+            foreach (var (propName, value) in simpleMappings)
+            {
+                sb.Append(indent).Append("target.").Append(propName).Append(" = ").Append(value).AppendLine(";");
+            }
+        }
+
+        // Handle complex mappings (lists, dictionaries, special cases)
+        foreach (var (dp, sp) in complexMappings)
+        {
             if (Types.IsAnyList(sp.Type, out ITypeSymbol? sElem) && Types.IsAnyList(dp.Type, out ITypeSymbol? dElem))
             {
                 sb.Append(indent).Append("if (source.").Append(sp.Name).AppendLine(" is not null)");
@@ -248,21 +318,42 @@ internal static class MapperFile
                 }
             }
 
-            string? rhs = Assignment.TryBuild("source." + sp.Name, sp.Type, dp.Type, enums);
-            if (rhs is null)
+            // Special case: string -> Guid with TryParse
+            if (Types.IsString(sp.Type) && Types.IsGuid(dp.Type))
             {
-                if (Types.IsString(sp.Type) && Types.IsGuid(dp.Type))
-                {
-                    sb.Append(indent).Append("if (global::System.Guid.TryParse(source.").Append(sp.Name).AppendLine(", out var g))");
-                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).AppendLine(" = g;");
-                    continue;
-                }
-                continue;
+                sb.Append(indent).Append("if (global::System.Guid.TryParse(source.").Append(sp.Name).AppendLine(", out var g))");
+                sb.Append(indent).Append("\ttarget.").Append(dp.Name).AppendLine(" = g;");
             }
-
-            sb.Append(indent).Append("target.").Append(dp.Name).Append(" = ").Append(rhs).AppendLine(";");
         }
 
         sb.Append(indent).AppendLine("return target;");
+    }
+
+    private static HashSet<string> GetRequiredPropertyNames(INamedTypeSymbol type)
+    {
+        var result = new HashSet<string>();
+        foreach (ISymbol member in type.GetMembers())
+        {
+            if (member is IPropertySymbol prop && prop.IsRequired)
+            {
+                result.Add(prop.Name);
+            }
+        }
+        return result;
+    }
+
+    private static string GetDefaultValueForType(ITypeSymbol type)
+    {
+        if (Types.IsString(type))
+            return "string.Empty";
+        
+        if (type.IsValueType)
+        {
+            if (Types.IsNullableOf(type, out _))
+                return "null";
+            return "default";
+        }
+        
+        return "null!";
     }
 }

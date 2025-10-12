@@ -195,9 +195,6 @@ internal static class Emitter
             INamedTypeSymbol src = pair.Source;
             INamedTypeSymbol dst = pair.Destination;
 
-            if (SymbolEqualityComparer.Default.Equals(src, dst))
-                continue;
-
             if (!HasParameterlessCtorLocal(dst))
                 continue;
 

@@ -20,20 +20,31 @@ internal sealed class TypeProps
     {
         var readable = new Dictionary<string, Prop>(32);
         var settable = new List<Prop>(32);
+        var settableNames = new HashSet<string>();
 
-        foreach (ISymbol? m in type.GetMembers())
+        // Walk up the inheritance chain to include inherited properties
+        INamedTypeSymbol? currentType = type;
+        while (currentType is not null)
         {
-            if (m is not IPropertySymbol p) continue;
-            if (p.DeclaredAccessibility != Accessibility.Public) continue;
+            foreach (ISymbol? m in currentType.GetMembers())
+            {
+                if (m is not IPropertySymbol p) continue;
+                if (p.DeclaredAccessibility != Accessibility.Public) continue;
 
-            if (p.GetMethod is not null)
-                readable[p.Name] = new Prop(p.Name, p.Type);
+                if (p.GetMethod is not null && !readable.ContainsKey(p.Name))
+                    readable[p.Name] = new Prop(p.Name, p.Type);
 
-            // Treat init-only as settable too
-            bool hasSet = p.SetMethod is not null;
-            bool isInit = p.SetMethod?.IsInitOnly ?? false;
-            if (hasSet || isInit)
-                settable.Add(new Prop(p.Name, p.Type));
+                // Treat init-only as settable too
+                bool hasSet = p.SetMethod is not null;
+                bool isInit = p.SetMethod?.IsInitOnly ?? false;
+                if ((hasSet || isInit) && !settableNames.Contains(p.Name))
+                {
+                    settable.Add(new Prop(p.Name, p.Type));
+                    settableNames.Add(p.Name);
+                }
+            }
+            
+            currentType = currentType.BaseType;
         }
 
         return new TypeProps(readable, settable);
