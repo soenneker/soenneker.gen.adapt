@@ -81,6 +81,52 @@ internal static class Collections
         sb.AppendLine("\t\tforeach (var item in source) result.Add(item);");
         sb.AppendLine("\t\treturn result;");
         sb.AppendLine("\t}");
+        sb.AppendLine();
+
+        // Array<T>
+        sb.AppendLine("\tpublic static TElement[] Adapt<TElement>(this TElement[] source)");
+        sb.AppendLine("\t{");
+        sb.AppendLine("\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
+        sb.AppendLine("\t\tvar result = new TElement[source.Length];");
+        sb.AppendLine("\t\tArray.Copy(source, result, source.Length);");
+        sb.AppendLine("\t\treturn result;");
+        sb.AppendLine("\t}");
+        sb.AppendLine();
+
+        // IList<T>
+        sb.AppendLine("\tpublic static IList<TElement> Adapt<TElement>(this IList<TElement> source)");
+        sb.AppendLine("\t{");
+        sb.AppendLine("\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
+        sb.AppendLine("\t\tvar result = new List<TElement>(source.Count);");
+        sb.AppendLine("\t\tfor (int i = 0; i < source.Count; i++) result.Add(source[i]);");
+        sb.AppendLine("\t\treturn result;");
+        sb.AppendLine("\t}");
+        sb.AppendLine();
+
+        // ICollection<T>
+        sb.AppendLine("\tpublic static ICollection<TElement> Adapt<TElement>(this ICollection<TElement> source)");
+        sb.AppendLine("\t{");
+        sb.AppendLine("\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
+        sb.AppendLine("\t\tvar result = new List<TElement>(source.Count);");
+        sb.AppendLine("\t\tforeach (var item in source) result.Add(item);");
+        sb.AppendLine("\t\treturn result;");
+        sb.AppendLine("\t}");
+        sb.AppendLine();
+
+        // HashSet<T>
+        sb.AppendLine("\tpublic static HashSet<TElement> Adapt<TElement>(this HashSet<TElement> source)");
+        sb.AppendLine("\t{");
+        sb.AppendLine("\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
+        sb.AppendLine("\t\treturn new HashSet<TElement>(source);");
+        sb.AppendLine("\t}");
+        sb.AppendLine();
+
+        // ISet<T>
+        sb.AppendLine("\tpublic static ISet<TElement> Adapt<TElement>(this ISet<TElement> source)");
+        sb.AppendLine("\t{");
+        sb.AppendLine("\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
+        sb.AppendLine("\t\treturn new HashSet<TElement>(source);");
+        sb.AppendLine("\t}");
         sb.AppendLine("}");
     }
 }

@@ -105,11 +105,16 @@ internal static class MapperFile
             if (!srcProps.TryGet(dp.Name, out Prop sp))
                 continue;
 
-            // List-like collections: List<S>, IReadOnlyList<S>, IReadOnlyCollection<S> -> List<D>, IReadOnlyList<D>, etc.
+            // List-like collections: List<S>, IReadOnlyList<S>, arrays, etc. -> List<D>, arrays, etc.
             if (Types.IsAnyList(sp.Type, out ITypeSymbol? sElem) && Types.IsAnyList(dp.Type, out ITypeSymbol? dElem))
             {
                 sb.Append("\t\tif (source.").Append(sp.Name).AppendLine(" is not null)");
                 sb.AppendLine("\t\t{");
+                
+                // Check destination type for special handling
+                bool destIsArray = Types.IsArray(dp.Type, out _);
+                bool destIsHashSet = Types.IsHashSet(dp.Type, out _) || Types.IsISet(dp.Type, out _);
+                
                 sb.Append("\t\t\tvar list_").Append(dp.Name).Append(" = new List<").Append(Types.Fq(dElem!)).AppendLine(">();");
 
                 if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
@@ -136,7 +141,20 @@ internal static class MapperFile
                     sb.AppendLine("\t\t\t}");
                 }
 
-                sb.Append("\t\t\ttarget.").Append(dp.Name).Append(" = list_").Append(dp.Name).AppendLine(";");
+                // Convert to appropriate destination type
+                if (destIsArray)
+                {
+                    sb.Append("\t\t\ttarget.").Append(dp.Name).Append(" = list_").Append(dp.Name).AppendLine(".ToArray();");
+                }
+                else if (destIsHashSet)
+                {
+                    sb.Append("\t\t\ttarget.").Append(dp.Name).Append(" = new HashSet<").Append(Types.Fq(dElem!)).Append(">(list_").Append(dp.Name).AppendLine(");");
+                }
+                else
+                {
+                    sb.Append("\t\t\ttarget.").Append(dp.Name).Append(" = list_").Append(dp.Name).AppendLine(";");
+                }
+                
                 sb.AppendLine("\t\t}");
                 continue;
             }

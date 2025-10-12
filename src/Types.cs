@@ -38,9 +38,71 @@ internal static class Types
         return false;
     }
 
+    public static bool IsArray(ITypeSymbol t, out ITypeSymbol? elem)
+    {
+        elem = null;
+        if (t is IArrayTypeSymbol arr)
+        {
+            elem = arr.ElementType;
+            return true;
+        }
+        return false;
+    }
+
+    public static bool IsIList(ITypeSymbol t, out ITypeSymbol? elem)
+    {
+        elem = null;
+        if (t is INamedTypeSymbol nt && nt.Name == "IList" && nt.TypeArguments.Length == 1)
+        {
+            elem = nt.TypeArguments[0];
+            return true;
+        }
+        return false;
+    }
+
+    public static bool IsICollection(ITypeSymbol t, out ITypeSymbol? elem)
+    {
+        elem = null;
+        if (t is INamedTypeSymbol nt && nt.Name == "ICollection" && nt.TypeArguments.Length == 1)
+        {
+            elem = nt.TypeArguments[0];
+            return true;
+        }
+        return false;
+    }
+
+    public static bool IsHashSet(ITypeSymbol t, out ITypeSymbol? elem)
+    {
+        elem = null;
+        if (t is INamedTypeSymbol nt && nt.Name == "HashSet" && nt.TypeArguments.Length == 1)
+        {
+            elem = nt.TypeArguments[0];
+            return true;
+        }
+        return false;
+    }
+
+    public static bool IsISet(ITypeSymbol t, out ITypeSymbol? elem)
+    {
+        elem = null;
+        if (t is INamedTypeSymbol nt && nt.Name == "ISet" && nt.TypeArguments.Length == 1)
+        {
+            elem = nt.TypeArguments[0];
+            return true;
+        }
+        return false;
+    }
+
     public static bool IsAnyList(ITypeSymbol t, out ITypeSymbol? elem)
     {
-        return IsList(t, out elem) || IsIReadOnlyList(t, out elem) || IsIReadOnlyCollection(t, out elem);
+        return IsList(t, out elem) || 
+               IsIReadOnlyList(t, out elem) || 
+               IsIReadOnlyCollection(t, out elem) ||
+               IsArray(t, out elem) ||
+               IsIList(t, out elem) ||
+               IsICollection(t, out elem) ||
+               IsHashSet(t, out elem) ||
+               IsISet(t, out elem);
     }
 
     public static bool IsDictionary(ITypeSymbol t, out ITypeSymbol? key, out ITypeSymbol? value)
@@ -91,6 +153,18 @@ internal static class Types
 
     public static bool IsString(ITypeSymbol t) => t.SpecialType == SpecialType.System_String;
     public static bool IsInt(ITypeSymbol t) => t.SpecialType == SpecialType.System_Int32;
+    public static bool IsByte(ITypeSymbol t) => t.SpecialType == SpecialType.System_Byte;
+    public static bool IsShort(ITypeSymbol t) => t.SpecialType == SpecialType.System_Int16;
+    public static bool IsLong(ITypeSymbol t) => t.SpecialType == SpecialType.System_Int64;
+    public static bool IsFloat(ITypeSymbol t) => t.SpecialType == SpecialType.System_Single;
+    public static bool IsDouble(ITypeSymbol t) => t.SpecialType == SpecialType.System_Double;
+    public static bool IsDecimal(ITypeSymbol t) => t.SpecialType == SpecialType.System_Decimal;
+    public static bool IsBool(ITypeSymbol t) => t.SpecialType == SpecialType.System_Boolean;
+    public static bool IsChar(ITypeSymbol t) => t.SpecialType == SpecialType.System_Char;
+    public static bool IsSByte(ITypeSymbol t) => t.SpecialType == SpecialType.System_SByte;
+    public static bool IsUShort(ITypeSymbol t) => t.SpecialType == SpecialType.System_UInt16;
+    public static bool IsUInt(ITypeSymbol t) => t.SpecialType == SpecialType.System_UInt32;
+    public static bool IsULong(ITypeSymbol t) => t.SpecialType == SpecialType.System_UInt64;
 
     public static bool IsGuid(ITypeSymbol t)
     {
@@ -99,6 +173,66 @@ internal static class Types
             // Compare fully-qualified name to avoid alias issues
             string fq = nt.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
             return fq == "global::System.Guid";
+        }
+        return false;
+    }
+
+    public static bool IsDateTime(ITypeSymbol t)
+    {
+        if (t is INamedTypeSymbol nt)
+        {
+            string fq = nt.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            return fq == "global::System.DateTime";
+        }
+        return false;
+    }
+
+    public static bool IsDateTimeOffset(ITypeSymbol t)
+    {
+        if (t is INamedTypeSymbol nt)
+        {
+            string fq = nt.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            return fq == "global::System.DateTimeOffset";
+        }
+        return false;
+    }
+
+    public static bool IsTimeSpan(ITypeSymbol t)
+    {
+        if (t is INamedTypeSymbol nt)
+        {
+            string fq = nt.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            return fq == "global::System.TimeSpan";
+        }
+        return false;
+    }
+
+    public static bool IsDateOnly(ITypeSymbol t)
+    {
+        if (t is INamedTypeSymbol nt)
+        {
+            string fq = nt.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            return fq == "global::System.DateOnly";
+        }
+        return false;
+    }
+
+    public static bool IsTimeOnly(ITypeSymbol t)
+    {
+        if (t is INamedTypeSymbol nt)
+        {
+            string fq = nt.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            return fq == "global::System.TimeOnly";
+        }
+        return false;
+    }
+
+    public static bool IsUri(ITypeSymbol t)
+    {
+        if (t is INamedTypeSymbol nt)
+        {
+            string fq = nt.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+            return fq == "global::System.Uri";
         }
         return false;
     }
