@@ -50,8 +50,6 @@ If the properties match by name and can be converted, it maps them.
 - **Collections** - `List<T>`, `IEnumerable<T>`, arrays with element conversion
 - **Dictionaries** - `Dictionary<TKey, TValue>` with key/value conversion
 - **Enums** - Bidirectional conversion between enum ↔ string, enum ↔ int
-- **Intellenums** - Custom value objects with `Value` property and `From()` factory
-- **Guid** - String ↔ Guid with safe `TryParse` (no exceptions)
 - **Nested objects** - Recursive mapping of complex object graphs
 - **Nullables** - Automatic nullable handling
 
