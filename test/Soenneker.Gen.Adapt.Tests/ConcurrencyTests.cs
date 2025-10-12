@@ -1,5 +1,4 @@
 using Soenneker.Tests.Unit;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -19,7 +18,7 @@ public sealed class ConcurrencyTests : UnitTest
     public void Adapt_ParallelAdaptations_ShouldAllSucceed()
     {
         // Arrange
-        var sources = Enumerable.Range(1, 1000)
+        List<BasicSource> sources = Enumerable.Range(1, 1000)
             .Select(i => new BasicSource { Id = $"id_{i}", Name = $"name_{i}", Count = i })
             .ToList();
 
@@ -43,7 +42,7 @@ public sealed class ConcurrencyTests : UnitTest
     public void Adapt_ConcurrentListAdaptations_ShouldAllSucceed()
     {
         // Arrange
-        var source = Enumerable.Range(1, 100).ToList();
+        List<int> source = Enumerable.Range(1, 100).ToList();
 
         // Act
         var results = new List<int>[100];
@@ -127,13 +126,13 @@ public sealed class ConcurrencyTests : UnitTest
             {
                 Numbers = Enumerable.Range(i * 100, 100).ToList(),
                 Tags = Enumerable.Range(i * 100, 100).Select(n => $"tag_{n}").ToList(),
-                Items = new List<BasicSource>()
+                Items = []
             });
         }
 
         // Act
         var results = new List<MultiListDest>();
-        foreach (var source in sources)
+        foreach (MultiListSource source in sources)
         {
             results.Add(source.Adapt<MultiListDest>());
         }
@@ -149,7 +148,7 @@ public sealed class ConcurrencyTests : UnitTest
     public void Adapt_ListOfComplexObjects_1000Items_ShouldMapAll()
     {
         // Arrange
-        var sources = Enumerable.Range(1, 1000)
+        List<NestedSource> sources = Enumerable.Range(1, 1000)
             .Select(i => new NestedSource
             {
                 Name = $"Parent_{i}",
@@ -164,7 +163,7 @@ public sealed class ConcurrencyTests : UnitTest
 
         // Act
         var results = new List<NestedDest>();
-        foreach (var source in sources)
+        foreach (NestedSource source in sources)
         {
             results.Add(source.Adapt<NestedDest>());
         }
@@ -194,7 +193,7 @@ public sealed class ConcurrencyTests : UnitTest
         );
 
         // Assert
-        listResult.Should().BeEquivalentTo(new[] { 1, 2, 3 });
+        listResult.Should().BeEquivalentTo([1, 2, 3]);
         dictResult["a"].Should().Be(1);
     }
 
@@ -225,7 +224,7 @@ public sealed class ConcurrencyTests : UnitTest
     public void Adapt_MultipleEnumConversions_InParallel_ShouldAllSucceed()
     {
         // Arrange
-        var sources = Enumerable.Range(0, 300)
+        List<EnumToIntSource> sources = Enumerable.Range(0, 300)
             .Select(i => new EnumToIntSource { Status = (TestStatus)(i % 3) })
             .ToList();
 
@@ -248,7 +247,7 @@ public sealed class ConcurrencyTests : UnitTest
     {
         // Arrange
         var statusStrings = new[] { "Active", "Pending", "Completed" };
-        var sources = Enumerable.Range(0, 300)
+        List<StringToEnumSource> sources = Enumerable.Range(0, 300)
             .Select(i => new StringToEnumSource { StatusString = statusStrings[i % 3] })
             .ToList();
 
@@ -270,7 +269,7 @@ public sealed class ConcurrencyTests : UnitTest
     public void Adapt_MixedStructAndClass_InParallel_ShouldWork()
     {
         // Arrange
-        var sources = Enumerable.Range(0, 100)
+        List<MixedStructSource> sources = Enumerable.Range(0, 100)
             .Select(i => new MixedStructSource
             {
                 Location = new PointStructSource { X = i, Y = i * 2 },
@@ -296,7 +295,7 @@ public sealed class ConcurrencyTests : UnitTest
     public void Adapt_Records_InParallel_ShouldWork()
     {
         // Arrange
-        var sources = Enumerable.Range(0, 100)
+        List<PersonRecordSource> sources = Enumerable.Range(0, 100)
             .Select(i => new PersonRecordSource
             {
                 FirstName = $"Person_{i}",
@@ -334,7 +333,7 @@ public sealed class ConcurrencyTests : UnitTest
         }
 
         // Act
-        var result = source.Adapt();
+        Dictionary<string, BasicSource> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(100);

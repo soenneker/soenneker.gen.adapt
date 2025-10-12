@@ -78,24 +78,26 @@ public sealed class NestedObjectTests : UnitTest
         // Arrange
         var source = new ComplexListSource
         {
-            NestedItems = new List<NestedSource>
-            {
+            NestedItems =
+            [
                 new()
                 {
                     Name = "Parent1",
                     Child = new BasicSource { Id = "c1", Name = "Child1", Count = 1 }
                 },
+
                 new()
                 {
                     Name = "Parent2",
                     Child = new BasicSource { Id = "c2", Name = "Child2", Count = 2 }
                 },
+
                 new()
                 {
                     Name = "Parent3",
                     Child = new BasicSource { Id = "c3", Name = "Child3", Count = 3 }
                 }
-            }
+            ]
         };
 
         // Act
@@ -117,7 +119,7 @@ public sealed class NestedObjectTests : UnitTest
         // Arrange
         var source = new ComplexListSource
         {
-            NestedItems = new List<NestedSource>()
+            NestedItems = []
         };
 
         // Act
@@ -154,7 +156,7 @@ public sealed class NestedObjectTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        Dictionary<string, NestedSource> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(2);

@@ -113,7 +113,7 @@ public sealed class BoundaryTests : UnitTest
         var source = new List<DateTime?> { DateTime.MinValue, null, DateTime.MaxValue };
 
         // Act
-        var result = source.Adapt();
+        List<DateTime?> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(3);
@@ -179,7 +179,7 @@ public sealed class BoundaryTests : UnitTest
         var source = new List<Guid?> { Guid.Empty, null, Guid.NewGuid() };
 
         // Act
-        var result = source.Adapt();
+        List<Guid?> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(3);
@@ -204,7 +204,7 @@ public sealed class BoundaryTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        Dictionary<Guid, string> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(3);
@@ -319,7 +319,7 @@ public sealed class BoundaryTests : UnitTest
         };
 
         // Act
-        var results = sources.Select(s => s.Adapt<BasicDest>()).ToList();
+        List<BasicDest> results = sources.Select(s => s.Adapt<BasicDest>()).ToList();
 
         // Assert
         results[0].Count.Should().Be(int.MinValue);
@@ -338,7 +338,7 @@ public sealed class BoundaryTests : UnitTest
         var source = new List<int> { -1, -2, -3, -100, -1000, int.MinValue };
 
         // Act
-        var result = source.Adapt();
+        List<int> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(6);
@@ -350,10 +350,10 @@ public sealed class BoundaryTests : UnitTest
     public void Adapt_HugeList_10000Items_ShouldMapAll()
     {
         // Arrange
-        var source = Enumerable.Range(1, 10000).ToList();
+        List<int> source = Enumerable.Range(1, 10000).ToList();
 
         // Act
-        var result = source.Adapt();
+        List<int> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(10000);
@@ -373,7 +373,7 @@ public sealed class BoundaryTests : UnitTest
         }
 
         // Act
-        var result = source.Adapt();
+        Dictionary<string, int> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(10000);
@@ -447,7 +447,7 @@ public sealed class BoundaryTests : UnitTest
         var source = new List<Guid>();
 
         // Act
-        var result = source.Adapt();
+        List<Guid> result = source.Adapt();
 
         // Assert
         result.Should().BeEmpty();
@@ -461,7 +461,7 @@ public sealed class BoundaryTests : UnitTest
         var source = new List<DateTime>();
 
         // Act
-        var result = source.Adapt();
+        List<DateTime> result = source.Adapt();
 
         // Assert
         result.Should().BeEmpty();
@@ -475,7 +475,7 @@ public sealed class BoundaryTests : UnitTest
         var source = new List<decimal>();
 
         // Act
-        var result = source.Adapt();
+        List<decimal> result = source.Adapt();
 
         // Assert
         result.Should().BeEmpty();

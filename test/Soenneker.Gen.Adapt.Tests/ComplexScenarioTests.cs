@@ -19,21 +19,35 @@ public sealed class ComplexScenarioTests : UnitTest
         // Arrange - test mapping multiple different property types in one go
         var source = new MultiListSource
         {
-            Numbers = new List<int> { 1, 2, 3, 4, 5 },
-            Tags = new List<string> { "tag1", "tag2", "tag3" },
-            Items = new List<BasicSource>
-            {
+            Numbers =
+            [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            Tags =
+            [
+                "tag1",
+                "tag2",
+                "tag3"
+            ],
+            Items =
+            [
                 new() { Id = "a", Name = "First", Count = 10 },
+
                 new() { Id = "b", Name = "Second", Count = 20 },
+
                 new() { Id = "c", Name = "Third", Count = 30 }
-            }
+            ]
         };
 
         // Act
         var result = source.Adapt<MultiListDest>();
 
         // Assert
-        result.Numbers.Should().BeEquivalentTo(new[] { 1, 2, 3, 4, 5 });
+        result.Numbers.Should().BeEquivalentTo([1, 2, 3, 4, 5]);
         result.Tags.Should().BeEquivalentTo(new[] { "tag1", "tag2", "tag3" });
         result.Items.Count.Should().Be(3);
         result.Items[0].Id.Should().Be("a");
@@ -114,24 +128,26 @@ public sealed class ComplexScenarioTests : UnitTest
         // Testing multiple properties that need the same type conversion
         var source = new ComplexListSource
         {
-            NestedItems = new List<NestedSource>
-            {
-                new() 
-                { 
-                    Name = "First", 
-                    Child = new BasicSource { Id = "1", Name = "C1", Count = 1 } 
+            NestedItems =
+            [
+                new()
+                {
+                    Name = "First",
+                    Child = new BasicSource { Id = "1", Name = "C1", Count = 1 }
                 },
-                new() 
-                { 
-                    Name = "Second", 
-                    Child = new BasicSource { Id = "2", Name = "C2", Count = 2 } 
+
+                new()
+                {
+                    Name = "Second",
+                    Child = new BasicSource { Id = "2", Name = "C2", Count = 2 }
                 },
-                new() 
-                { 
-                    Name = "Third", 
-                    Child = new BasicSource { Id = "3", Name = "C3", Count = 3 } 
+
+                new()
+                {
+                    Name = "Third",
+                    Child = new BasicSource { Id = "3", Name = "C3", Count = 3 }
                 }
-            }
+            ]
         };
 
         // Act
@@ -161,7 +177,7 @@ public sealed class ComplexScenarioTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        Dictionary<Guid, BasicSource> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(2);
@@ -177,9 +193,9 @@ public sealed class ComplexScenarioTests : UnitTest
         var stringDict = new Dictionary<string, string> { { "x", "y" } };
         var boolDict = new Dictionary<string, bool> { { "flag", true } };
 
-        var intResult = intDict.Adapt();
-        var stringResult = stringDict.Adapt();
-        var boolResult = boolDict.Adapt();
+        Dictionary<string, int> intResult = intDict.Adapt();
+        Dictionary<string, string> stringResult = stringDict.Adapt();
+        Dictionary<string, bool> boolResult = boolDict.Adapt();
 
         intResult["a"].Should().Be(1);
         stringResult["x"].Should().Be("y");
@@ -192,9 +208,9 @@ public sealed class ComplexScenarioTests : UnitTest
         // Arrange
         var source = new MultiListSource
         {
-            Numbers = new List<int>(),
-            Tags = new List<string>(),
-            Items = new List<BasicSource>()
+            Numbers = [],
+            Tags = [],
+            Items = []
         };
 
         // Act

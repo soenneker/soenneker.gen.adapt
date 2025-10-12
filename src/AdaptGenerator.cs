@@ -1,12 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Text;
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
 
 namespace Soenneker.Gen.Adapt;
 
@@ -15,418 +10,46 @@ public sealed class AdaptGenerator : IIncrementalGenerator
 {
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        IncrementalValueProvider<ImmutableArray<ClassDeclarationSyntax>> classDeclarations = context.SyntaxProvider
-            .CreateSyntaxProvider(static (node, _) => node is ClassDeclarationSyntax, static (ctx, _) => (ClassDeclarationSyntax)ctx.Node).Collect();
+        IncrementalValueProvider<ImmutableArray<INamedTypeSymbol>> classSymbols = context.SyntaxProvider.CreateSyntaxProvider(
+            static (node, _) => node is ClassDeclarationSyntax,
+            static (ctx, _) => ctx.SemanticModel.GetDeclaredSymbol((ClassDeclarationSyntax)ctx.Node) as INamedTypeSymbol)
+            .Where(static s => s is not null && s.TypeKind == TypeKind.Class)
+            .Select(static (s, _) => s!)
+            .Collect();
 
-        IncrementalValueProvider<ImmutableArray<StructDeclarationSyntax>> structDeclarations = context.SyntaxProvider
-            .CreateSyntaxProvider(static (node, _) => node is StructDeclarationSyntax, static (ctx, _) => (StructDeclarationSyntax)ctx.Node).Collect();
+        IncrementalValueProvider<ImmutableArray<INamedTypeSymbol>> structSymbols = context.SyntaxProvider.CreateSyntaxProvider(
+            static (node, _) => node is StructDeclarationSyntax,
+            static (ctx, _) => ctx.SemanticModel.GetDeclaredSymbol((StructDeclarationSyntax)ctx.Node) as INamedTypeSymbol)
+            .Where(static s => s is not null && s.TypeKind == TypeKind.Struct)
+            .Select(static (s, _) => s!)
+            .Collect();
 
-        IncrementalValueProvider<ImmutableArray<EnumDeclarationSyntax>> enumDeclarations = context.SyntaxProvider
-            .CreateSyntaxProvider(static (node, _) => node is EnumDeclarationSyntax, static (ctx, _) => (EnumDeclarationSyntax)ctx.Node).Collect();
+        IncrementalValueProvider<ImmutableArray<INamedTypeSymbol>> enumSymbols = context.SyntaxProvider.CreateSyntaxProvider(
+            static (node, _) => node is EnumDeclarationSyntax,
+            static (ctx, _) => ctx.SemanticModel.GetDeclaredSymbol((EnumDeclarationSyntax)ctx.Node) as INamedTypeSymbol)
+            .Where(static s => s is not null && s.TypeKind == TypeKind.Enum)
+            .Select(static (s, _) => s!)
+            .Collect();
 
-        IncrementalValueProvider<(((Compilation Left, ImmutableArray<ClassDeclarationSyntax> Right) Left, ImmutableArray<StructDeclarationSyntax> Right) Left,
-            ImmutableArray<EnumDeclarationSyntax> Right)> compilationAndSyntax =
-            context.CompilationProvider.Combine(classDeclarations).Combine(structDeclarations).Combine(enumDeclarations);
+        IncrementalValueProvider<(((Compilation Left, ImmutableArray<INamedTypeSymbol> Right) Left, ImmutableArray<INamedTypeSymbol> Right) Left, ImmutableArray<INamedTypeSymbol> Right)> all = context.CompilationProvider.Combine(classSymbols).Combine(structSymbols).Combine(enumSymbols);
 
-        context.RegisterSourceOutput(compilationAndSyntax, static (spc, tuple) =>
+        context.RegisterSourceOutput(all, static (spc, pack) =>
         {
-            Compilation? compilation = tuple.Left.Left.Left;
-            ImmutableArray<ClassDeclarationSyntax> classes = tuple.Left.Left.Right;
-            ImmutableArray<StructDeclarationSyntax> structs = tuple.Left.Right;
-            ImmutableArray<EnumDeclarationSyntax> enums = tuple.Right;
+            Compilation? compilation = pack.Left.Left.Left;
+            ImmutableArray<INamedTypeSymbol> classes = pack.Left.Left.Right;
+            ImmutableArray<INamedTypeSymbol> structs = pack.Left.Right;
+            ImmutableArray<INamedTypeSymbol> enums = pack.Right;
 
             try
             {
-                Generate(spc, compilation, classes, structs, enums);
+                Emitter.Generate(spc, compilation, classes, structs, enums);
             }
-            catch (Exception ex)
+            catch (System.Exception ex)
             {
                 spc.ReportDiagnostic(Diagnostic.Create(
-                    new DiagnosticDescriptor("SGA001", "AdaptGenerator error", ex.ToString(), "Adapt", DiagnosticSeverity.Warning, true), Location.None));
+                    new DiagnosticDescriptor("SGA001", "AdaptGenerator error", ex.ToString(), "Adapt", DiagnosticSeverity.Warning, true),
+                    Location.None));
             }
         });
-    }
-
-    private static void Generate(SourceProductionContext context, Compilation compilation, IEnumerable<ClassDeclarationSyntax> classDecls,
-        IEnumerable<StructDeclarationSyntax> structDecls, IEnumerable<EnumDeclarationSyntax> enumDecls)
-    {
-        var types = new List<INamedTypeSymbol>();
-
-        // Collect classes (includes records since they're ClassDeclarationSyntax)
-        foreach (ClassDeclarationSyntax? cls in classDecls)
-        {
-            SemanticModel model = compilation.GetSemanticModel(cls.SyntaxTree);
-            if (model.GetDeclaredSymbol(cls) is INamedTypeSymbol { TypeKind: TypeKind.Class, DeclaredAccessibility: Accessibility.Public } sym)
-            {
-                // Skip framework types
-                if (!IsUserDefinedType(sym))
-                    continue;
-                types.Add(sym);
-            }
-        }
-
-        // Collect structs
-        foreach (StructDeclarationSyntax? str in structDecls)
-        {
-            SemanticModel model = compilation.GetSemanticModel(str.SyntaxTree);
-            if (model.GetDeclaredSymbol(str) is INamedTypeSymbol { TypeKind: TypeKind.Struct, DeclaredAccessibility: Accessibility.Public } sym)
-            {
-                // Skip framework types
-                if (!IsUserDefinedType(sym))
-                    continue;
-                types.Add(sym);
-            }
-        }
-
-        var enums = new List<INamedTypeSymbol>();
-        foreach (EnumDeclarationSyntax? en in enumDecls)
-        {
-            SemanticModel model = compilation.GetSemanticModel(en.SyntaxTree);
-            if (model.GetDeclaredSymbol(en) is INamedTypeSymbol { TypeKind: TypeKind.Enum, DeclaredAccessibility: Accessibility.Public } sym)
-                enums.Add(sym);
-        }
-
-        var sb = new StringBuilder();
-        sb.AppendLine("// <auto-generated/>");
-        sb.AppendLine("#nullable enable");
-        sb.AppendLine("using System;");
-        sb.AppendLine("using System.Collections.Generic;");
-        sb.AppendLine();
-        sb.AppendLine("public static class GenAdaptExtensions");
-        sb.AppendLine("{");
-
-        // Emit enum parse helpers (no Enum.Parse)
-        foreach (INamedTypeSymbol? e in enums)
-        {
-            string[] names = e.GetMembers().OfType<IFieldSymbol>().Where(f => f.HasConstantValue).Select(f => f.Name).ToArray();
-            sb.AppendLine($"\tprivate static {e.ToDisplayString()} Parse_{SanitizeTypeName(e)}(string value)");
-            sb.AppendLine("\t{");
-            sb.AppendLine("\t\tswitch (value)");
-            sb.AppendLine("\t\t{");
-            foreach (string n in names)
-                sb.AppendLine($"\t\t\tcase \"{n}\": return {e.ToDisplayString()}.{n};");
-            sb.AppendLine("\t\t\tdefault: throw new ArgumentOutOfRangeException(nameof(value), $\"Unknown enum value '{value}' for " + e.Name + "\");");
-            sb.AppendLine("\t\t}");
-            sb.AppendLine("\t}");
-            sb.AppendLine();
-        }
-
-        // Build map of source -> list of destinations
-        var sourceToDestinations = new Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>>(SymbolEqualityComparer.Default);
-        foreach (INamedTypeSymbol? src in types)
-        {
-            foreach (INamedTypeSymbol? dst in types)
-            {
-                if (SymbolEqualityComparer.Default.Equals(src, dst))
-                    continue;
-                if (!HasParameterlessCtorLocal(dst))
-                    continue;
-                if (HasAnyMappableProperty(src, dst, enums))
-                {
-                    if (!sourceToDestinations.ContainsKey(src))
-                        sourceToDestinations[src] = new List<INamedTypeSymbol>();
-                    sourceToDestinations[src].Add(dst);
-                }
-            }
-        }
-
-        // Emit private mapping methods for each pair
-        foreach (KeyValuePair<INamedTypeSymbol, List<INamedTypeSymbol>> kvp in sourceToDestinations)
-        {
-            foreach (INamedTypeSymbol? dest in kvp.Value)
-            {
-                EmitMappingMethod(sb, kvp.Key, dest, enums);
-            }
-        }
-
-        // Emit one generic Adapt<TDest>() per source type (just dispatches to mapping methods)
-        foreach (KeyValuePair<INamedTypeSymbol, List<INamedTypeSymbol>> kvp in sourceToDestinations)
-        {
-            EmitGenericAdaptMethod(sb, kvp.Key, kvp.Value, enums);
-        }
-
-        // Emit collection-to-collection adapters
-        EmitCollectionAdapters(sb, types, enums);
-
-        sb.AppendLine("}");
-
-        context.AddSource("Adapt.g.cs", SourceText.From(sb.ToString(), Encoding.UTF8));
-    }
-
-    private static bool HasParameterlessCtorLocal(INamedTypeSymbol type)
-    {
-        // Structs always have a default constructor
-        if (type.TypeKind == TypeKind.Struct)
-            return true;
-
-        return type.InstanceConstructors.Any(c => c.Parameters.Length == 0 && c.DeclaredAccessibility == Accessibility.Public);
-    }
-
-    private static bool HasAnyMappableProperty(INamedTypeSymbol source, INamedTypeSymbol dest, IEnumerable<INamedTypeSymbol> enums)
-    {
-        Dictionary<string, IPropertySymbol> srcProps = source.GetMembers().OfType<IPropertySymbol>()
-            .Where(p => p.DeclaredAccessibility == Accessibility.Public && p.GetMethod != null).ToDictionary(p => p.Name, p => p);
-        IPropertySymbol[] dstProps = dest.GetMembers().OfType<IPropertySymbol>()
-            .Where(p => p.DeclaredAccessibility == Accessibility.Public && p.SetMethod != null).ToArray();
-        foreach (IPropertySymbol tp in dstProps)
-        {
-            if (!srcProps.TryGetValue(tp.Name, out IPropertySymbol? sp)) continue;
-
-            // List properties are always mappable (handled specially)
-            if (IsList(sp.Type, out _) && IsList(tp.Type, out _))
-                return true;
-
-            if (BuildAssignment("source." + sp.Name, sp.Type, tp.Type, enums) is not null)
-                return true;
-        }
-
-        return false;
-    }
-
-    private static void EmitMappingMethod(StringBuilder sb, INamedTypeSymbol source, INamedTypeSymbol dest, IEnumerable<INamedTypeSymbol> enums)
-    {
-        Dictionary<string, IPropertySymbol> srcProps = source.GetMembers().OfType<IPropertySymbol>()
-            .Where(p => p.DeclaredAccessibility == Accessibility.Public && p.GetMethod != null).ToDictionary(p => p.Name, p => p);
-        IPropertySymbol[] dstProps = dest.GetMembers().OfType<IPropertySymbol>()
-            .Where(p => p.DeclaredAccessibility == Accessibility.Public && p.SetMethod != null).ToArray();
-        if (dstProps.Length == 0) return;
-
-        sb.AppendLine(
-            $"\tprivate static {dest.ToDisplayString()} Map_{SanitizeTypeName(source)}_To_{SanitizeTypeName(dest)}({source.ToDisplayString()} source)");
-        sb.AppendLine("\t{");
-        sb.AppendLine($"\t\tvar target = new {dest.ToDisplayString()}();");
-        foreach (IPropertySymbol tp in dstProps)
-        {
-            if (!srcProps.TryGetValue(tp.Name, out IPropertySymbol? sp))
-                continue;
-
-            // Special handling for List<S> -> List<D> with manual loop (no LINQ)
-            if (IsList(sp.Type, out ITypeSymbol? sElem) && IsList(tp.Type, out ITypeSymbol? dElem))
-            {
-                sb.AppendLine($"\t\tif (source.{sp.Name} is not null)");
-                sb.AppendLine("\t\t{");
-                sb.AppendLine($"\t\t\tvar list_{tp.Name} = new System.Collections.Generic.List<{dElem!.ToDisplayString()}>(source.{sp.Name}.Count);");
-
-                // Same element type - direct copy
-                if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
-                {
-                    sb.AppendLine($"\t\t\tfor (int i = 0; i < source.{sp.Name}.Count; i++)");
-                    sb.AppendLine($"\t\t\t\tlist_{tp.Name}.Add(source.{sp.Name}[i]);");
-                }
-                else
-                {
-                    // Different element types - need conversion
-                    string itemAssign = BuildAssignment("item", sElem!, dElem!, enums) ?? "item";
-                    sb.AppendLine($"\t\t\tfor (int i = 0; i < source.{sp.Name}.Count; i++)");
-                    sb.AppendLine("\t\t\t{");
-                    sb.AppendLine($"\t\t\t\tvar item = source.{sp.Name}[i];");
-                    sb.AppendLine($"\t\t\t\tlist_{tp.Name}.Add({itemAssign});");
-                    sb.AppendLine("\t\t\t}");
-                }
-
-                sb.AppendLine($"\t\t\ttarget.{tp.Name} = list_{tp.Name};");
-                sb.AppendLine("\t\t}");
-                continue;
-            }
-
-            string? assign = BuildAssignment("source." + sp.Name, sp.Type, tp.Type, enums);
-            if (assign is null) continue;
-            sb.AppendLine($"\t\ttarget.{tp.Name} = {assign};");
-        }
-
-        sb.AppendLine("\t\treturn target;");
-        sb.AppendLine("\t}");
-        sb.AppendLine();
-    }
-
-    private static void EmitGenericAdaptMethod(StringBuilder sb, INamedTypeSymbol source, List<INamedTypeSymbol> destinations, IEnumerable<INamedTypeSymbol> enums)
-    {
-        // If no valid destinations, emit nothing so calls won't compile.
-        if (destinations is null || destinations.Count == 0)
-            return;
-
-        string sanitizedSource = SanitizeTypeName(source);
-
-        // Cache class
-        sb.AppendLine($"\tprivate static class AdaptCache_{sanitizedSource}<TDest>");
-        sb.AppendLine("\t{");
-        sb.AppendLine($"\t\tpublic static readonly System.Func<{source.ToDisplayString()}, TDest> Invoke = BuildMapper();");
-        sb.AppendLine();
-        sb.AppendLine($"\t\tprivate static System.Func<{source.ToDisplayString()}, TDest> BuildMapper()");
-        sb.AppendLine("\t\t{");
-        sb.AppendLine("\t\t\tvar destType = typeof(TDest);");
-
-        foreach (var dest in destinations)
-        {
-            sb.AppendLine($"\t\t\tif (destType == typeof({dest.ToDisplayString()}))");
-            sb.AppendLine($"\t\t\t\treturn (System.Func<{source.ToDisplayString()}, TDest>)(object)(System.Func<{source.ToDisplayString()}, {dest.ToDisplayString()}>)Map_{SanitizeTypeName(source)}_To_{SanitizeTypeName(dest)};");
-        }
-
-        // No mapper -> don't provide a path. Throwing here is fine because this code is only reachable
-        // if someone references Adapt<TDest> for an unsupported TDest. But since we only emit the
-        // public Adapt<TDest> for sources with at least one destination, normal "no mapping" cases
-        // will *not* compile (as desired).
-        sb.AppendLine("\t\t\tthrow new System.NotSupportedException($\"Unsupported Adapt target type: {destType.FullName}\");");
-        sb.AppendLine("\t\t}");
-        sb.AppendLine("\t}");
-        sb.AppendLine();
-
-        // Public Adapt for this source (only emitted if there is at least one valid destination)
-        sb.AppendLine($"\tpublic static TDest Adapt<TDest>(this {source.ToDisplayString()} source)");
-        sb.AppendLine("\t{");
-        sb.AppendLine($"\t\treturn AdaptCache_{sanitizedSource}<TDest>.Invoke(source);");
-        sb.AppendLine("\t}");
-        sb.AppendLine();
-    }
-
-    private static string? BuildAssignment(string srcExpr, ITypeSymbol srcType, ITypeSymbol dstType, IEnumerable<INamedTypeSymbol> enums)
-    {
-        // Same type
-        if (SymbolEqualityComparer.Default.Equals(srcType, dstType))
-        {
-            // List<T> -> clone (handled separately with manual loop for performance)
-            if (IsList(srcType, out ITypeSymbol? srcElem))
-                return null; // Will be handled specially
-            return srcExpr;
-        }
-
-        // List<S> -> List<D> (handled separately in EmitMappingMethod with manual loop)
-        if (IsList(srcType, out ITypeSymbol? sElem) && IsList(dstType, out ITypeSymbol? dElem))
-        {
-            return null; // Will be handled specially
-        }
-
-        // Class/Struct -> Class/Struct mapping by calling mapping method (only for user-defined types)
-        if (srcType is INamedTypeSymbol sType && dstType is INamedTypeSymbol dType && sType.TypeKind is TypeKind.Class or TypeKind.Struct &&
-            dType.TypeKind is TypeKind.Class or TypeKind.Struct && IsUserDefinedType(sType) && IsUserDefinedType(dType))
-        {
-            return $"Map_{SanitizeTypeName(sType)}_To_{SanitizeTypeName(dType)}({srcExpr})";
-        }
-
-        // Enum -> string
-        if (srcType.TypeKind == TypeKind.Enum && IsString(dstType))
-            return srcExpr + ".ToString()";
-
-        // string -> Enum (emit helper)
-        if (IsString(srcType) && dstType.TypeKind == TypeKind.Enum)
-        {
-            var e = (INamedTypeSymbol)dstType;
-            return $"Parse_{SanitizeTypeName(e)}({srcExpr})";
-        }
-
-        // Enum -> int
-        if (srcType.TypeKind == TypeKind.Enum && IsInt(dstType))
-            return $"(int){srcExpr}";
-
-        // int -> Enum
-        if (IsInt(srcType) && dstType.TypeKind == TypeKind.Enum)
-            return $"({dstType.ToDisplayString()}){srcExpr}";
-
-        // Intellenum-like: class with public int Value -> int
-        if (srcType is INamedTypeSymbol cls1 && HasIntValueProp(cls1) && IsInt(dstType))
-            return $"{srcExpr}.Value";
-
-        // int -> class with public static From(int)
-        if (IsInt(srcType) && dstType is INamedTypeSymbol cls2 && HasStaticFromInt(cls2))
-            return $"{cls2.ToDisplayString()}.From({srcExpr})";
-
-        return null;
-    }
-
-    private static bool IsList(ITypeSymbol t, out ITypeSymbol? elem)
-    {
-        elem = null;
-        if (t is INamedTypeSymbol { Name: "List", TypeArguments.Length: 1 } nt)
-        {
-            elem = nt.TypeArguments[0];
-            return true;
-        }
-
-        return false;
-    }
-
-    private static bool IsUserDefinedType(INamedTypeSymbol type)
-    {
-        // Skip types from System namespace (except System types defined in user code)
-        string? ns = type.ContainingNamespace?.ToDisplayString();
-        if (ns != null && ns.StartsWith("System"))
-            return false;
-
-        return true;
-    }
-
-    private static bool IsString(ITypeSymbol t) => t.SpecialType == SpecialType.System_String;
-    private static bool IsInt(ITypeSymbol t) => t.SpecialType == SpecialType.System_Int32;
-
-    private static bool HasIntValueProp(INamedTypeSymbol t) => t.GetMembers().OfType<IPropertySymbol>()
-        .Any(p => p.Name == "Value" && p.Type.SpecialType == SpecialType.System_Int32 && p.GetMethod != null);
-
-    private static bool HasStaticFromInt(INamedTypeSymbol t) => t.GetMembers().OfType<IMethodSymbol>().Any(m =>
-        m.IsStatic && m is { Name: "From", Parameters.Length: 1 } && m.Parameters[0].Type.SpecialType == SpecialType.System_Int32 &&
-        SymbolEqualityComparer.Default.Equals(m.ReturnType, t));
-
-    private static string SanitizeTypeName(ITypeSymbol t)
-    {
-        string n = t.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        var sb = new StringBuilder(n.Length);
-        foreach (char ch in n)
-        {
-            if (ch is >= 'a' and <= 'z' or >= 'A' and <= 'Z' or >= '0' and <= '9')
-                sb.Append(ch);
-
-            else sb.Append('_');
-        }
-
-        return sb.ToString();
-    }
-
-    private static void EmitCollectionAdapters(StringBuilder sb, List<INamedTypeSymbol> types, IEnumerable<INamedTypeSymbol> enums)
-    {
-        // Emit generic List<T> adapter for same-type copying
-        sb.AppendLine("\t// List<T> adapters");
-        sb.AppendLine("\tpublic static System.Collections.Generic.List<TElement> Adapt<TElement>(this System.Collections.Generic.List<TElement> source)");
-        sb.AppendLine("\t{");
-        sb.AppendLine("\t\tif (source == null) throw new System.ArgumentNullException(nameof(source));");
-        sb.AppendLine("\t\tvar result = new System.Collections.Generic.List<TElement>(source.Count);");
-        sb.AppendLine("\t\tfor (int i = 0; i < source.Count; i++)");
-        sb.AppendLine("\t\t\tresult.Add(source[i]);");
-        sb.AppendLine("\t\treturn result;");
-        sb.AppendLine("\t}");
-        sb.AppendLine();
-
-        // Emit IEnumerable<T> adapter for same-type copying
-        sb.AppendLine("\tpublic static System.Collections.Generic.IEnumerable<TElement> Adapt<TElement>(this System.Collections.Generic.IEnumerable<TElement> source)");
-        sb.AppendLine("\t{");
-        sb.AppendLine("\t\tif (source == null) throw new System.ArgumentNullException(nameof(source));");
-        sb.AppendLine("\t\t// Return a list to avoid multiple enumeration issues");
-        sb.AppendLine("\t\tvar result = new System.Collections.Generic.List<TElement>();");
-        sb.AppendLine("\t\tforeach (var item in source)");
-        sb.AppendLine("\t\t\tresult.Add(item);");
-        sb.AppendLine("\t\treturn result;");
-        sb.AppendLine("\t}");
-        sb.AppendLine();
-
-        // Emit Dictionary<TKey, TValue> adapter
-        sb.AppendLine("\t// Dictionary<TKey, TValue> adapters");
-        sb.AppendLine("\tpublic static System.Collections.Generic.Dictionary<TKey, TValue> Adapt<TKey, TValue>(this System.Collections.Generic.Dictionary<TKey, TValue> source)");
-        sb.AppendLine("\t{");
-        sb.AppendLine("\t\tif (source == null) throw new System.ArgumentNullException(nameof(source));");
-        sb.AppendLine("\t\tvar result = new System.Collections.Generic.Dictionary<TKey, TValue>(source.Count);");
-        sb.AppendLine("\t\tforeach (var kvp in source)");
-        sb.AppendLine("\t\t\tresult.Add(kvp.Key, kvp.Value);");
-        sb.AppendLine("\t\treturn result;");
-        sb.AppendLine("\t}");
-        sb.AppendLine();
-
-        // Emit IDictionary<TKey, TValue> adapter
-        sb.AppendLine("\tpublic static System.Collections.Generic.IDictionary<TKey, TValue> Adapt<TKey, TValue>(this System.Collections.Generic.IDictionary<TKey, TValue> source)");
-        sb.AppendLine("\t{");
-        sb.AppendLine("\t\tif (source == null) throw new System.ArgumentNullException(nameof(source));");
-        sb.AppendLine("\t\tvar result = new System.Collections.Generic.Dictionary<TKey, TValue>();");
-        sb.AppendLine("\t\tforeach (var kvp in source)");
-        sb.AppendLine("\t\t\tresult.Add(kvp.Key, kvp.Value);");
-        sb.AppendLine("\t\treturn result;");
-        sb.AppendLine("\t}");
-        sb.AppendLine();
     }
 }

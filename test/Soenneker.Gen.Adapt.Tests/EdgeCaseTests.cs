@@ -1,7 +1,6 @@
 using Soenneker.Tests.Unit;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 using Xunit;
 using AwesomeAssertions;
@@ -155,7 +154,7 @@ public sealed class EdgeCaseTests : UnitTest
         var source = new List<Guid> { default, default, default };
 
         // Act
-        var result = source.Adapt();
+        List<Guid> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(3);
@@ -205,15 +204,15 @@ public sealed class EdgeCaseTests : UnitTest
         var source = new List<int> { 1, 2, 3 };
 
         // Act
-        var result = source.Adapt();
+        List<int> result = source.Adapt();
         result.Add(4);
         result.Add(5);
 
         // Assert
         source.Count.Should().Be(3);
         result.Count.Should().Be(5);
-        source.Should().BeEquivalentTo(new[] { 1, 2, 3 });
-        result.Should().BeEquivalentTo(new[] { 1, 2, 3, 4, 5 });
+        source.Should().BeEquivalentTo([1, 2, 3]);
+        result.Should().BeEquivalentTo([1, 2, 3, 4, 5]);
     }
 
     [Fact]
@@ -223,7 +222,7 @@ public sealed class EdgeCaseTests : UnitTest
         var source = new Dictionary<string, int> { { "a", 1 }, { "b", 2 } };
 
         // Act
-        var result = source.Adapt();
+        Dictionary<string, int> result = source.Adapt();
         result["c"] = 3;
         result["b"] = 999;
 
@@ -261,7 +260,7 @@ public sealed class EdgeCaseTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        List<string> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(6);

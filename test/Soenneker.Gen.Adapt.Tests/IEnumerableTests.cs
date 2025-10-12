@@ -20,11 +20,11 @@ public sealed class IEnumerableTests : UnitTest
         IEnumerable<int> source = Enumerable.Range(1, 5);
 
         // Act
-        var result = source.Adapt();
+        IEnumerable<int> result = source.Adapt();
 
         // Assert
         result.Should().NotBeNull();
-        result.Should().BeEquivalentTo(new[] { 1, 2, 3, 4, 5 });
+        result.Should().BeEquivalentTo([1, 2, 3, 4, 5]);
     }
 
     [Fact]
@@ -34,7 +34,7 @@ public sealed class IEnumerableTests : UnitTest
         IEnumerable<string> source = new[] { "a", "b", "c" }.Where(x => x != "d");
 
         // Act
-        var result = source.Adapt();
+        IEnumerable<string> result = source.Adapt();
 
         // Assert
         result.Should().NotBeNull();
@@ -45,10 +45,10 @@ public sealed class IEnumerableTests : UnitTest
     public void Adapt_IEnumerable_Empty_ShouldReturnEmpty()
     {
         // Arrange
-        IEnumerable<int> source = Enumerable.Empty<int>();
+        IEnumerable<int> source = [];
 
         // Act
-        var result = source.Adapt();
+        IEnumerable<int> result = source.Adapt();
 
         // Assert
         result.Should().NotBeNull();
@@ -64,11 +64,11 @@ public sealed class IEnumerableTests : UnitTest
             .Select(x => x * 2);
 
         // Act
-        var result = source.Adapt();
+        IEnumerable<int> result = source.Adapt();
 
         // Assert
         result.Should().NotBeNull();
-        result.Should().BeEquivalentTo(new[] { 4, 8, 12, 16, 20 });
+        result.Should().BeEquivalentTo([4, 8, 12, 16, 20]);
     }
 
     [Fact]
@@ -82,10 +82,10 @@ public sealed class IEnumerableTests : UnitTest
             .Take(5);
 
         // Act
-        var result = source.Adapt();
+        IEnumerable<int> result = source.Adapt();
 
         // Assert
-        result.Should().BeEquivalentTo(new[] { 10, 9, 8, 7, 6 });
+        result.Should().BeEquivalentTo([10, 9, 8, 7, 6]);
     }
 
     [Fact]
@@ -96,10 +96,10 @@ public sealed class IEnumerableTests : UnitTest
         IEnumerable<int> source = data.SelectMany(x => x);
 
         // Act
-        var result = source.Adapt();
+        IEnumerable<int> result = source.Adapt();
 
         // Assert
-        result.Should().BeEquivalentTo(new[] { 1, 2, 3, 4, 5, 6 });
+        result.Should().BeEquivalentTo([1, 2, 3, 4, 5, 6]);
     }
 
     [Fact]
@@ -109,20 +109,20 @@ public sealed class IEnumerableTests : UnitTest
         IEnumerable<int> source = new[] { 1, 2, 2, 3, 3, 3, 4 }.Distinct();
 
         // Act
-        var result = source.Adapt();
+        IEnumerable<int> result = source.Adapt();
 
         // Assert
-        result.Should().BeEquivalentTo(new[] { 1, 2, 3, 4 });
+        result.Should().BeEquivalentTo([1, 2, 3, 4]);
     }
 
     [Fact]
     public void Adapt_IEnumerable_WithNull_ShouldMaterialize()
     {
         // Arrange
-        IEnumerable<string?> source = new string?[] { "a", null, "c" };
+        IEnumerable<string?> source = ["a", null, "c"];
 
         // Act
-        var result = source.Adapt();
+        IEnumerable<string?> result = source.Adapt();
 
         // Assert
         result.Count().Should().Be(3);
@@ -135,10 +135,10 @@ public sealed class IEnumerableTests : UnitTest
     public void Adapt_IEnumerable_SingleElement_ShouldMaterialize()
     {
         // Arrange
-        IEnumerable<string> source = new[] { "only" };
+        IEnumerable<string> source = ["only"];
 
         // Act
-        var result = source.Adapt();
+        IEnumerable<string> result = source.Adapt();
 
         // Assert
         result.Count().Should().Be(1);
@@ -153,7 +153,7 @@ public sealed class IEnumerableTests : UnitTest
         IEnumerable<int> source = data.GroupBy(x => x % 2).SelectMany(g => g);
 
         // Act
-        var result = source.Adapt();
+        IEnumerable<int> result = source.Adapt();
 
         // Assert
         result.Should().NotBeNull();
@@ -169,23 +169,23 @@ public sealed class IEnumerableTests : UnitTest
         IEnumerable<int> source = first.Zip(second, (a, b) => a + b);
 
         // Act
-        var result = source.Adapt();
+        IEnumerable<int> result = source.Adapt();
 
         // Assert
-        result.Should().BeEquivalentTo(new[] { 11, 22, 33 });
+        result.Should().BeEquivalentTo([11, 22, 33]);
     }
 
     [Fact]
     public void Adapt_IEnumerable_Concat_ShouldMaterialize()
     {
         // Arrange
-        IEnumerable<int> source = new[] { 1, 2, 3 }.Concat(new[] { 4, 5, 6 });
+        IEnumerable<int> source = new[] { 1, 2, 3 }.Concat([4, 5, 6]);
 
         // Act
-        var result = source.Adapt();
+        IEnumerable<int> result = source.Adapt();
 
         // Assert
-        result.Should().BeEquivalentTo(new[] { 1, 2, 3, 4, 5, 6 });
+        result.Should().BeEquivalentTo([1, 2, 3, 4, 5, 6]);
     }
 
     [Fact]
@@ -195,10 +195,10 @@ public sealed class IEnumerableTests : UnitTest
         IEnumerable<int> source = Enumerable.Range(1, 20).Skip(5).Take(10);
 
         // Act
-        var result = source.Adapt();
+        IEnumerable<int> result = source.Adapt();
 
         // Assert
-        result.Should().BeEquivalentTo(new[] { 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 });
+        result.Should().BeEquivalentTo([6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
     }
 }
 

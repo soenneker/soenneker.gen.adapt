@@ -4,16 +4,14 @@
 
 # ![](https://user-images.githubusercontent.com/4441470/224455560-91ed3ee7-f510-4041-a8d2-3fc093025112.png) Soenneker.Gen.Adapt
 
-**A high-performance C# source generator for compile-time object mapping**
-
-Generates strongly-typed mapping code at compile time with zero runtime overhead and no reflection.
+A modern, high-performance C# source generator for compile-time object mapping; a zero-overhead replacement for AutoMapper, Mapperly, Mapster, etc.
 
 ## Why Use This?
 
 - **Zero runtime cost** - All code is generated at compile time
-- **No reflection** - Direct property assignments for maximum performance
 - **Type-safe** - Compiler errors instead of runtime failures
 - **IntelliSense support** - Full IDE support for generated methods
+- **Highly optimized** - Aggressive inlining, cached delegates, safe parsing
 
 ## Installation
 
@@ -44,24 +42,43 @@ var dto = new UserDto { Name = "John", Age = 30 };
 UserModel model = dto.Adapt<UserModel>(); // just one line!
 ```
 
-## What It Handles
+If the properties match by name and can be converted, it maps them.
 
-Throw anything at it - classes, records, structs, nullables, nested objects, collections (`List<T>`, `IEnumerable<T>`, `Dictionary<K,V>`), enums (to/from string/int), Intellenums, whatever. If the properties match by name and can be converted, it maps them. 
+### Supported Conversions
 
-If for some reason the source generator cannot build the extension method, you'll get a compile-time error.
+- **Same-type assignments** - Direct property copying
+- **Collections** - `List<T>`, `IEnumerable<T>`, arrays with element conversion
+- **Dictionaries** - `Dictionary<TKey, TValue>` with key/value conversion
+- **Enums** - Bidirectional conversion between enum ↔ string, enum ↔ int
+- **Intellenums** - Custom value objects with `Value` property and `From()` factory
+- **Guid** - String ↔ Guid with safe `TryParse` (no exceptions)
+- **Nested objects** - Recursive mapping of complex object graphs
+- **Nullables** - Automatic nullable handling
+
+If for some reason the source generator cannot build the extension method, an `Adapt()` extension method will not be generated.
 
 ## Performance
 
-All mapping code is generated at compile time. No reflection, no runtime overhead. Mappers are cached as static delegates per source/destination type pair, so subsequent calls have virtually zero overhead beyond a direct property assignment.
+All mapping code is generated at compile time with multiple optimizations:
+
+- **Zero reflection** - No expression trees, direct property assignments only
+- **Aggressive inlining** - JIT compile methods when possible
+- **Static delegate caching** - One-time initialization per source/destination pair
+- **Minimal allocations** - Reused delegates, no boxing, no dynamic dispatch
+
+The generated code is as fast as hand-written mapping code.
 
 ## What's being generated?
 
-Take the example above:
+Take the example above. The generator creates efficient mapping code:
 
 ```csharp
-public static class GenAdaptExtensions
+using System.Runtime.CompilerServices;
+
+public static partial class GenAdapt
 {
-    private static UserModel Map_UserDto_To_UserModel(UserDto source)
+    // Direct mapping method - no reflection, just property assignments
+    private static UserModel Map_global__UserDto_To_global__UserModel(UserDto source)
     {
         var target = new UserModel();
         target.Name = source.Name;
@@ -69,24 +86,41 @@ public static class GenAdaptExtensions
         return target;
     }
 
-    private static class AdaptCache_UserDto<TDest>
+    // Static delegate - computed once, zero allocations after initialization
+    private static readonly Func<UserDto, UserModel> _map_UserDto_To_UserModel = 
+        Map_global__UserDto_To_global__UserModel;
+
+    private static class AdaptCache_global__UserDto<TDest>
     {
         public static readonly Func<UserDto, TDest> Invoke = BuildMapper();
-        // Cached delegate - computed once, reused for the life of the application
+
+        private static Func<UserDto, TDest> BuildMapper()
+        {
+            var destType = typeof(TDest);
+            if (destType == typeof(UserModel))
+                return (Func<UserDto, TDest>)(object)_map_UserDto_To_UserModel;
+            throw new NotSupportedException($"Unsupported Adapt target type: {destType.FullName}");
+        }
     }
 
+    // Aggressive inlining for minimal call overhead
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static TDest Adapt<TDest>(this UserDto source)
     {
-        return AdaptCache_UserDto<TDest>.Invoke(source);
+        return AdaptCache_global__UserDto<TDest>.Invoke(source);
     }
 }
 ```
 
-### Troubleshooting
+## Troubleshooting
 
-Behind the scenes, an Adapt.g.cs file is built, and can be inspected for debugging purposes by adding the following to your .csproj:
+The generator creates multiple files per source type (e.g., `Adapt.BasicSource.g.cs`, `Adapt.UserDto.g.cs`). To inspect the generated code, add this to your `.csproj`:
 
 ```xml
-<EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
-<CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)Generated</CompilerGeneratedFilesOutputPath>
+<PropertyGroup>
+  <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+  <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)Generated</CompilerGeneratedFilesOutputPath>
+</PropertyGroup>
 ```
+
+Generated files will appear in `Project -> Dependencies -> Analyzers -> Soenneker.Gen.Adapt`

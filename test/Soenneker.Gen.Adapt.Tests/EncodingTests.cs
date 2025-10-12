@@ -1,5 +1,4 @@
 using Soenneker.Tests.Unit;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -383,7 +382,7 @@ public sealed class EncodingTests : UnitTest
         };
 
         // Act
-        var results = sources.Select(s => s.Adapt<BasicDest>()).ToList();
+        List<BasicDest> results = sources.Select(s => s.Adapt<BasicDest>()).ToList();
 
         // Assert
         results[0].Id.Should().Be("   ");
@@ -398,7 +397,7 @@ public sealed class EncodingTests : UnitTest
     {
         // Arrange
         var pattern = "abc123";
-        var repeated = string.Concat(Enumerable.Repeat(pattern, 1000));
+        string repeated = string.Concat(Enumerable.Repeat(pattern, 1000));
         var source = new BasicSource 
         { 
             Id = repeated,

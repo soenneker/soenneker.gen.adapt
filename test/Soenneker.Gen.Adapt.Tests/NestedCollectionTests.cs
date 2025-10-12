@@ -24,14 +24,14 @@ public sealed class NestedCollectionTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        List<List<int>> result = source.Adapt();
 
         // Assert
         result.Should().NotBeNull();
         result.Count.Should().Be(3);
-        result[0].Should().BeEquivalentTo(new[] { 1, 2, 3 });
-        result[1].Should().BeEquivalentTo(new[] { 4, 5, 6 });
-        result[2].Should().BeEquivalentTo(new[] { 7, 8, 9 });
+        result[0].Should().BeEquivalentTo([1, 2, 3]);
+        result[1].Should().BeEquivalentTo([4, 5, 6]);
+        result[2].Should().BeEquivalentTo([7, 8, 9]);
         // Should be shallow copy - inner lists are same references
         source[0].Should().BeSameAs(result[0]);
     }
@@ -47,7 +47,7 @@ public sealed class NestedCollectionTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        List<List<string>> result = source.Adapt();
 
         // Assert
         result.Should().NotBeNull();
@@ -67,7 +67,7 @@ public sealed class NestedCollectionTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        List<Dictionary<string, int>> result = source.Adapt();
 
         // Assert
         result.Should().NotBeNull();
@@ -82,18 +82,28 @@ public sealed class NestedCollectionTests : UnitTest
         // Arrange
         var source = new Dictionary<string, List<int>>
         {
-            { "odds", new List<int> { 1, 3, 5 } },
-            { "evens", new List<int> { 2, 4, 6 } }
+            { "odds", [
+                    1,
+                    3,
+                    5
+                ]
+            },
+            { "evens", [
+                    2,
+                    4,
+                    6
+                ]
+            }
         };
 
         // Act
-        var result = source.Adapt();
+        Dictionary<string, List<int>> result = source.Adapt();
 
         // Assert
         result.Should().NotBeNull();
         result.Count.Should().Be(2);
-        result["odds"].Should().BeEquivalentTo(new[] { 1, 3, 5 });
-        result["evens"].Should().BeEquivalentTo(new[] { 2, 4, 6 });
+        result["odds"].Should().BeEquivalentTo([1, 3, 5]);
+        result["evens"].Should().BeEquivalentTo([2, 4, 6]);
     }
 
     [Fact]
@@ -102,19 +112,20 @@ public sealed class NestedCollectionTests : UnitTest
         // Arrange
         var source = new ComplexListSource
         {
-            NestedItems = new List<NestedSource>
-            {
+            NestedItems =
+            [
                 new()
                 {
                     Name = "Nested1",
                     Child = new BasicSource { Id = "1", Name = "Child1", Count = 10 }
                 },
+
                 new()
                 {
                     Name = "Nested2",
                     Child = new BasicSource { Id = "2", Name = "Child2", Count = 20 }
                 }
-            }
+            ]
         };
 
         // Act
@@ -137,7 +148,7 @@ public sealed class NestedCollectionTests : UnitTest
         var source = new List<List<int>>();
 
         // Act
-        var result = source.Adapt();
+        List<List<int>> result = source.Adapt();
 
         // Assert
         result.Should().NotBeNull();
@@ -156,12 +167,12 @@ public sealed class NestedCollectionTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        List<List<int>> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(3);
         result[0].Should().BeEmpty();
-        result[1].Should().BeEquivalentTo(new[] { 1, 2 });
+        result[1].Should().BeEquivalentTo([1, 2]);
         result[2].Should().BeEmpty();
     }
 
@@ -176,7 +187,7 @@ public sealed class NestedCollectionTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        Dictionary<string, Dictionary<string, int>> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(2);
@@ -197,7 +208,7 @@ public sealed class NestedCollectionTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        List<List<int>> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(3);
@@ -224,15 +235,15 @@ public sealed class NestedCollectionTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        List<List<List<int>>> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(2);
         result[0].Count.Should().Be(2);
-        result[0][0].Should().BeEquivalentTo(new[] { 1, 2 });
-        result[0][1].Should().BeEquivalentTo(new[] { 3, 4 });
+        result[0][0].Should().BeEquivalentTo([1, 2]);
+        result[0][1].Should().BeEquivalentTo([3, 4]);
         result[1].Count.Should().Be(1);
-        result[1][0].Should().BeEquivalentTo(new[] { 5, 6 });
+        result[1][0].Should().BeEquivalentTo([5, 6]);
     }
 
     [Fact]
@@ -243,21 +254,30 @@ public sealed class NestedCollectionTests : UnitTest
         {
             new Dictionary<string, List<int>>
             {
-                { "key1", new List<int> { 1, 2, 3 } }
+                { "key1", [
+                        1,
+                        2,
+                        3
+                    ]
+                }
             },
             new Dictionary<string, List<int>>
             {
-                { "key2", new List<int> { 4, 5 } }
+                { "key2", [
+                        4,
+                        5
+                    ]
+                }
             }
         };
 
         // Act
-        var result = source.Adapt();
+        List<Dictionary<string, List<int>>> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(2);
-        result[0]["key1"].Should().BeEquivalentTo(new[] { 1, 2, 3 });
-        result[1]["key2"].Should().BeEquivalentTo(new[] { 4, 5 });
+        result[0]["key1"].Should().BeEquivalentTo([1, 2, 3]);
+        result[1]["key2"].Should().BeEquivalentTo([4, 5]);
     }
 }
 

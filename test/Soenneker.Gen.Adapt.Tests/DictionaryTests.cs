@@ -24,7 +24,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        Dictionary<string, string> result = source.Adapt();
 
         // Assert
         result.Should().NotBeNull();
@@ -47,7 +47,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        Dictionary<int, string> result = source.Adapt();
 
         // Assert
         result.Should().NotBeNull();
@@ -70,7 +70,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        Dictionary<string, int> result = source.Adapt();
 
         // Assert
         result.Should().NotBeNull();
@@ -87,7 +87,7 @@ public sealed class DictionaryTests : UnitTest
         var source = new Dictionary<string, int>();
 
         // Act
-        var result = source.Adapt();
+        Dictionary<string, int> result = source.Adapt();
 
         // Assert
         result.Should().NotBeNull();
@@ -105,7 +105,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        IDictionary<string, int> result = source.Adapt();
 
         // Assert
         result.Should().NotBeNull();
@@ -127,7 +127,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        Dictionary<Guid, string> result = source.Adapt();
 
         // Assert
         result.Should().NotBeNull();
@@ -147,7 +147,7 @@ public sealed class DictionaryTests : UnitTest
         }
 
         // Act
-        var result = source.Adapt();
+        Dictionary<int, string> result = source.Adapt();
 
         // Assert
         result.Should().NotBeNull();
@@ -168,7 +168,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        Dictionary<int, int> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(3);
@@ -188,7 +188,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        Dictionary<long, long> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(2);
@@ -206,7 +206,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        Dictionary<bool, string> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(2);
@@ -226,7 +226,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        Dictionary<string, string> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(3);
@@ -242,7 +242,7 @@ public sealed class DictionaryTests : UnitTest
         var source = new Dictionary<string, int> { { "solo", 42 } };
 
         // Act
-        var result = source.Adapt();
+        Dictionary<string, int> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(1);
@@ -253,8 +253,8 @@ public sealed class DictionaryTests : UnitTest
     public void Adapt_Dictionary_DateTimeKeys_ShouldCopy()
     {
         // Arrange
-        var date1 = DateTime.UtcNow;
-        var date2 = date1.AddDays(1);
+        DateTime date1 = DateTime.UtcNow;
+        DateTime date2 = date1.AddDays(1);
         var source = new Dictionary<DateTime, string>
         {
             { date1, "today" },
@@ -262,7 +262,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        Dictionary<DateTime, string> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(2);
@@ -282,7 +282,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        var result = source.Adapt();
+        Dictionary<string, decimal> result = source.Adapt();
 
         // Assert
         result.Count.Should().Be(3);
