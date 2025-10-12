@@ -105,23 +105,22 @@ internal static class MapperFile
             if (!srcProps.TryGet(dp.Name, out Prop sp))
                 continue;
 
-            // List<S> -> List<D>
-            if (Types.IsList(sp.Type, out ITypeSymbol? sElem) && Types.IsList(dp.Type, out ITypeSymbol? dElem))
+            // List-like collections: List<S>, IReadOnlyList<S>, IReadOnlyCollection<S> -> List<D>, IReadOnlyList<D>, etc.
+            if (Types.IsAnyList(sp.Type, out ITypeSymbol? sElem) && Types.IsAnyList(dp.Type, out ITypeSymbol? dElem))
             {
                 sb.Append("\t\tif (source.").Append(sp.Name).AppendLine(" is not null)");
                 sb.AppendLine("\t\t{");
-                sb.Append("\t\t\tvar list_").Append(dp.Name).Append(" = new List<").Append(Types.Fq(dElem!)).Append(">(source.").Append(sp.Name).AppendLine(".Count);");
+                sb.Append("\t\t\tvar list_").Append(dp.Name).Append(" = new List<").Append(Types.Fq(dElem!)).AppendLine(">();");
 
                 if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
                 {
-                    sb.Append("\t\t\tfor (int i2 = 0; i2 < source.").Append(sp.Name).AppendLine(".Count; i2++)");
-                    sb.Append("\t\t\t\tlist_").Append(dp.Name).Append(".Add(source.").Append(sp.Name).AppendLine("[i2]);");
+                    sb.Append("\t\t\tforeach (var item in source.").Append(sp.Name).AppendLine(")");
+                    sb.Append("\t\t\t\tlist_").Append(dp.Name).AppendLine(".Add(item);");
                 }
                 else
                 {
-                    sb.Append("\t\t\tfor (int i2 = 0; i2 < source.").Append(sp.Name).AppendLine(".Count; i2++)");
+                    sb.Append("\t\t\tforeach (var item in source.").Append(sp.Name).AppendLine(")");
                     sb.AppendLine("\t\t\t{");
-                    sb.Append("\t\t\t\tvar item = source.").Append(sp.Name).AppendLine("[i2];");
                     string? assn = Assignment.TryBuild("item", sElem!, dElem!, enums);
                     
                     // Special case: string -> Guid uses TryParse
@@ -140,6 +139,40 @@ internal static class MapperFile
                 sb.Append("\t\t\ttarget.").Append(dp.Name).Append(" = list_").Append(dp.Name).AppendLine(";");
                 sb.AppendLine("\t\t}");
                 continue;
+            }
+
+            // Dictionary<K,V1> -> Dictionary<K,V2> with value transformation
+            if (Types.IsAnyDictionary(sp.Type, out ITypeSymbol? sKey, out ITypeSymbol? sValue) && 
+                Types.IsAnyDictionary(dp.Type, out ITypeSymbol? dKey, out ITypeSymbol? dValue))
+            {
+                // Keys must match, but values can be different
+                if (SymbolEqualityComparer.Default.Equals(sKey, dKey))
+                {
+                    sb.Append("\t\tif (source.").Append(sp.Name).AppendLine(" is not null)");
+                    sb.AppendLine("\t\t{");
+                    sb.Append("\t\t\tvar dict_").Append(dp.Name).Append(" = new Dictionary<").Append(Types.Fq(dKey!)).Append(", ").Append(Types.Fq(dValue!)).AppendLine(">();");
+
+                    if (SymbolEqualityComparer.Default.Equals(sValue, dValue))
+                    {
+                        sb.Append("\t\t\tforeach (var kv in source.").Append(sp.Name).AppendLine(")");
+                        sb.Append("\t\t\t\tdict_").Append(dp.Name).AppendLine("[kv.Key] = kv.Value;");
+                    }
+                    else
+                    {
+                        sb.Append("\t\t\tforeach (var kv in source.").Append(sp.Name).AppendLine(")");
+                        sb.AppendLine("\t\t\t{");
+                        string? assn = Assignment.TryBuild("kv.Value", sValue!, dValue!, enums);
+                        if (assn is not null)
+                        {
+                            sb.Append("\t\t\t\tdict_").Append(dp.Name).Append("[kv.Key] = ").Append(assn).AppendLine(";");
+                        }
+                        sb.AppendLine("\t\t\t}");
+                    }
+
+                    sb.Append("\t\t\ttarget.").Append(dp.Name).Append(" = dict_").Append(dp.Name).AppendLine(";");
+                    sb.AppendLine("\t\t}");
+                    continue;
+                }
             }
 
             string? rhs = Assignment.TryBuild("source." + sp.Name, sp.Type, dp.Type, enums);

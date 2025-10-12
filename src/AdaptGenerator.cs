@@ -24,6 +24,13 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             .Select(static (s, _) => s!)
             .Collect();
 
+        IncrementalValueProvider<ImmutableArray<INamedTypeSymbol>> interfaceSymbols = context.SyntaxProvider.CreateSyntaxProvider(
+            static (node, _) => node is InterfaceDeclarationSyntax,
+            static (ctx, _) => ctx.SemanticModel.GetDeclaredSymbol((InterfaceDeclarationSyntax)ctx.Node) as INamedTypeSymbol)
+            .Where(static s => s is not null && s.TypeKind == TypeKind.Interface)
+            .Select(static (s, _) => s!)
+            .Collect();
+
         IncrementalValueProvider<ImmutableArray<INamedTypeSymbol>> enumSymbols = context.SyntaxProvider.CreateSyntaxProvider(
             static (node, _) => node is EnumDeclarationSyntax,
             static (ctx, _) => ctx.SemanticModel.GetDeclaredSymbol((EnumDeclarationSyntax)ctx.Node) as INamedTypeSymbol)
@@ -31,18 +38,19 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             .Select(static (s, _) => s!)
             .Collect();
 
-        IncrementalValueProvider<(((Compilation Left, ImmutableArray<INamedTypeSymbol> Right) Left, ImmutableArray<INamedTypeSymbol> Right) Left, ImmutableArray<INamedTypeSymbol> Right)> all = context.CompilationProvider.Combine(classSymbols).Combine(structSymbols).Combine(enumSymbols);
+        IncrementalValueProvider<((((Compilation Left, ImmutableArray<INamedTypeSymbol> Right) Left, ImmutableArray<INamedTypeSymbol> Right) Left, ImmutableArray<INamedTypeSymbol> Right) Left, ImmutableArray<INamedTypeSymbol> Right)> all = context.CompilationProvider.Combine(classSymbols).Combine(structSymbols).Combine(interfaceSymbols).Combine(enumSymbols);
 
         context.RegisterSourceOutput(all, static (spc, pack) =>
         {
-            Compilation? compilation = pack.Left.Left.Left;
-            ImmutableArray<INamedTypeSymbol> classes = pack.Left.Left.Right;
-            ImmutableArray<INamedTypeSymbol> structs = pack.Left.Right;
+            Compilation? compilation = pack.Left.Left.Left.Left;
+            ImmutableArray<INamedTypeSymbol> classes = pack.Left.Left.Left.Right;
+            ImmutableArray<INamedTypeSymbol> structs = pack.Left.Left.Right;
+            ImmutableArray<INamedTypeSymbol> interfaces = pack.Left.Right;
             ImmutableArray<INamedTypeSymbol> enums = pack.Right;
 
             try
             {
-                Emitter.Generate(spc, compilation, classes, structs, enums);
+                Emitter.Generate(spc, compilation, classes, structs, interfaces, enums);
             }
             catch (System.Exception ex)
             {

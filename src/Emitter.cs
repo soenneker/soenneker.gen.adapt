@@ -20,14 +20,16 @@ internal static class Emitter
         Compilation compilation,
         ImmutableArray<INamedTypeSymbol> classDecls,
         ImmutableArray<INamedTypeSymbol> structDecls,
+        ImmutableArray<INamedTypeSymbol> interfaceDecls,
         ImmutableArray<INamedTypeSymbol> enumDecls)
     {
-        // Filter to only user-defined symbols in this compilation’s assembly and public
+        // Filter to only user-defined symbols in this compilation's assembly and public
         IAssemblySymbol userAsm = compilation.Assembly;
 
-        var userTypes = new List<INamedTypeSymbol>(classDecls.Length + structDecls.Length);
+        var userTypes = new List<INamedTypeSymbol>(classDecls.Length + structDecls.Length + interfaceDecls.Length);
         AddUserTypes(userAsm, classDecls, userTypes);
         AddUserTypes(userAsm, structDecls, userTypes);
+        AddUserTypes(userAsm, interfaceDecls, userTypes);
 
         var enums = new List<INamedTypeSymbol>(enumDecls.Length);
         for (int i = 0; i < enumDecls.Length; i++)
@@ -150,6 +152,10 @@ internal static class Emitter
         if (type.TypeKind == TypeKind.Struct)
             return true;
 
+        // Interfaces cannot be instantiated, so they cannot be destination types
+        if (type.TypeKind == TypeKind.Interface)
+            return false;
+
         foreach (IMethodSymbol? ctor in type.InstanceConstructors)
             if (ctor.Parameters.Length == 0 && ctor.DeclaredAccessibility == Accessibility.Public)
                 return true;
@@ -168,7 +174,12 @@ internal static class Emitter
             if (!src.TryGet(d.Name, out Prop s))
                 continue;
 
-            if (Types.IsList(s.Type, out _) && Types.IsList(d.Type, out _))
+            if (Types.IsAnyList(s.Type, out _) && Types.IsAnyList(d.Type, out _))
+                return true;
+
+            if (Types.IsAnyDictionary(s.Type, out ITypeSymbol? sKey, out _) && 
+                Types.IsAnyDictionary(d.Type, out ITypeSymbol? dKey, out _) &&
+                SymbolEqualityComparer.Default.Equals(sKey, dKey))
                 return true;
 
             if (Assignment.CanAssign(s.Type, d.Type, enums))

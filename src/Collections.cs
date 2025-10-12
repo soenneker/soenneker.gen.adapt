@@ -51,6 +51,36 @@ internal static class Collections
         sb.AppendLine("\t\tforeach (var kv in source) result[kv.Key] = kv.Value;");
         sb.AppendLine("\t\treturn result;");
         sb.AppendLine("\t}");
+        sb.AppendLine();
+
+        // IReadOnlyDictionary<TKey,TValue>
+        sb.AppendLine("\tpublic static IReadOnlyDictionary<TKey, TValue> Adapt<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> source)");
+        sb.AppendLine("\t{");
+        sb.AppendLine("\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
+        sb.AppendLine("\t\tvar result = new Dictionary<TKey, TValue>(source.Count);");
+        sb.AppendLine("\t\tforeach (var kv in source) result[kv.Key] = kv.Value;");
+        sb.AppendLine("\t\treturn result;");
+        sb.AppendLine("\t}");
+        sb.AppendLine();
+
+        // IReadOnlyList<T>
+        sb.AppendLine("\tpublic static IReadOnlyList<TElement> Adapt<TElement>(this IReadOnlyList<TElement> source)");
+        sb.AppendLine("\t{");
+        sb.AppendLine("\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
+        sb.AppendLine("\t\tvar result = new List<TElement>(source.Count);");
+        sb.AppendLine("\t\tfor (int i = 0; i < source.Count; i++) result.Add(source[i]);");
+        sb.AppendLine("\t\treturn result;");
+        sb.AppendLine("\t}");
+        sb.AppendLine();
+
+        // IReadOnlyCollection<T>
+        sb.AppendLine("\tpublic static IReadOnlyCollection<TElement> Adapt<TElement>(this IReadOnlyCollection<TElement> source)");
+        sb.AppendLine("\t{");
+        sb.AppendLine("\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
+        sb.AppendLine("\t\tvar result = new List<TElement>(source.Count);");
+        sb.AppendLine("\t\tforeach (var item in source) result.Add(item);");
+        sb.AppendLine("\t\treturn result;");
+        sb.AppendLine("\t}");
         sb.AppendLine("}");
     }
 }

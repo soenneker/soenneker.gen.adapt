@@ -9,12 +9,16 @@ internal static class Assignment
     /// <summary>Return C# expression for assignment or null if unsupported.</summary>
     public static string? TryBuild(string srcExpr, ITypeSymbol srcType, ITypeSymbol dstType, List<INamedTypeSymbol> enums)
     {
-        // Same type (lists handled in mapper)
+        // Same type (lists and dicts handled in mapper)
         if (SymbolEqualityComparer.Default.Equals(srcType, dstType))
             return srcExpr;
 
-        // List<S> -> List<D> handled by mapper
-        if (Types.IsList(srcType, out _) && Types.IsList(dstType, out _))
+        // List-like collections handled by mapper
+        if (Types.IsAnyList(srcType, out _) && Types.IsAnyList(dstType, out _))
+            return null;
+
+        // Dictionary-like collections handled by mapper
+        if (Types.IsAnyDictionary(srcType, out _, out _) && Types.IsAnyDictionary(dstType, out _, out _))
             return null;
 
         // ===== Primitive / enum / common BCL conversions FIRST =====
@@ -59,8 +63,8 @@ internal static class Assignment
         // ===== User-defined type -> user-defined type (LAST) =====
         if (srcType is INamedTypeSymbol sType &&
             dstType is INamedTypeSymbol dType &&
-            (sType.TypeKind == TypeKind.Class || sType.TypeKind == TypeKind.Struct) &&
-            (dType.TypeKind == TypeKind.Class || dType.TypeKind == TypeKind.Struct) &&
+            (sType.TypeKind == TypeKind.Class || sType.TypeKind == TypeKind.Struct || sType.TypeKind == TypeKind.Interface) &&
+            (dType.TypeKind == TypeKind.Class || dType.TypeKind == TypeKind.Struct) && // destination can't be interface
             !Types.IsFrameworkType(sType) && !Types.IsFrameworkType(dType)) // block BCL maps like string->int, string->Guid, etc.
         {
             return "GenAdapt.Map_" + San(sType) + "_To_" + San(dType) + "(" + srcExpr + ")";
@@ -75,7 +79,10 @@ internal static class Assignment
         if (SymbolEqualityComparer.Default.Equals(srcType, dstType))
             return true;
 
-        if (Types.IsList(srcType, out _) && Types.IsList(dstType, out _))
+        if (Types.IsAnyList(srcType, out _) && Types.IsAnyList(dstType, out _))
+            return true;
+
+        if (Types.IsAnyDictionary(srcType, out _, out _) && Types.IsAnyDictionary(dstType, out _, out _))
             return true;
 
         if (srcType.TypeKind == TypeKind.Enum && (Types.IsString(dstType) || Types.IsInt(dstType)))
@@ -101,8 +108,8 @@ internal static class Assignment
 
         if (srcType is INamedTypeSymbol sType &&
             dstType is INamedTypeSymbol dType &&
-            (sType.TypeKind == TypeKind.Class || sType.TypeKind == TypeKind.Struct) &&
-            (dType.TypeKind == TypeKind.Class || dType.TypeKind == TypeKind.Struct) &&
+            (sType.TypeKind == TypeKind.Class || sType.TypeKind == TypeKind.Struct || sType.TypeKind == TypeKind.Interface) &&
+            (dType.TypeKind == TypeKind.Class || dType.TypeKind == TypeKind.Struct) && // destination can't be interface
             !Types.IsFrameworkType(sType) && !Types.IsFrameworkType(dType))
             return true;
 

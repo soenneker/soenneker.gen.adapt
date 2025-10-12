@@ -16,6 +16,79 @@ internal static class Types
         return false;
     }
 
+    public static bool IsIReadOnlyList(ITypeSymbol t, out ITypeSymbol? elem)
+    {
+        elem = null;
+        if (t is INamedTypeSymbol nt && nt.Name == "IReadOnlyList" && nt.TypeArguments.Length == 1)
+        {
+            elem = nt.TypeArguments[0];
+            return true;
+        }
+        return false;
+    }
+
+    public static bool IsIReadOnlyCollection(ITypeSymbol t, out ITypeSymbol? elem)
+    {
+        elem = null;
+        if (t is INamedTypeSymbol nt && nt.Name == "IReadOnlyCollection" && nt.TypeArguments.Length == 1)
+        {
+            elem = nt.TypeArguments[0];
+            return true;
+        }
+        return false;
+    }
+
+    public static bool IsAnyList(ITypeSymbol t, out ITypeSymbol? elem)
+    {
+        return IsList(t, out elem) || IsIReadOnlyList(t, out elem) || IsIReadOnlyCollection(t, out elem);
+    }
+
+    public static bool IsDictionary(ITypeSymbol t, out ITypeSymbol? key, out ITypeSymbol? value)
+    {
+        key = null;
+        value = null;
+        if (t is INamedTypeSymbol nt && nt.Name == "Dictionary" && nt.TypeArguments.Length == 2)
+        {
+            key = nt.TypeArguments[0];
+            value = nt.TypeArguments[1];
+            return true;
+        }
+        return false;
+    }
+
+    public static bool IsIDictionary(ITypeSymbol t, out ITypeSymbol? key, out ITypeSymbol? value)
+    {
+        key = null;
+        value = null;
+        if (t is INamedTypeSymbol nt && nt.Name == "IDictionary" && nt.TypeArguments.Length == 2)
+        {
+            key = nt.TypeArguments[0];
+            value = nt.TypeArguments[1];
+            return true;
+        }
+        return false;
+    }
+
+    public static bool IsIReadOnlyDictionary(ITypeSymbol t, out ITypeSymbol? key, out ITypeSymbol? value)
+    {
+        key = null;
+        value = null;
+        if (t is INamedTypeSymbol nt && nt.Name == "IReadOnlyDictionary" && nt.TypeArguments.Length == 2)
+        {
+            key = nt.TypeArguments[0];
+            value = nt.TypeArguments[1];
+            return true;
+        }
+        return false;
+    }
+
+    public static bool IsAnyDictionary(ITypeSymbol t, out ITypeSymbol? key, out ITypeSymbol? value)
+    {
+        return IsDictionary(t, out key, out value) || 
+               IsIDictionary(t, out key, out value) || 
+               IsIReadOnlyDictionary(t, out key, out value);
+    }
+
     public static bool IsString(ITypeSymbol t) => t.SpecialType == SpecialType.System_String;
     public static bool IsInt(ITypeSymbol t) => t.SpecialType == SpecialType.System_Int32;
 
