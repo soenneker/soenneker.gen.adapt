@@ -14,7 +14,7 @@ public sealed class InterfaceTests : UnitTest
     [Fact]
     public void Adapt_ClassToImplementation_WithInterfaceInMiddle_ShouldMapProperties()
     {
-        // Arrange - both PersonClass and PersonImplementation implement same interface properties
+        // Arrange
         var source = new PersonClass
         {
             FirstName = "John",
@@ -35,7 +35,7 @@ public sealed class InterfaceTests : UnitTest
     [Fact]
     public void Adapt_ImplementationToAnotherImplementation_ShouldMapProperties()
     {
-        // Arrange - both classes share interface-like properties
+        // Arrange
         var source = new PersonImplementation
         {
             FirstName = "Jane",
@@ -164,9 +164,6 @@ public sealed class InterfaceTests : UnitTest
         // Assert
         result.Should().NotBeNull();
         result.OrderId.Should().Be("ORDER-001");
-        // Note: Interface-typed properties (Product, Customer) cannot be automatically 
-        // mapped by the generator as it doesn't know which concrete type to instantiate.
-        // This is a known limitation when mapping to interface-typed properties.
     }
 
     [Fact]
@@ -196,7 +193,6 @@ public sealed class InterfaceTests : UnitTest
         // Assert
         result.Should().NotBeNull();
         result.OrderId.Should().Be("ORDER-002");
-        // Note: Interface-typed properties cannot be automatically mapped
     }
 
     [Fact]
@@ -282,7 +278,7 @@ public sealed class InterfaceTests : UnitTest
             Age = 30
         };
 
-        // Act - Map to implementation and back
+        // Act
         var implementation = sourceClass.Adapt<PersonImplementation>();
         var backToClass = implementation.Adapt<PersonClass>();
 
@@ -296,7 +292,7 @@ public sealed class InterfaceTests : UnitTest
     [Fact]
     public void Adapt_DirectlyFromInterface_ShouldWork()
     {
-        // Arrange - This simulates the scenario where you have an interface reference
+        // Arrange
         IPersonInterface person = new PersonImplementation
         {
             FirstName = "Jane",
@@ -304,7 +300,7 @@ public sealed class InterfaceTests : UnitTest
             Age = 25
         };
 
-        // Act - Call .Adapt<T>() directly on the interface reference
+        // Act
         var result = person.Adapt<PersonClass>();
 
         // Assert
@@ -325,7 +321,7 @@ public sealed class InterfaceTests : UnitTest
             Price = 99.99m
         };
 
-        // Act - This is the scenario from your code example
+        // Act
         var document = product.Adapt<ProductClass>();
 
         // Assert

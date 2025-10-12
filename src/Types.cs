@@ -170,7 +170,6 @@ internal static class Types
     {
         if (t is INamedTypeSymbol nt)
         {
-            // Compare fully-qualified name to avoid alias issues
             string fq = nt.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
             return fq == "global::System.Guid";
         }
@@ -291,7 +290,6 @@ internal static class Types
     {
         string? ns = t.ContainingNamespace?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         if (ns is null) return false;
-        // Treat anything under global::System.* as framework (blocks user-type mapping for BCL)
         return ns == "global::System" || ns.StartsWith("global::System.");
     }
 }

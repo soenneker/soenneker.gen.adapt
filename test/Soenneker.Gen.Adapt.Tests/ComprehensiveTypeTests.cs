@@ -2,7 +2,6 @@ using Soenneker.Tests.Unit;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Xunit;
 using AwesomeAssertions;
 
@@ -87,8 +86,8 @@ public sealed class ComprehensiveTypeTests : UnitTest
     public void Adapt_AllPrimitiveTypes_ShouldMapCorrectly()
     {
         // Arrange
-        var now = DateTimeOffset.UtcNow;
-        var span = TimeSpan.FromHours(5);
+        DateTimeOffset now = DateTimeOffset.UtcNow;
+        TimeSpan span = TimeSpan.FromHours(5);
         
         var source = new AllPrimitivesSource
         {

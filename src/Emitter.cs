@@ -1,6 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text;
@@ -10,10 +9,7 @@ namespace Soenneker.Gen.Adapt;
 internal static class Emitter
 {
     /// <summary>
-    /// Entry point from the incremental pipeline. Emits:
-    /// - Adapt.EnumParsers.g.cs   (all enum parse helpers)
-    /// - Adapt.Mapper.{Source}.g.cs (one per source type: mapping methods + Adapt&lt;TDest&gt; dispatcher)
-    /// - Adapt.Collections.g.cs   (generic collection adapters)
+    /// Generates mapping code: enum parsers, per-source mappers, and collection adapters.
     /// </summary>
     public static void Generate(
         SourceProductionContext context,
@@ -44,7 +40,7 @@ internal static class Emitter
         for (int i = 0; i < userTypes.Count; i++) nameCache.Prime(userTypes[i]);
         for (int i = 0; i < enums.Count; i++) nameCache.Prime(enums[i]);
 
-        // === A) Enum parsers (single small file) ===
+        // Enum parsers
         {
             var sb = new StringBuilder(2048);
             EnumParsers.Emit(sb, enums, nameCache);
@@ -54,7 +50,7 @@ internal static class Emitter
         // Build candidate mapping graph (src -> [dst...]) using pre-indexed props
         Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map = BuildMappingGraph(userTypes, enums);
 
-        // === B) Per-source mapper files ===
+        // Per-source mapper files
         foreach (KeyValuePair<INamedTypeSymbol, List<INamedTypeSymbol>> kv in map)
         {
             INamedTypeSymbol? source = kv.Key;
@@ -74,7 +70,7 @@ internal static class Emitter
             Add(context, fileName, sb);
         }
 
-        // === C) Collections (single small file) ===
+        // Collections
         {
             var sb = new StringBuilder(2048);
             Collections.Emit(sb);
@@ -82,7 +78,6 @@ internal static class Emitter
         }
     }
 
-    // ---------- helpers ----------
 
     private static void AddUserTypes(
         IAssemblySymbol userAsm,
@@ -104,7 +99,7 @@ internal static class Emitter
         t.DeclaredAccessibility == Accessibility.Public;
 
     /// <summary>
-    /// Builds a mapping graph based on your rules, with a property index per type to avoid repeated GetMembers allocation.
+    /// Builds mapping graph with pre-indexed properties per type.
     /// </summary>
     private static Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> BuildMappingGraph(
         List<INamedTypeSymbol> types,
@@ -152,7 +147,6 @@ internal static class Emitter
         if (type.TypeKind == TypeKind.Struct)
             return true;
 
-        // Interfaces cannot be instantiated, so they cannot be destination types
         if (type.TypeKind == TypeKind.Interface)
             return false;
 
@@ -164,7 +158,7 @@ internal static class Emitter
     }
 
     /// <summary>
-    /// Uses the same mapping rules as emission, but only checks feasibility.
+    /// Checks mapping feasibility using same rules as emission.
     /// </summary>
     private static bool HasAnyMappableProperty(TypeProps src, TypeProps dst, List<INamedTypeSymbol> enums)
     {
@@ -183,7 +177,7 @@ internal static class Emitter
                 return true;
 
             if (Assignment.CanAssign(s.Type, d.Type, enums))
-                return true;   // ✅ this covers int → enum
+                return true;
         }
         return false;
     }

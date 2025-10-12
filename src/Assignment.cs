@@ -6,7 +6,7 @@ namespace Soenneker.Gen.Adapt;
 
 internal static class Assignment
 {
-    /// <summary>Return C# expression for assignment or null if unsupported.</summary>
+    /// <summary>Returns C# assignment expression or null if unsupported.</summary>
     public static string? TryBuild(string srcExpr, ITypeSymbol srcType, ITypeSymbol dstType, List<INamedTypeSymbol> enums)
     {
         // Same type (lists and dicts handled in mapper)
@@ -20,8 +20,6 @@ internal static class Assignment
         // Dictionary-like collections handled by mapper
         if (Types.IsAnyDictionary(srcType, out _, out _) && Types.IsAnyDictionary(dstType, out _, out _))
             return null;
-
-        // ===== Primitive / enum / common BCL conversions FIRST =====
 
         // enum -> string
         if (srcType.TypeKind == TypeKind.Enum && Types.IsString(dstType))
@@ -60,20 +58,20 @@ internal static class Assignment
         if (Types.IsInt(srcType) && dstType is INamedTypeSymbol cls2 && Types.HasStaticFromInt(cls2))
             return Types.Fq(cls2) + ".From(" + srcExpr + ")";
 
-        // ===== User-defined type -> user-defined type (LAST) =====
+        // User-defined type -> user-defined type (call public .Adapt<T>() extension)
         if (srcType is INamedTypeSymbol sType &&
             dstType is INamedTypeSymbol dType &&
             (sType.TypeKind == TypeKind.Class || sType.TypeKind == TypeKind.Struct || sType.TypeKind == TypeKind.Interface) &&
-            (dType.TypeKind == TypeKind.Class || dType.TypeKind == TypeKind.Struct) && // destination can't be interface
-            !Types.IsFrameworkType(sType) && !Types.IsFrameworkType(dType)) // block BCL maps like string->int, string->Guid, etc.
+            (dType.TypeKind == TypeKind.Class || dType.TypeKind == TypeKind.Struct) &&
+            !Types.IsFrameworkType(sType) && !Types.IsFrameworkType(dType))
         {
-            return "GenAdapt.Map_" + San(sType) + "_To_" + San(dType) + "(" + srcExpr + ")";
+            return srcExpr + ".Adapt<" + Types.Fq(dType) + ">()";
         }
 
         return null;
     }
 
-    /// <summary>Fast feasibility check mirroring TryBuild (no expression emitted).</summary>
+    /// <summary>Checks assignment feasibility without emitting code.</summary>
     public static bool CanAssign(ITypeSymbol srcType, ITypeSymbol dstType, List<INamedTypeSymbol> enums)
     {
         if (SymbolEqualityComparer.Default.Equals(srcType, dstType))
@@ -109,17 +107,16 @@ internal static class Assignment
         if (srcType is INamedTypeSymbol sType &&
             dstType is INamedTypeSymbol dType &&
             (sType.TypeKind == TypeKind.Class || sType.TypeKind == TypeKind.Struct || sType.TypeKind == TypeKind.Interface) &&
-            (dType.TypeKind == TypeKind.Class || dType.TypeKind == TypeKind.Struct) && // destination can't be interface
+            (dType.TypeKind == TypeKind.Class || dType.TypeKind == TypeKind.Struct) &&
             !Types.IsFrameworkType(sType) && !Types.IsFrameworkType(dType))
             return true;
 
         return false;
     }
 
-    // --- Identifier sanitizer for method names (no punctuation, ever) ---
     private static string San(INamedTypeSymbol sym)
     {
-        string s = sym.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat); // includes "global::"
+        string s = sym.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var sb = new StringBuilder(s.Length);
         for (int i = 0; i < s.Length; i++)
         {
@@ -129,7 +126,7 @@ internal static class Assignment
                 (ch >= '0' && ch <= '9'))
                 sb.Append(ch);
             else
-                sb.Append('_'); // covers ':', '<', '>', '.', ',', ' ', '`', '[', ']'
+                sb.Append('_');
         }
         return sb.ToString();
     }

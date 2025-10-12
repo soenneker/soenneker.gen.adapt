@@ -11,7 +11,6 @@ internal sealed class NameCache
 
     public NameCache(int capacity)
     {
-        // Pre-size via ctor; works on older TFMs.
         _fq = new Dictionary<ISymbol, string>(capacity, SymbolEqualityComparer.Default);
         _san = new Dictionary<ISymbol, string>(capacity, SymbolEqualityComparer.Default);
     }
@@ -48,7 +47,6 @@ internal sealed class NameCache
         for (int i = 0; i < s.Length; i++)
         {
             char ch = s[i];
-            // Allow only [A-Za-z0-9]; everything else becomes '_'
             if ((ch >= 'a' && ch <= 'z') ||
                 (ch >= 'A' && ch <= 'Z') ||
                 (ch >= '0' && ch <= '9'))

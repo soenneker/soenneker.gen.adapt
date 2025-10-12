@@ -25,54 +25,88 @@ internal static class MapperFile
         sb.AppendLine("public static partial class GenAdapt");
         sb.AppendLine("{");
 
-        // Private mapping methods
-        for (int i = 0; i < destinations.Count; i++)
-            EmitMappingMethod(sb, source, destinations[i], enums, names);
-
-        // Static readonly delegate fields to avoid allocations
-        for (int i = 0; i < destinations.Count; i++)
+        if (destinations.Count == 1)
         {
-            INamedTypeSymbol? d = destinations[i];
+            // Single destination: inline everything directly
+            INamedTypeSymbol d = destinations[0];
             string dFq = names.FullyQualified(d);
-            string dSan = names.Sanitized(d);
             
-            sb.Append("\tprivate static readonly Func<").Append(srcFq).Append(", ").Append(dFq).Append("> _map_")
-              .Append(srcSan).Append("_To_").Append(dSan).Append(" = Map_").Append(srcSan).Append("_To_").Append(dSan).AppendLine(";");
+            sb.AppendLine("\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
+            sb.Append("\tpublic static ").Append(dFq).Append(" Adapt(this ").Append(srcFq).AppendLine(" source)");
+            sb.AppendLine("\t{");
+            EmitMappingBody(sb, source, d, enums, names, "\t\t");
+            sb.AppendLine("\t}");
+            sb.AppendLine();
+            
+            // Generic overload (for explicit .Adapt<TDest>() calls)
+            sb.AppendLine("\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
+            sb.Append("\tpublic static TDest Adapt<TDest>(this ").Append(srcFq).AppendLine(" source)");
+            sb.AppendLine("\t{");
+            sb.AppendLine("\t\treturn (TDest)(object)source.Adapt();");
+            sb.AppendLine("\t}");
         }
-        sb.AppendLine();
-
-        // Cache + Dispatcher
-        sb.Append("\tprivate static class AdaptCache_").Append(srcSan).AppendLine("<TDest>");
-        sb.AppendLine("\t{");
-        sb.Append("\t\tpublic static readonly Func<").Append(srcFq).Append(", TDest> Invoke = BuildMapper();").AppendLine();
-        sb.AppendLine();
-        sb.Append("\t\tprivate static Func<").Append(srcFq).Append(", TDest> BuildMapper()").AppendLine();
-        sb.AppendLine("\t\t{");
-        sb.AppendLine("\t\t\tvar destType = typeof(TDest);");
-
-        for (int i = 0; i < destinations.Count; i++)
+        else
         {
-            INamedTypeSymbol? d = destinations[i];
-            string dFq = names.FullyQualified(d);
-            string dSan = names.Sanitized(d);
+            // Multiple destinations: emit private mapping methods + delegate cache
+            for (int i = 0; i < destinations.Count; i++)
+                EmitMappingMethod(sb, source, destinations[i], enums, names);
+            
+            // Static readonly delegate fields
+            for (int i = 0; i < destinations.Count; i++)
+            {
+                INamedTypeSymbol? d = destinations[i];
+                string dFq = names.FullyQualified(d);
+                string dSan = names.Sanitized(d);
+                
+                sb.Append("\tprivate static readonly Func<").Append(srcFq).Append(", ").Append(dFq).Append("> _map_")
+                  .Append(srcSan).Append("_To_").Append(dSan).Append(" = Map_").Append(srcSan).Append("_To_").Append(dSan).AppendLine(";");
+            }
+            sb.AppendLine();
 
-            sb.Append("\t\t\tif (destType == typeof(").Append(dFq).AppendLine("))");
-            sb.Append("\t\t\t\treturn (Func<").Append(srcFq).Append(", TDest>)(object)_map_")
-              .Append(srcSan).Append("_To_").Append(dSan).AppendLine(";");
+            sb.Append("\tprivate static class AdaptCache_").Append(srcSan).AppendLine("<TDest>");
+            sb.AppendLine("\t{");
+            sb.Append("\t\tpublic static readonly Func<").Append(srcFq).Append(", TDest> Invoke = BuildMapper();").AppendLine();
+            sb.AppendLine();
+            sb.Append("\t\tprivate static Func<").Append(srcFq).Append(", TDest> BuildMapper()").AppendLine();
+            sb.AppendLine("\t\t{");
+            sb.AppendLine("\t\t\tvar destType = typeof(TDest);");
+
+            for (int i = 0; i < destinations.Count; i++)
+            {
+                INamedTypeSymbol? d = destinations[i];
+                string dFq = names.FullyQualified(d);
+                string dSan = names.Sanitized(d);
+
+                sb.Append("\t\t\tif (destType == typeof(").Append(dFq).AppendLine("))");
+                sb.Append("\t\t\t\treturn (Func<").Append(srcFq).Append(", TDest>)(object)_map_")
+                  .Append(srcSan).Append("_To_").Append(dSan).AppendLine(";");
+            }
+
+            sb.AppendLine("\t\t\tthrow new NotSupportedException($\"Unsupported Adapt target type: {destType.FullName}\");");
+            sb.AppendLine("\t\t}");
+            sb.AppendLine("\t}");
+            sb.AppendLine();
+
+            sb.AppendLine("\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
+            sb.Append("\tpublic static TDest Adapt<TDest>(this ").Append(srcFq).AppendLine(" source)");
+            sb.AppendLine("\t{");
+            sb.Append("\t\treturn AdaptCache_").Append(srcSan).AppendLine("<TDest>.Invoke(source);");
+            sb.AppendLine("\t}");
         }
 
-        sb.AppendLine("\t\t\tthrow new NotSupportedException($\"Unsupported Adapt target type: {destType.FullName}\");");
-        sb.AppendLine("\t\t}");
-        sb.AppendLine("\t}");
-        sb.AppendLine();
-
-        // Public Adapt extension for this source
-        sb.AppendLine("\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
-        sb.Append("\tpublic static TDest Adapt<TDest>(this ").Append(srcFq).AppendLine(" source)");
-        sb.AppendLine("\t{");
-        sb.Append("\t\treturn AdaptCache_").Append(srcSan).AppendLine("<TDest>.Invoke(source);");
-        sb.AppendLine("\t}");
         sb.AppendLine("}");
+    }
+
+    private static bool IsBaseClass(INamedTypeSymbol derived, INamedTypeSymbol potentialBase)
+    {
+        INamedTypeSymbol? current = derived.BaseType;
+        while (current is not null)
+        {
+            if (SymbolEqualityComparer.Default.Equals(current, potentialBase))
+                return true;
+            current = current.BaseType;
+        }
+        return false;
     }
 
     private static void EmitMappingMethod(
@@ -82,7 +116,6 @@ internal static class MapperFile
         List<INamedTypeSymbol> enums,
         NameCache names)
     {
-        // collect props once
         var srcProps = TypeProps.Build(source);
         var dstProps = TypeProps.Build(dest);
 
@@ -96,121 +129,140 @@ internal static class MapperFile
 
         sb.Append("\tprivate static ").Append(dstFq).Append(" Map_").Append(srcSan).Append("_To_").Append(dstSan).Append('(').Append(srcFq).AppendLine(" source)");
         sb.AppendLine("\t{");
-        sb.Append("\t\tvar target = new ").Append(dstFq).AppendLine("();");
+        
+        EmitMappingBody(sb, source, dest, enums, names, "\t\t");
+        
+        sb.AppendLine("\t}");
+        sb.AppendLine();
+    }
 
-        // for each destination property, see if a matching source property exists and emit assignment
+    private static void EmitMappingBody(
+        StringBuilder sb,
+        INamedTypeSymbol source,
+        INamedTypeSymbol dest,
+        List<INamedTypeSymbol> enums,
+        NameCache names,
+        string indent)
+    {
+        var srcProps = TypeProps.Build(source);
+        var dstProps = TypeProps.Build(dest);
+        string dstFq = names.FullyQualified(dest);
+
+        sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("();");
+
         for (int i = 0; i < dstProps.Settable.Count; i++)
         {
             Prop dp = dstProps.Settable[i];
             if (!srcProps.TryGet(dp.Name, out Prop sp))
                 continue;
 
-            // List-like collections: List<S>, IReadOnlyList<S>, arrays, etc. -> List<D>, arrays, etc.
             if (Types.IsAnyList(sp.Type, out ITypeSymbol? sElem) && Types.IsAnyList(dp.Type, out ITypeSymbol? dElem))
             {
-                sb.Append("\t\tif (source.").Append(sp.Name).AppendLine(" is not null)");
-                sb.AppendLine("\t\t{");
+                sb.Append(indent).Append("if (source.").Append(sp.Name).AppendLine(" is not null)");
+                sb.Append(indent).AppendLine("{");
                 
-                // Check destination type for special handling
                 bool destIsArray = Types.IsArray(dp.Type, out _);
                 bool destIsHashSet = Types.IsHashSet(dp.Type, out _) || Types.IsISet(dp.Type, out _);
                 
-                sb.Append("\t\t\tvar list_").Append(dp.Name).Append(" = new List<").Append(Types.Fq(dElem!)).AppendLine(">();");
+                sb.Append(indent).Append("\tvar list_").Append(dp.Name).Append(" = new List<").Append(Types.Fq(dElem!)).AppendLine(">();");
 
                 if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
                 {
-                    sb.Append("\t\t\tforeach (var item in source.").Append(sp.Name).AppendLine(")");
-                    sb.Append("\t\t\t\tlist_").Append(dp.Name).AppendLine(".Add(item);");
+                    sb.Append(indent).Append("\tforeach (var item in source.").Append(sp.Name).AppendLine(")");
+                    sb.Append(indent).Append("\t\tlist_").Append(dp.Name).AppendLine(".Add(item);");
                 }
                 else
                 {
-                    sb.Append("\t\t\tforeach (var item in source.").Append(sp.Name).AppendLine(")");
-                    sb.AppendLine("\t\t\t{");
+                    sb.Append(indent).Append("\tforeach (var item in source.").Append(sp.Name).AppendLine(")");
+                    sb.Append(indent).AppendLine("\t{");
                     string? assn = Assignment.TryBuild("item", sElem!, dElem!, enums);
                     
-                    // Special case: string -> Guid uses TryParse
                     if (assn is null && Types.IsString(sElem!) && Types.IsGuid(dElem!))
                     {
-                        sb.AppendLine("\t\t\t\tif (global::System.Guid.TryParse(item, out var g))");
-                        sb.Append("\t\t\t\t\tlist_").Append(dp.Name).AppendLine(".Add(g);");
+                        sb.Append(indent).AppendLine("\t\tif (global::System.Guid.TryParse(item, out var g))");
+                        sb.Append(indent).Append("\t\t\tlist_").Append(dp.Name).AppendLine(".Add(g);");
                     }
                     else
                     {
-                        sb.Append("\t\t\t\tlist_").Append(dp.Name).Append(".Add(").Append(assn ?? "item").AppendLine(");");
+                        sb.Append(indent).Append("\t\tlist_").Append(dp.Name).Append(".Add(").Append(assn ?? "item").AppendLine(");");
                     }
-                    sb.AppendLine("\t\t\t}");
+                    sb.Append(indent).AppendLine("\t}");
                 }
 
-                // Convert to appropriate destination type
                 if (destIsArray)
                 {
-                    sb.Append("\t\t\ttarget.").Append(dp.Name).Append(" = list_").Append(dp.Name).AppendLine(".ToArray();");
+                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = list_").Append(dp.Name).AppendLine(".ToArray();");
                 }
                 else if (destIsHashSet)
                 {
-                    sb.Append("\t\t\ttarget.").Append(dp.Name).Append(" = new HashSet<").Append(Types.Fq(dElem!)).Append(">(list_").Append(dp.Name).AppendLine(");");
+                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = new HashSet<").Append(Types.Fq(dElem!)).Append(">(list_").Append(dp.Name).AppendLine(");");
                 }
                 else
                 {
-                    sb.Append("\t\t\ttarget.").Append(dp.Name).Append(" = list_").Append(dp.Name).AppendLine(";");
+                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = list_").Append(dp.Name).AppendLine(";");
                 }
                 
-                sb.AppendLine("\t\t}");
+                sb.Append(indent).AppendLine("}");
                 continue;
             }
 
-            // Dictionary<K,V1> -> Dictionary<K,V2> with value transformation
             if (Types.IsAnyDictionary(sp.Type, out ITypeSymbol? sKey, out ITypeSymbol? sValue) && 
                 Types.IsAnyDictionary(dp.Type, out ITypeSymbol? dKey, out ITypeSymbol? dValue))
             {
-                // Keys must match, but values can be different
                 if (SymbolEqualityComparer.Default.Equals(sKey, dKey))
                 {
-                    sb.Append("\t\tif (source.").Append(sp.Name).AppendLine(" is not null)");
-                    sb.AppendLine("\t\t{");
-                    sb.Append("\t\t\tvar dict_").Append(dp.Name).Append(" = new Dictionary<").Append(Types.Fq(dKey!)).Append(", ").Append(Types.Fq(dValue!)).AppendLine(">();");
-
-                    if (SymbolEqualityComparer.Default.Equals(sValue, dValue))
+                    // Check if values are same type or source is assignable to dest (upcast)
+                    bool sameTypes = SymbolEqualityComparer.Default.Equals(sValue, dValue);
+                    bool isAssignable = !sameTypes && sValue is INamedTypeSymbol sNamed && dValue is INamedTypeSymbol dNamed &&
+                                       (sNamed.AllInterfaces.Contains(dNamed, SymbolEqualityComparer.Default) ||
+                                        IsBaseClass(sNamed, dNamed));
+                    
+                    if (sameTypes || isAssignable)
                     {
-                        sb.Append("\t\t\tforeach (var kv in source.").Append(sp.Name).AppendLine(")");
-                        sb.Append("\t\t\t\tdict_").Append(dp.Name).AppendLine("[kv.Key] = kv.Value;");
+                        sb.Append(indent).Append("if (source.").Append(sp.Name).AppendLine(" is not null)");
+                        sb.Append(indent).AppendLine("{");
+                        sb.Append(indent).Append("\tvar dict_").Append(dp.Name).Append(" = new Dictionary<").Append(Types.Fq(dKey!)).Append(", ").Append(Types.Fq(dValue!)).AppendLine(">();");
+                        sb.Append(indent).Append("\tforeach (var kv in source.").Append(sp.Name).AppendLine(")");
+                        sb.Append(indent).Append("\t\tdict_").Append(dp.Name).AppendLine("[kv.Key] = kv.Value;");
+                        sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = dict_").Append(dp.Name).AppendLine(";");
+                        sb.Append(indent).AppendLine("}");
+                        continue;
                     }
                     else
                     {
-                        sb.Append("\t\t\tforeach (var kv in source.").Append(sp.Name).AppendLine(")");
-                        sb.AppendLine("\t\t\t{");
                         string? assn = Assignment.TryBuild("kv.Value", sValue!, dValue!, enums);
                         if (assn is not null)
                         {
-                            sb.Append("\t\t\t\tdict_").Append(dp.Name).Append("[kv.Key] = ").Append(assn).AppendLine(";");
+                            sb.Append(indent).Append("if (source.").Append(sp.Name).AppendLine(" is not null)");
+                            sb.Append(indent).AppendLine("{");
+                            sb.Append(indent).Append("\tvar dict_").Append(dp.Name).Append(" = new Dictionary<").Append(Types.Fq(dKey!)).Append(", ").Append(Types.Fq(dValue!)).AppendLine(">();");
+                            sb.Append(indent).Append("\tforeach (var kv in source.").Append(sp.Name).AppendLine(")");
+                            sb.Append(indent).AppendLine("\t{");
+                            sb.Append(indent).Append("\t\tdict_").Append(dp.Name).Append("[kv.Key] = ").Append(assn).AppendLine(";");
+                            sb.Append(indent).AppendLine("\t}");
+                            sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = dict_").Append(dp.Name).AppendLine(";");
+                            sb.Append(indent).AppendLine("}");
+                            continue;
                         }
-                        sb.AppendLine("\t\t\t}");
                     }
-
-                    sb.Append("\t\t\ttarget.").Append(dp.Name).Append(" = dict_").Append(dp.Name).AppendLine(";");
-                    sb.AppendLine("\t\t}");
-                    continue;
                 }
             }
 
             string? rhs = Assignment.TryBuild("source." + sp.Name, sp.Type, dp.Type, enums);
             if (rhs is null)
             {
-                // Special case: string -> Guid uses TryParse
                 if (Types.IsString(sp.Type) && Types.IsGuid(dp.Type))
                 {
-                    sb.Append("\t\tif (global::System.Guid.TryParse(source.").Append(sp.Name).AppendLine(", out var g))");
-                    sb.Append("\t\t\ttarget.").Append(dp.Name).AppendLine(" = g;");
+                    sb.Append(indent).Append("if (global::System.Guid.TryParse(source.").Append(sp.Name).AppendLine(", out var g))");
+                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).AppendLine(" = g;");
                     continue;
                 }
                 continue;
             }
 
-            sb.Append("\t\ttarget.").Append(dp.Name).Append(" = ").Append(rhs).AppendLine(";");
+            sb.Append(indent).Append("target.").Append(dp.Name).Append(" = ").Append(rhs).AppendLine(";");
         }
 
-        sb.AppendLine("\t\treturn target;");
-        sb.AppendLine("\t}");
-        sb.AppendLine();
+        sb.Append(indent).AppendLine("return target;");
     }
 }
