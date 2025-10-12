@@ -1,6 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.CodeAnalysis.Operations;
 using System.Collections.Immutable;
 
 namespace Soenneker.Gen.Adapt;
