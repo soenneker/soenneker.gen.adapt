@@ -9,6 +9,10 @@
         <Platforms>AnyCPU</Platforms>
         <NoWarn>$(NoWarn);1591</NoWarn>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
+        <IncludeBuildOutput>false</IncludeBuildOutput>
+        <PackageType>Analyzer</PackageType>
+        <DevelopmentDependency>true</DevelopmentDependency>
+        <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     </PropertyGroup>
 
     <PropertyGroup>
@@ -33,17 +37,21 @@
         <RepositoryBranch>main</RepositoryBranch>
         <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
         <PublishRepositoryUrl>true</PublishRepositoryUrl>
-        <LangVersion>latest</LangVersion>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackageIcon>icon.png</PackageIcon>
         <ContinuousIntegrationBuild>true</ContinuousIntegrationBuild>
-        <DevelopmentDependency>true</DevelopmentDependency>
     </PropertyGroup>
 
     <ItemGroup>
         <None Include="..\README.md" Pack="true" PackagePath="\" />
         <None Include="..\LICENSE" Pack="true" PackagePath="\" />
         <None Include="..\icon.png" Pack="true" PackagePath="\" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <None Include="$(TargetPath)" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
+        <None Include="$(TargetDir)$(AssemblyName).pdb" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false"
+              Condition="Exists('$(TargetDir)$(AssemblyName).pdb')" />
     </ItemGroup>
 
     <ItemGroup>
