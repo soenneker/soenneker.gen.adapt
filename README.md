@@ -6,8 +6,6 @@
 
 A modern, high-performance C# source generator for compile-time object mapping; a zero-overhead replacement for AutoMapper, Mapperly, Mapster, etc.
 
-## Why Use This?
-
 - **Zero runtime cost** - All code is generated at compile time
 - **Type-safe** - Compiler errors instead of runtime failures
 - **IntelliSense support** - Full IDE support for generated methods
