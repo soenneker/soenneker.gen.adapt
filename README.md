@@ -39,7 +39,7 @@ var dto = new UserDto { Name = "John", Age = 30 };
 UserModel model = dto.Adapt<UserModel>(); // just one line!
 ```
 
-If the properties match by name and can be converted, it maps them.
+If the properties match by name and can be converted, it maps them. If for some reason the source generator cannot build the extension method, an Adapt() extension method will not be generated.
 
 ## What's being generated?
 
@@ -66,8 +66,6 @@ public static partial class GenAdapt
 - **Enums** - Bidirectional conversion between enum ↔ string, enum ↔ int
 - **Nested objects** - Recursive mapping of complex object graphs
 - **Nullables** - Automatic nullable handling
-
-If for some reason the source generator cannot build the extension method, an `Adapt()` extension method will not be generated.
 
 ## Performance
 
