@@ -4,7 +4,7 @@ using Soenneker.Gen.Adapt.Tests.Dtos;
 using Soenneker.Tests.Unit;
 using Xunit;
 
-namespace Soenneker.Gen.Adapt.Tests;
+namespace Soenneker.Gen.Adapt.Tests.Reflection;
 
 public sealed class ReflectionAdapterTests : UnitTest
 {
@@ -24,7 +24,7 @@ public sealed class ReflectionAdapterTests : UnitTest
         };
 
         // Act
-        var result = source.AdaptViaReflection<BasicSource, BasicDest>();
+        var result = source.AdaptViaReflection<BasicDest>();
 
         // Assert
         result.Should().NotBeNull();
@@ -44,7 +44,7 @@ public sealed class ReflectionAdapterTests : UnitTest
         };
 
         // Act
-        var result = source.AdaptViaReflection<CustomerEntity, CustomerDocument>();
+        var result = source.AdaptViaReflection<CustomerDocument>();
 
         // Assert
         result.Should().NotBeNull();
@@ -63,7 +63,7 @@ public sealed class ReflectionAdapterTests : UnitTest
         };
 
         // Act
-        var result = source.AdaptViaReflection<NestedSource, NestedDest>();
+        var result = source.AdaptViaReflection<NestedDest>();
 
         // Assert - Only Name is copied (string is assignable), Child is not (BasicSource -> BasicDest requires conversion)
         result.Should().NotBeNull();
@@ -80,8 +80,8 @@ public sealed class ReflectionAdapterTests : UnitTest
         var source2 = new BasicSource { Id = "2", Name = "Second", Count = 20 };
 
         // Act - Call twice with same types to test caching
-        var result1 = source1.AdaptViaReflection<BasicSource, BasicDest>();
-        var result2 = source2.AdaptViaReflection<BasicSource, BasicDest>();
+        var result1 = source1.AdaptViaReflection<BasicDest>();
+        var result2 = source2.AdaptViaReflection<BasicDest>();
 
         // Assert
         result1.Id.Should().Be("1");
@@ -104,7 +104,7 @@ public sealed class ReflectionAdapterTests : UnitTest
         };
 
         // Act
-        var result = source.AdaptViaReflection<PartialMatchSource, PartialMatchDest>();
+        var result = source.AdaptViaReflection<PartialMatchDest>();
 
         // Assert
         result.Should().NotBeNull();
@@ -120,7 +120,7 @@ public sealed class ReflectionAdapterTests : UnitTest
         BasicSource? source = null;
 
         // Act & Assert
-        Action act = () => source!.AdaptViaReflection<BasicSource, BasicDest>();
+        Action act = () => source!.AdaptViaReflection<BasicDest>();
         act.Should().Throw<ArgumentNullException>();
     }
 
@@ -135,7 +135,7 @@ public sealed class ReflectionAdapterTests : UnitTest
         };
 
         // Act - Reverse mapping: Document -> Entity
-        var result = source.AdaptViaReflection<CustomerDocument, CustomerEntity>();
+        var result = source.AdaptViaReflection<CustomerEntity>();
 
         // Assert
         result.Should().NotBeNull();
