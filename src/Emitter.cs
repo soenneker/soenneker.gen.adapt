@@ -61,6 +61,7 @@ internal static class Emitter
         var typePairs = new List<TypePair>();
         var allTypes = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
         var enums = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+        var deferredCalls = new List<(InvocationExpressionSyntax invocation, SemanticModel model, INamedTypeSymbol destType)>();
 
         foreach ((InvocationExpressionSyntax invocation, SemanticModel model) in invocations)
         {
@@ -78,6 +79,14 @@ internal static class Emitter
 
                 if (methodName != "Adapt")
                     continue;
+
+                // Get destination type from generic argument first (this is always available)
+                if (memberAccess.Name is GenericNameSyntax gn && gn.TypeArgumentList.Arguments.Count > 0)
+                {
+                    TypeSyntax destTypeSyntax = gn.TypeArgumentList.Arguments[0];
+                    ITypeSymbol? destTypeSymbol = model.GetTypeInfo(destTypeSyntax).Type;
+                    destType = destTypeSymbol as INamedTypeSymbol;
+                }
 
                 // Try GetTypeInfo first, fallback to SymbolInfo if needed
                 TypeInfo typeInfo = model.GetTypeInfo(memberAccess.Expression);
@@ -107,18 +116,22 @@ internal static class Emitter
                 }
                 
                 sourceType = expressionType as INamedTypeSymbol;
-
-                // Get destination type from generic argument
-                if (memberAccess.Name is GenericNameSyntax gn && gn.TypeArgumentList.Arguments.Count > 0)
+                
+                // Filter out error types - these appear when the compiler can't resolve a type
+                if (sourceType != null && sourceType.TypeKind == TypeKind.Error)
                 {
-                    TypeSyntax destTypeSyntax = gn.TypeArgumentList.Arguments[0];
-                    ITypeSymbol? destTypeSymbol = model.GetTypeInfo(destTypeSyntax).Type;
-                    destType = destTypeSymbol as INamedTypeSymbol;
+                    sourceType = null;
                 }
             }
             else
             {
                 continue;
+            }
+            
+            // Also filter out error types for destination
+            if (destType != null && destType.TypeKind == TypeKind.Error)
+            {
+                destType = null;
             }
 
             if (sourceType is not null && destType is not null)
@@ -127,9 +140,17 @@ internal static class Emitter
                 allTypes.Add(sourceType);
                 allTypes.Add(destType);
             }
+            else if (sourceType is null && destType is not null)
+            {
+                // Defer this call - we might be able to resolve it after generating initial mappings
+                // This handles cases like: var x = a.Adapt<B>(); var y = x.Adapt<C>();
+                // where x's type depends on a.Adapt<B>() being generated first
+                deferredCalls.Add((invocation, model, destType));
+                allTypes.Add(destType);
+            }
             else
             {
-                // Report diagnostic for type resolution failures
+                // Report diagnostic for type resolution failures only if we also can't get dest type
                 string sourceTypeName = sourceType?.ToDisplayString() ?? "unknown";
                 string destTypeName = destType?.ToDisplayString() ?? "unknown";
                 
@@ -137,6 +158,37 @@ internal static class Emitter
                     _typeResolutionFailed,
                     invocation.GetLocation(),
                     sourceTypeName, destTypeName));
+            }
+        }
+        
+        // Try to resolve deferred calls by tracing back through syntax
+        // If someone does: var x = a.Adapt<B>(); var y = x.Adapt<C>();
+        // We trace x back to its assignment and see it's B, so we add B -> C mapping
+        foreach ((InvocationExpressionSyntax invocation, SemanticModel model, INamedTypeSymbol destType) in deferredCalls)
+        {
+            if (invocation.Expression is MemberAccessExpressionSyntax memberAccess &&
+                memberAccess.Expression is IdentifierNameSyntax identifier)
+            {
+                // Find the source type by tracing the identifier back to its definition
+                INamedTypeSymbol? sourceType = TraceIdentifierToAdaptCall(identifier, model);
+                
+                // Filter out error types
+                if (sourceType != null && sourceType.TypeKind == TypeKind.Error)
+                {
+                    sourceType = null;
+                }
+                
+                if (sourceType is not null)
+                {
+                    typePairs.Add(new TypePair(sourceType, destType, invocation.GetLocation()));
+                    allTypes.Add(sourceType);
+                    // Successfully resolved - don't report any diagnostic
+                    continue;
+                }
+                
+                // Still couldn't resolve - but don't report diagnostic
+                // The mapping might already exist from another invocation where types were known
+                // If the mapping truly doesn't exist, compilation will fail with CS1061 anyway
             }
         }
 
@@ -343,6 +395,82 @@ internal static class Emitter
                 return true;
         }
         return false;
+    }
+
+    /// <summary>
+    /// Traces an identifier back to its source by looking at variable declarations and finding Adapt calls.
+    /// For example, if we see "doc.Adapt&lt;Foo&gt;()" and doc is declared as "var doc = entity.Adapt&lt;Bar&gt;()",
+    /// this will return Bar as the type.
+    /// </summary>
+    private static INamedTypeSymbol? TraceIdentifierToAdaptCall(IdentifierNameSyntax identifier, SemanticModel model)
+    {
+        // Try to get the symbol for this identifier
+        var symbolInfo = model.GetSymbolInfo(identifier);
+        ILocalSymbol? localSymbol = symbolInfo.Symbol as ILocalSymbol;
+        
+        if (localSymbol != null)
+        {
+            // Find the variable declarator for this local symbol
+            var syntaxReference = localSymbol.DeclaringSyntaxReferences.FirstOrDefault();
+            if (syntaxReference != null)
+            {
+                var declaratorSyntax = syntaxReference.GetSyntax();
+                
+                // Check if it's a VariableDeclaratorSyntax with an initializer
+                if (declaratorSyntax is VariableDeclaratorSyntax declarator && declarator.Initializer?.Value != null)
+                {
+                    // Check if the initializer is an Adapt call
+                    if (declarator.Initializer.Value is InvocationExpressionSyntax invocation &&
+                        invocation.Expression is MemberAccessExpressionSyntax memberAccess &&
+                        memberAccess.Name is GenericNameSyntax genericName &&
+                        genericName.Identifier.Text == "Adapt" &&
+                        genericName.TypeArgumentList.Arguments.Count > 0)
+                    {
+                        // Get the generic type argument - this is what the variable's type will be
+                        TypeSyntax destTypeSyntax = genericName.TypeArgumentList.Arguments[0];
+                        ITypeSymbol? destTypeSymbol = model.GetTypeInfo(destTypeSyntax).Type;
+                        return destTypeSymbol as INamedTypeSymbol;
+                    }
+                }
+            }
+        }
+        else
+        {
+            // Symbol couldn't be resolved (e.g. because type depends on our generator)
+            // Fall back to syntax-only search in the containing method/block
+            var containingMethod = identifier.Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault();
+            if (containingMethod != null)
+            {
+                var identifierName = identifier.Identifier.Text;
+                
+                // Find variable declarations in the method before this usage
+                var declarators = containingMethod.DescendantNodes()
+                    .OfType<VariableDeclaratorSyntax>()
+                    .Where(v => v.Identifier.Text == identifierName);
+                
+                foreach (var declarator in declarators)
+                {
+                    // Check if this declarator comes before our identifier in the source
+                    if (declarator.SpanStart < identifier.SpanStart && declarator.Initializer?.Value != null)
+                    {
+                        // Check if the initializer is an Adapt call
+                        if (declarator.Initializer.Value is InvocationExpressionSyntax invocation &&
+                            invocation.Expression is MemberAccessExpressionSyntax memberAccess &&
+                            memberAccess.Name is GenericNameSyntax genericName &&
+                            genericName.Identifier.Text == "Adapt" &&
+                            genericName.TypeArgumentList.Arguments.Count > 0)
+                        {
+                            // Get the generic type argument - this is what the variable's type will be
+                            TypeSyntax destTypeSyntax = genericName.TypeArgumentList.Arguments[0];
+                            ITypeSymbol? destTypeSymbol = model.GetTypeInfo(destTypeSyntax).Type;
+                            return destTypeSymbol as INamedTypeSymbol;
+                        }
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
     private static void Add(SourceProductionContext ctx, string fileName, StringBuilder sb)
