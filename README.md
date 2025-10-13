@@ -95,26 +95,6 @@ For generic type parameters or abstract base classes where concrete types are on
 - Mappers are cached per type pair (first call overhead, then subsequent calls are fast)
 - Use regular `Adapt<T>()` for better performance when types are known at compile time
 
-#### Example:
-```csharp
-// Works with nested objects and collections!
-public class EntitySource 
-{
-    public string Name { get; set; }
-    public List<ChildSource> Children { get; set; }
-}
-
-public class EntityDest 
-{
-    public string Name { get; set; }
-    public List<ChildDest> Children { get; set; }
-}
-
-var entity = new EntitySource { Name = "Parent", Children = [...] };
-var document = entity.AdaptViaReflection<EntityDest>();
-// Children are automatically adapted recursively!
-```
-
 ## Troubleshooting
 
 The generator creates multiple files per source type (e.g., `Adapt.BasicSource.g.cs`, `Adapt.UserDto.g.cs`). To inspect the generated code, add this to your `.csproj`:
