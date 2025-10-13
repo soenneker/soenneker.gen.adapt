@@ -28,7 +28,7 @@ public sealed class ReflectionDiagnosticsTests : UnitTest
         
         // The reflection fallback should fail for types without parameterless constructors
         act.Should().Throw<MissingMethodException>()
-            .WithMessage("*Cannot create instance*");
+            .WithMessage("*Cannot dynamically create an instance*");
     }
 
     [Fact]
@@ -41,7 +41,7 @@ public sealed class ReflectionDiagnosticsTests : UnitTest
         
         // The reflection fallback should fail for interfaces
         act.Should().Throw<MissingMethodException>()
-            .WithMessage("*Cannot create instance*");
+            .WithMessage("*Cannot dynamically create an instance*");
     }
 
     [Fact]

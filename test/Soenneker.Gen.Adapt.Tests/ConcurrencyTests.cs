@@ -48,7 +48,7 @@ public sealed class ConcurrencyTests : UnitTest
         var results = new List<int>[100];
         Parallel.For(0, 100, i =>
         {
-            results[i] = source.Adapt();
+            results[i] = source.Adapt<List<int>>();
         });
 
         // Assert
@@ -72,7 +72,7 @@ public sealed class ConcurrencyTests : UnitTest
         var results = new Dictionary<string, int>[100];
         Parallel.For(0, 100, i =>
         {
-            results[i] = source.Adapt();
+            results[i] = source.Adapt<Dictionary<string, int>>();
         });
 
         // Assert
@@ -188,8 +188,8 @@ public sealed class ConcurrencyTests : UnitTest
         Dictionary<string, int> dictResult = null;
         
         Parallel.Invoke(
-            () => listResult = list.Adapt(),
-            () => dictResult = dict.Adapt()
+            () => listResult = list.Adapt<List<int>>(),
+            () => dictResult = dict.Adapt<Dictionary<string, int>>()
         );
 
         // Assert
@@ -333,7 +333,7 @@ public sealed class ConcurrencyTests : UnitTest
         }
 
         // Act
-        Dictionary<string, BasicSource> result = source.Adapt();
+        Dictionary<string, BasicSource> result = source.Adapt<Dictionary<string, BasicSource>>();
 
         // Assert
         result.Count.Should().Be(100);

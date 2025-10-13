@@ -20,7 +20,7 @@ public sealed class IEnumerableTests : UnitTest
         IEnumerable<int> source = Enumerable.Range(1, 5);
 
         // Act
-        IEnumerable<int> result = source.Adapt();
+        List<int> result = source.Adapt<List<int>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -34,7 +34,7 @@ public sealed class IEnumerableTests : UnitTest
         IEnumerable<string> source = new[] { "a", "b", "c" }.Where(x => x != "d");
 
         // Act
-        IEnumerable<string> result = source.Adapt();
+        List<string> result = source.Adapt<List<string>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -48,7 +48,7 @@ public sealed class IEnumerableTests : UnitTest
         IEnumerable<int> source = [];
 
         // Act
-        IEnumerable<int> result = source.Adapt();
+        List<int> result = source.Adapt<List<int>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -59,12 +59,10 @@ public sealed class IEnumerableTests : UnitTest
     public void Adapt_IEnumerable_FromLinq_ShouldMaterialize()
     {
         // Arrange
-        IEnumerable<int> source = Enumerable.Range(1, 10)
-            .Where(x => x % 2 == 0)
-            .Select(x => x * 2);
+        IEnumerable<int> source = Enumerable.Range(1, 10).Where(x => x % 2 == 0).Select(x => x * 2);
 
         // Act
-        IEnumerable<int> result = source.Adapt();
+        List<int> result = source.Adapt<List<int>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -76,13 +74,10 @@ public sealed class IEnumerableTests : UnitTest
     {
         // Arrange
         var data = new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
-        IEnumerable<int> source = data
-            .Where(x => x > 3)
-            .OrderByDescending(x => x)
-            .Take(5);
+        IEnumerable<int> source = data.Where(x => x > 3).OrderByDescending(x => x).Take(5);
 
         // Act
-        IEnumerable<int> result = source.Adapt();
+        List<int> result = source.Adapt<List<int>>();
 
         // Assert
         result.Should().BeEquivalentTo([10, 9, 8, 7, 6]);
@@ -96,7 +91,7 @@ public sealed class IEnumerableTests : UnitTest
         IEnumerable<int> source = data.SelectMany(x => x);
 
         // Act
-        IEnumerable<int> result = source.Adapt();
+        List<int> result = source.Adapt<List<int>>();
 
         // Assert
         result.Should().BeEquivalentTo([1, 2, 3, 4, 5, 6]);
@@ -109,7 +104,7 @@ public sealed class IEnumerableTests : UnitTest
         IEnumerable<int> source = new[] { 1, 2, 2, 3, 3, 3, 4 }.Distinct();
 
         // Act
-        IEnumerable<int> result = source.Adapt();
+        List<int> result = source.Adapt<List<int>>();
 
         // Assert
         result.Should().BeEquivalentTo([1, 2, 3, 4]);
@@ -122,7 +117,7 @@ public sealed class IEnumerableTests : UnitTest
         IEnumerable<string?> source = ["a", null, "c"];
 
         // Act
-        IEnumerable<string?> result = source.Adapt();
+        List<string?> result = source.Adapt<List<string?>>();
 
         // Assert
         result.Count().Should().Be(3);
@@ -138,7 +133,7 @@ public sealed class IEnumerableTests : UnitTest
         IEnumerable<string> source = ["only"];
 
         // Act
-        IEnumerable<string> result = source.Adapt();
+        List<string> result = source.Adapt<List<string>>();
 
         // Assert
         result.Count().Should().Be(1);
@@ -153,7 +148,7 @@ public sealed class IEnumerableTests : UnitTest
         IEnumerable<int> source = data.GroupBy(x => x % 2).SelectMany(g => g);
 
         // Act
-        IEnumerable<int> result = source.Adapt();
+        List<int> result = source.Adapt<List<int>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -169,7 +164,7 @@ public sealed class IEnumerableTests : UnitTest
         IEnumerable<int> source = first.Zip(second, (a, b) => a + b);
 
         // Act
-        IEnumerable<int> result = source.Adapt();
+        List<int> result = source.Adapt<List<int>>();
 
         // Assert
         result.Should().BeEquivalentTo([11, 22, 33]);
@@ -182,7 +177,7 @@ public sealed class IEnumerableTests : UnitTest
         IEnumerable<int> source = new[] { 1, 2, 3 }.Concat([4, 5, 6]);
 
         // Act
-        IEnumerable<int> result = source.Adapt();
+        List<int> result = source.Adapt<List<int>>();
 
         // Assert
         result.Should().BeEquivalentTo([1, 2, 3, 4, 5, 6]);
@@ -195,10 +190,9 @@ public sealed class IEnumerableTests : UnitTest
         IEnumerable<int> source = Enumerable.Range(1, 20).Skip(5).Take(10);
 
         // Act
-        IEnumerable<int> result = source.Adapt();
+        List<int> result = source.Adapt<List<int>>();
 
         // Assert
         result.Should().BeEquivalentTo([6, 7, 8, 9, 10, 11, 12, 13, 14, 15]);
     }
 }
-

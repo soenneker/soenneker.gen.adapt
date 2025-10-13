@@ -24,7 +24,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        Dictionary<string, string> result = source.Adapt();
+        Dictionary<string, string> result = source.Adapt<Dictionary<string, string>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -47,7 +47,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        Dictionary<int, string> result = source.Adapt();
+        Dictionary<int, string> result = source.Adapt< Dictionary<int, string>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -70,7 +70,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        Dictionary<string, int> result = source.Adapt();
+        Dictionary<string, int> result = source.Adapt<Dictionary<string, int>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -87,7 +87,7 @@ public sealed class DictionaryTests : UnitTest
         var source = new Dictionary<string, int>();
 
         // Act
-        Dictionary<string, int> result = source.Adapt();
+        Dictionary<string, int> result = source.Adapt<Dictionary<string, int>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -105,7 +105,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        IDictionary<string, int> result = source.Adapt();
+        Dictionary<string, int> result = source.Adapt<Dictionary<string, int>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -127,7 +127,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        Dictionary<Guid, string> result = source.Adapt();
+        Dictionary<Guid, string> result = source.Adapt<Dictionary<Guid, string>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -147,7 +147,7 @@ public sealed class DictionaryTests : UnitTest
         }
 
         // Act
-        Dictionary<int, string> result = source.Adapt();
+        Dictionary<int, string> result = source.Adapt<Dictionary<int, string>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -168,7 +168,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        Dictionary<int, int> result = source.Adapt();
+        Dictionary<int, int> result = source.Adapt<Dictionary<int, int>>();
 
         // Assert
         result.Count.Should().Be(3);
@@ -188,7 +188,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        Dictionary<long, long> result = source.Adapt();
+        Dictionary<long, long> result = source.Adapt<Dictionary<long, long>>();
 
         // Assert
         result.Count.Should().Be(2);
@@ -206,7 +206,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        Dictionary<bool, string> result = source.Adapt();
+        Dictionary<bool, string> result = source.Adapt<Dictionary<bool, string>>();
 
         // Assert
         result.Count.Should().Be(2);
@@ -226,7 +226,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        Dictionary<string, string> result = source.Adapt();
+        Dictionary<string, string> result = source.Adapt<Dictionary<string, string>>();
 
         // Assert
         result.Count.Should().Be(3);
@@ -242,7 +242,7 @@ public sealed class DictionaryTests : UnitTest
         var source = new Dictionary<string, int> { { "solo", 42 } };
 
         // Act
-        Dictionary<string, int> result = source.Adapt();
+        Dictionary<string, int> result = source.Adapt<Dictionary<string, int>>();
 
         // Assert
         result.Count.Should().Be(1);
@@ -262,7 +262,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        Dictionary<DateTime, string> result = source.Adapt();
+        Dictionary<DateTime, string> result = source.Adapt< Dictionary<DateTime, string>>();
 
         // Assert
         result.Count.Should().Be(2);
@@ -282,7 +282,7 @@ public sealed class DictionaryTests : UnitTest
         };
 
         // Act
-        Dictionary<string, decimal> result = source.Adapt();
+        Dictionary<string, decimal> result = source.Adapt<Dictionary<string, decimal>>();
 
         // Assert
         result.Count.Should().Be(3);

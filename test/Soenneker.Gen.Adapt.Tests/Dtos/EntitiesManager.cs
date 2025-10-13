@@ -2,14 +2,14 @@
 
 namespace Soenneker.Gen.Adapt.Tests.Dtos;
 
-public class EntitiesManager<TEntity, TDocument> where TEntity : CustomerEntity, new() where TDocument : CustomerDocument
+public class EntitiesManager
 {
     
-    public virtual TEntity Create(TEntity entity)
+    public virtual CustomerEntity Create(CustomerEntity entity)
     {
         entity.CreatedAt = DateTime.UtcNow;
 
-        var document = entity.Adapt<TDocument>();
+        var document = entity.Adapt<CustomerDocument>();
 
         document.DocumentId = Guid.NewGuid().ToString();
         document.PartitionKey = document.DocumentId;

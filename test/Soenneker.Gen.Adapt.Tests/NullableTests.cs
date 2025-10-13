@@ -118,7 +118,7 @@ public sealed class NullableTests : UnitTest
         var source = new List<int?> { 1, null, 3, null, 5 };
 
         // Act
-        List<int?> result = source.Adapt();
+        List<int?> result = source.Adapt<List<int?>>();
 
         // Assert
         result.Count.Should().Be(5);
@@ -136,7 +136,7 @@ public sealed class NullableTests : UnitTest
         var source = new List<string> { null, null, null };
 
         // Act
-        List<string> result = source.Adapt();
+        List<string> result = source.Adapt<List<string>>();
 
         // Assert
         result.Count.Should().Be(3);
@@ -157,7 +157,7 @@ public sealed class NullableTests : UnitTest
         };
 
         // Act
-        Dictionary<string, string> result = source.Adapt();
+        Dictionary<string, string> result = source.Adapt<Dictionary<string, string>>();
 
         // Assert
         result.Count.Should().Be(3);

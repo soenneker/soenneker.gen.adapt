@@ -34,32 +34,32 @@ public sealed class MixedDiagnosticTests : UnitTest
     }
 
     //[Fact]
-    public void InvalidAdapt_ShouldGenerateDiagnosticError()
-    {
-        // This test will fail to compile with SGA002 diagnostic error
-        // because InvalidDestNoCtor doesn't have a parameterless constructor
-        
-        var source = new ValidSource { Name = "test", Value = 42 };
-        
-        // This line should generate a compilation error SGA002
-        var result = source.Adapt<InvalidDestNoCtor>();
-        
-        // This code will never execute because compilation will fail
-        result.Should().NotBeNull();
-    }
+    //public void InvalidAdapt_ShouldGenerateDiagnosticError()
+    //{
+    //    // This test will fail to compile with SGA002 diagnostic error
+    //    // because InvalidDestNoCtor doesn't have a parameterless constructor
+    //    
+    //    var source = new ValidSource { Name = "test", Value = 42 };
+    //    
+    //    // This line should generate a compilation error SGA002
+    //    var result = source.Adapt<InvalidDestNoCtor>();
+    //    
+    //    // This code will never execute because compilation will fail
+    //    result.Should().NotBeNull();
+    //}
 
     //[Fact]
-    public void AnotherInvalidAdapt_ShouldGenerateDiagnosticError()
-    {
-        // This test will fail to compile with SGA003 diagnostic error
-        // because InvalidDestNoProps has no matching properties
-        
-        var source = new ValidSource { Name = "test", Value = 42 };
-        
-        // This line should generate a compilation error SGA003
-        var result = source.Adapt<InvalidDestNoProps>();
-        
-        // This code will never execute because compilation will fail
-        result.Should().NotBeNull();
-    }
+    //public void AnotherInvalidAdapt_ShouldGenerateDiagnosticError()
+    //{
+    //    // This test will fail to compile with SGA003 diagnostic error
+    //    // because InvalidDestNoProps has no matching properties
+    //    
+    //    var source = new ValidSource { Name = "test", Value = 42 };
+    //    
+    //    // This line should generate a compilation error SGA003
+    //    var result = source.Adapt<InvalidDestNoProps>();
+    //    
+    //    // This code will never execute because compilation will fail
+    //    result.Should().NotBeNull();
+    //}
 }

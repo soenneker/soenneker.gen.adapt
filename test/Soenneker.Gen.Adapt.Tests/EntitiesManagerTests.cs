@@ -14,7 +14,7 @@ public sealed class EntitiesManagerTests : UnitTest
     [Fact]
     public void Create_should_create()
     {
-        var entitiesManager = new EntitiesManager<CustomerEntity, CustomerDocument>();
+        var entitiesManager = new EntitiesManager();
 
         CustomerEntity resultingEntity = entitiesManager.Create(new CustomerEntity());
 

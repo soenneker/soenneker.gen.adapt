@@ -38,6 +38,25 @@ internal static class Types
         return false;
     }
 
+    public static bool IsIEnumerable(ITypeSymbol t, out ITypeSymbol? elem)
+    {
+        elem = null;
+        if (t is INamedTypeSymbol nt && nt.Name == "IEnumerable" && nt.TypeArguments.Length == 1)
+        {
+            elem = nt.TypeArguments[0];
+            return true;
+        }
+        
+        // Also check for IEnumerable<T> with generic arity
+        if (t is INamedTypeSymbol nt2 && nt2.Name == "IEnumerable`1" && nt2.TypeArguments.Length == 1)
+        {
+            elem = nt2.TypeArguments[0];
+            return true;
+        }
+        
+        return false;
+    }
+
     public static bool IsArray(ITypeSymbol t, out ITypeSymbol? elem)
     {
         elem = null;

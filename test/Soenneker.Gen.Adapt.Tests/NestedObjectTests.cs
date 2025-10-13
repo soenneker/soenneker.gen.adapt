@@ -156,7 +156,7 @@ public sealed class NestedObjectTests : UnitTest
         };
 
         // Act
-        Dictionary<string, NestedSource> result = source.Adapt();
+        Dictionary<string, NestedSource> result = source.Adapt<Dictionary<string, NestedSource>>();
 
         // Assert
         result.Count.Should().Be(2);

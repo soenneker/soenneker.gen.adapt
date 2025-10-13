@@ -11,7 +11,7 @@ namespace Soenneker.Gen.Adapt;
 internal static class Emitter
 {
     // Diagnostic descriptors for Adapt method generation failures
-    private static readonly DiagnosticDescriptor NoParameterlessConstructor = new(
+    private static readonly DiagnosticDescriptor _noParameterlessConstructor = new(
         "SGA002", 
         "No parameterless constructor available", 
         "Cannot create Adapt method for '{0}' to '{1}': destination type does not have a public parameterless constructor", 
@@ -19,7 +19,7 @@ internal static class Emitter
         DiagnosticSeverity.Error, 
         true);
 
-    private static readonly DiagnosticDescriptor NoMappableProperties = new(
+    private static readonly DiagnosticDescriptor _noMappableProperties = new(
         "SGA003", 
         "No mappable properties found", 
         "Cannot create Adapt method for '{0}' to '{1}': no mappable properties found between source and destination types", 
@@ -27,7 +27,7 @@ internal static class Emitter
         DiagnosticSeverity.Error, 
         true);
 
-    private static readonly DiagnosticDescriptor TypeResolutionFailed = new(
+    private static readonly DiagnosticDescriptor _typeResolutionFailed = new(
         "SGA004", 
         "Type resolution failed", 
         "Cannot create Adapt method: failed to resolve source type '{0}' or destination type '{1}'", 
@@ -134,7 +134,7 @@ internal static class Emitter
                 string destTypeName = destType?.ToDisplayString() ?? "unknown";
                 
                 context.ReportDiagnostic(Diagnostic.Create(
-                    TypeResolutionFailed,
+                    _typeResolutionFailed,
                     invocation.GetLocation(),
                     sourceTypeName, destTypeName));
             }
@@ -247,10 +247,32 @@ internal static class Emitter
             {
                 // Report diagnostic for missing parameterless constructor
                 context.ReportDiagnostic(Diagnostic.Create(
-                    NoParameterlessConstructor,
+                    _noParameterlessConstructor,
                     location,
                     src.ToDisplayString(), dst.ToDisplayString()));
                 continue;
+            }
+
+
+            // Special handling for collection-to-collection adaptations
+            if (Types.IsIEnumerable(src, out ITypeSymbol? srcElement) && Types.IsAnyList(dst, out ITypeSymbol? dstElement))
+            {
+                // Allow IEnumerable<T> to List<T> adaptations if element types are compatible
+                if (Assignment.CanAssign(srcElement, dstElement, enums))
+                {
+                    // Add to the map for later processing
+                    if (!map.TryGetValue(src, out List<INamedTypeSymbol>? destList))
+                    {
+                        destList = new List<INamedTypeSymbol>(8);
+                        map[src] = destList;
+                    }
+                    // Only add if not already present to avoid duplicates
+                    if (!destList.Contains(dst))
+                    {
+                        destList.Add(dst);
+                    }
+                    continue;
+                }
             }
 
             // Validate that mapping is possible
@@ -261,7 +283,7 @@ internal static class Emitter
             {
                 // Report diagnostic for no mappable properties
                 context.ReportDiagnostic(Diagnostic.Create(
-                    NoMappableProperties,
+                    _noMappableProperties,
                     location,
                     src.ToDisplayString(), dst.ToDisplayString()));
                 continue;

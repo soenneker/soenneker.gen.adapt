@@ -145,6 +145,27 @@ internal static class MapperFile
         NameCache names,
         string indent)
     {
+        // Handle direct collection-to-collection adaptations
+        if (Types.IsAnyDictionary(source, out ITypeSymbol? srcKey, out ITypeSymbol? srcValue) && 
+            Types.IsAnyDictionary(dest, out ITypeSymbol? dstKey, out ITypeSymbol? dstValue))
+        {
+            EmitDictionaryMappingBody(sb, source, dest, srcKey!, srcValue!, dstKey!, dstValue!, names, indent);
+            return;
+        }
+
+        if (Types.IsAnyList(source, out ITypeSymbol? srcElem) && Types.IsAnyList(dest, out ITypeSymbol? dstElem))
+        {
+            EmitListMappingBody(sb, source, dest, srcElem!, dstElem!, names, indent);
+            return;
+        }
+
+        // Handle IEnumerable<T> to List<T> adaptations
+        if (Types.IsIEnumerable(source, out ITypeSymbol? srcElement) && Types.IsAnyList(dest, out ITypeSymbol? dstElement))
+        {
+            EmitListMappingBody(sb, source, dest, srcElement!, dstElement!, names, indent);
+            return;
+        }
+
         var srcProps = TypeProps.Build(source);
         var dstProps = TypeProps.Build(dest);
         string dstFq = names.FullyQualified(dest);
@@ -355,5 +376,132 @@ internal static class MapperFile
         }
         
         return "null!";
+    }
+
+    private static void EmitDictionaryMappingBody(
+        StringBuilder sb,
+        INamedTypeSymbol source,
+        INamedTypeSymbol dest,
+        ITypeSymbol sKey,
+        ITypeSymbol sValue,
+        ITypeSymbol dKey,
+        ITypeSymbol dValue,
+        NameCache names,
+        string indent)
+    {
+        string dstFq = names.FullyQualified(dest);
+        
+        sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("();");
+        
+        if (SymbolEqualityComparer.Default.Equals(sKey, dKey) && SymbolEqualityComparer.Default.Equals(sValue, dValue))
+        {
+            // Same types - direct copy
+            sb.Append(indent).Append("foreach (var kv in source)").AppendLine();
+            sb.Append(indent).Append("\ttarget[kv.Key] = kv.Value;").AppendLine();
+        }
+        else
+        {
+            // Different types - need conversion
+            sb.Append(indent).Append("foreach (var kv in source)").AppendLine();
+            sb.Append(indent).AppendLine("{");
+            
+            string keyExpr = SymbolEqualityComparer.Default.Equals(sKey, dKey) 
+                ? "kv.Key" 
+                : GetConversionExpression("kv.Key", sKey, dKey);
+                
+            string valueExpr = SymbolEqualityComparer.Default.Equals(sValue, dValue) 
+                ? "kv.Value" 
+                : GetConversionExpression("kv.Value", sValue, dValue);
+                
+            sb.Append(indent).Append("\ttarget[").Append(keyExpr).Append("] = ").Append(valueExpr).AppendLine(";");
+            sb.Append(indent).AppendLine("}");
+        }
+        
+        sb.Append(indent).AppendLine("return target;");
+    }
+
+    private static void EmitListMappingBody(
+        StringBuilder sb,
+        INamedTypeSymbol source,
+        INamedTypeSymbol dest,
+        ITypeSymbol sElem,
+        ITypeSymbol dElem,
+        NameCache names,
+        string indent)
+    {
+        string dstFq = names.FullyQualified(dest);
+        
+        sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("();");
+        
+        if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
+        {
+            // Same types - direct copy
+            sb.Append(indent).Append("foreach (var item in source)").AppendLine();
+            sb.Append(indent).Append("\ttarget.Add(item);").AppendLine();
+        }
+        else
+        {
+            // Different types - need conversion
+            sb.Append(indent).Append("foreach (var item in source)").AppendLine();
+            sb.Append(indent).AppendLine("{");
+            
+            string itemExpr = GetConversionExpression("item", sElem, dElem);
+            sb.Append(indent).Append("\ttarget.Add(").Append(itemExpr).AppendLine(");");
+            sb.Append(indent).AppendLine("}");
+        }
+        
+        sb.Append(indent).AppendLine("return target;");
+    }
+
+    private static string GetConversionExpression(string expr, ITypeSymbol fromType, ITypeSymbol toType)
+    {
+        // Handle basic type conversions
+        if (SymbolEqualityComparer.Default.Equals(fromType, toType))
+            return expr;
+            
+        // Handle enum conversions
+        if (fromType.TypeKind == TypeKind.Enum && Types.IsString(toType))
+            return expr + ".ToString()";
+            
+        if (Types.IsString(fromType) && toType.TypeKind == TypeKind.Enum)
+            return "GenAdapt_EnumParsers.Parse_" + San((INamedTypeSymbol)toType) + "(" + expr + ")";
+            
+        if (fromType.TypeKind == TypeKind.Enum && Types.IsInt(toType))
+            return "(int)" + expr;
+            
+        if (Types.IsInt(fromType) && toType.TypeKind == TypeKind.Enum)
+            return "(" + Types.Fq(toType) + ")" + expr;
+            
+        // Handle Guid conversions
+        if (Types.IsGuid(fromType) && Types.IsString(toType))
+            return expr + ".ToString()";
+            
+        if (Types.IsString(fromType) && Types.IsGuid(toType))
+            return "global::System.Guid.TryParse(" + expr + ", out var g) ? g : default(global::System.Guid)";
+            
+        // Handle nullable conversions
+        if (Types.IsNullableOf(fromType, out ITypeSymbol? fromInner) && Types.IsNullableOf(toType, out ITypeSymbol? toInner))
+        {
+            if (SymbolEqualityComparer.Default.Equals(fromInner!, toInner!))
+                return expr; // same nullable type
+        }
+        
+        // Handle user-defined type conversions
+        if (fromType is INamedTypeSymbol fromNamed && toType is INamedTypeSymbol toNamed &&
+            (fromNamed.TypeKind == TypeKind.Class || fromNamed.TypeKind == TypeKind.Struct) &&
+            (toNamed.TypeKind == TypeKind.Class || toNamed.TypeKind == TypeKind.Struct) &&
+            !Types.IsFrameworkType(fromNamed) && !Types.IsFrameworkType(toNamed))
+        {
+            return expr + ".Adapt<" + Types.Fq(toType) + ">()";
+        }
+        
+        // Default: cast
+        return "(" + Types.Fq(toType) + ")" + expr;
+    }
+
+    private static string San(INamedTypeSymbol type)
+    {
+        // Simple sanitization for enum parser names
+        return type.Name.Replace(".", "_").Replace("`", "_");
     }
 }
