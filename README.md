@@ -85,7 +85,7 @@ All mapping code is generated at compile time with multiple optimizations:
 
 The generated code is as fast (or faster) as hand-written mapping code.
 
-### Reflection Mapping (`AdaptViaReflection<TSource, TDest>()`)
+### Reflection Mapping (`AdaptViaReflection<TDest>()`)
 
 For generic type parameters or abstract base classes where concrete types are only known at runtime:
 

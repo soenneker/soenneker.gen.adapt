@@ -25,7 +25,7 @@ internal static class ReflectionAdapter
         sb.AppendLine("\t/// Copies all matching properties from source to destination based on name and assignability.");
         sb.AppendLine("\t/// At runtime, TDest will be a concrete type even if the compile-time constraint is abstract.");
         sb.AppendLine("\t/// </summary>");
-        sb.AppendLine("\tpublic static TDest AdaptViaReflection<TSource, TDest>(this TSource source)");
+        sb.AppendLine("\tpublic static TDest AdaptViaReflection<TDest>(this object source)");
         sb.AppendLine("\t{");
         sb.AppendLine("\t\tif (source == null)");
         sb.AppendLine("\t\t\tthrow new ArgumentNullException(nameof(source));");
