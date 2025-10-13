@@ -6,11 +6,8 @@
 
 A modern, high-performance C# source generator for compile-time object mapping; a zero-overhead replacement for AutoMapper, Mapperly, Mapster, etc.
 
-## Why Use This?
-
 - **Zero runtime cost** - All code is generated at compile time
 - **Type-safe** - Compiler errors instead of runtime failures
-- **IntelliSense support** - Full IDE support for generated methods
 - **Highly optimized** - Aggressive inlining, cached delegates, safe parsing
 
 ## Installation
@@ -21,7 +18,7 @@ dotnet add package Soenneker.Gen.Adapt
 
 ## Usage
 
-Once installed, the generator automatically creates `Adapt<TDest>()` extension methods for your types:
+Once installed, the generator automatically detects usage of  `Adapt<TDest>()` and generates extension methods for your types:
 
 ```csharp
 public class UserDto
@@ -42,7 +39,7 @@ var dto = new UserDto { Name = "John", Age = 30 };
 UserModel model = dto.Adapt<UserModel>(); // just one line!
 ```
 
-If the properties match by name and can be converted, it maps them.
+If the properties match by name and can be converted, it maps them. If for some reason the source generator cannot build the extension method, an Adapt() extension method will not be generated.
 
 ## What's being generated?
 
@@ -69,8 +66,6 @@ public static partial class GenAdapt
 - **Enums** - Bidirectional conversion between enum ↔ string, enum ↔ int
 - **Nested objects** - Recursive mapping of complex object graphs
 - **Nullables** - Automatic nullable handling
-
-If for some reason the source generator cannot build the extension method, an `Adapt()` extension method will not be generated.
 
 ## Performance
 
