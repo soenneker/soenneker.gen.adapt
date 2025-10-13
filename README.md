@@ -44,6 +44,23 @@ UserModel model = dto.Adapt<UserModel>(); // just one line!
 
 If the properties match by name and can be converted, it maps them.
 
+## What's being generated?
+
+The generator creates extension methods with direct property assignments:
+
+```csharp
+public static partial class GenAdapt
+{
+    public static UserModel Adapt(this UserDto source)
+    {
+        var target = new UserModel();
+        target.Name = source.Name;
+        target.Age = source.Age;
+        return target;
+    }
+}
+```
+
 ### Supported Conversions
 
 - **Same-type assignments** - Direct property copying
@@ -57,58 +74,24 @@ If for some reason the source generator cannot build the extension method, an `A
 
 ## Performance
 
+### Compile-Time Mapping (Regular `Adapt<T>()`)
+
 All mapping code is generated at compile time with multiple optimizations:
 
 - **Zero reflection** - No expression trees, direct property assignments only
-- **Aggressive inlining** - JIT compile methods when possible
+- **Aggressive inlining** - JIT optimizes methods when possible
 - **Static delegate caching** - One-time initialization per source/destination pair
 - **Minimal allocations** - Reused delegates, no boxing, no dynamic dispatch
 
-The generated code is as fast as hand-written mapping code.
+The generated code is as fast (or faster) as hand-written mapping code.
 
-## What's being generated?
+### Reflection Mapping (`AdaptViaReflection<TSource, TDest>()`)
 
-Take the example above. The generator creates efficient mapping code:
+For generic type parameters or abstract base classes where concrete types are only known at runtime:
 
-```csharp
-using System.Runtime.CompilerServices;
-
-public static partial class GenAdapt
-{
-    // Direct mapping method - no reflection, just property assignments
-    private static UserModel Map_global__UserDto_To_global__UserModel(UserDto source)
-    {
-        var target = new UserModel();
-        target.Name = source.Name;
-        target.Age = source.Age;
-        return target;
-    }
-
-    // Static delegate - computed once, zero allocations after initialization
-    private static readonly Func<UserDto, UserModel> _map_UserDto_To_UserModel = 
-        Map_global__UserDto_To_global__UserModel;
-
-    private static class AdaptCache_global__UserDto<TDest>
-    {
-        public static readonly Func<UserDto, TDest> Invoke = BuildMapper();
-
-        private static Func<UserDto, TDest> BuildMapper()
-        {
-            var destType = typeof(TDest);
-            if (destType == typeof(UserModel))
-                return (Func<UserDto, TDest>)(object)_map_UserDto_To_UserModel;
-            throw new NotSupportedException($"Unsupported Adapt target type: {destType.FullName}");
-        }
-    }
-
-    // Aggressive inlining for minimal call overhead
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static TDest Adapt<TDest>(this UserDto source)
-    {
-        return AdaptCache_global__UserDto<TDest>.Invoke(source);
-    }
-}
-```
+- Uses reflection to copy properties at runtime based on actual concrete types
+- Mappers are cached per type pair (first call overhead, then fast)
+- Use regular `Adapt<T>()` for better performance when types are known at compile time
 
 ## Troubleshooting
 

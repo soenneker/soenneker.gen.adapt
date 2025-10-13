@@ -102,6 +102,14 @@ internal static class Emitter
             }
         }
 
+        // Always generate reflection-based adapter for flexibility
+        // This handles scenarios where compile-time type info isn't available (generic type parameters, etc.)
+        {
+            var sb = new StringBuilder(2048);
+            ReflectionAdapter.EmitReflectionAdapter(sb);
+            Add(context, "Adapt.ReflectionAdapter.g.cs", sb);
+        }
+
         if (typePairs.Count == 0)
             return;
 
