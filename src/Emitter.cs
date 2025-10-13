@@ -10,15 +10,42 @@ namespace Soenneker.Gen.Adapt;
 
 internal static class Emitter
 {
+    // Diagnostic descriptors for Adapt method generation failures
+    private static readonly DiagnosticDescriptor NoParameterlessConstructor = new(
+        "SGA002", 
+        "No parameterless constructor available", 
+        "Cannot create Adapt method for '{0}' to '{1}': destination type does not have a public parameterless constructor", 
+        "Adapt", 
+        DiagnosticSeverity.Error, 
+        true);
+
+    private static readonly DiagnosticDescriptor NoMappableProperties = new(
+        "SGA003", 
+        "No mappable properties found", 
+        "Cannot create Adapt method for '{0}' to '{1}': no mappable properties found between source and destination types", 
+        "Adapt", 
+        DiagnosticSeverity.Error, 
+        true);
+
+    private static readonly DiagnosticDescriptor TypeResolutionFailed = new(
+        "SGA004", 
+        "Type resolution failed", 
+        "Cannot create Adapt method: failed to resolve source type '{0}' or destination type '{1}'", 
+        "Adapt", 
+        DiagnosticSeverity.Error, 
+        true);
+
     private readonly struct TypePair
     {
         public readonly INamedTypeSymbol Source;
         public readonly INamedTypeSymbol Destination;
+        public readonly Location Location;
 
-        public TypePair(INamedTypeSymbol source, INamedTypeSymbol destination)
+        public TypePair(INamedTypeSymbol source, INamedTypeSymbol destination, Location location)
         {
             Source = source;
             Destination = destination;
+            Location = location;
         }
     }
 
@@ -96,9 +123,20 @@ internal static class Emitter
 
             if (sourceType is not null && destType is not null)
             {
-                typePairs.Add(new TypePair(sourceType, destType));
+                typePairs.Add(new TypePair(sourceType, destType, invocation.GetLocation()));
                 allTypes.Add(sourceType);
                 allTypes.Add(destType);
+            }
+            else
+            {
+                // Report diagnostic for type resolution failures
+                string sourceTypeName = sourceType?.ToDisplayString() ?? "unknown";
+                string destTypeName = destType?.ToDisplayString() ?? "unknown";
+                
+                context.ReportDiagnostic(Diagnostic.Create(
+                    TypeResolutionFailed,
+                    invocation.GetLocation(),
+                    sourceTypeName, destTypeName));
             }
         }
 
@@ -134,7 +172,7 @@ internal static class Emitter
         }
 
         // Build mapping graph from discovered type pairs
-        Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map = BuildMappingGraphFromPairs(typePairs, enumList);
+        Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map = BuildMappingGraphFromPairs(typePairs, enumList, context);
 
         // Per-source mapper files
         foreach (KeyValuePair<INamedTypeSymbol, List<INamedTypeSymbol>> kv in map)
@@ -194,7 +232,8 @@ internal static class Emitter
 
     private static Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> BuildMappingGraphFromPairs(
         List<TypePair> typePairs,
-        List<INamedTypeSymbol> enums)
+        List<INamedTypeSymbol> enums,
+        SourceProductionContext context)
     {
         var map = new Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>>(SymbolEqualityComparer.Default);
 
@@ -202,16 +241,31 @@ internal static class Emitter
         {
             INamedTypeSymbol src = pair.Source;
             INamedTypeSymbol dst = pair.Destination;
+            Location location = pair.Location;
 
             if (!HasParameterlessCtorLocal(dst))
+            {
+                // Report diagnostic for missing parameterless constructor
+                context.ReportDiagnostic(Diagnostic.Create(
+                    NoParameterlessConstructor,
+                    location,
+                    src.ToDisplayString(), dst.ToDisplayString()));
                 continue;
+            }
 
             // Validate that mapping is possible
             TypeProps srcProps = TypeProps.Build(src);
             TypeProps dstProps = TypeProps.Build(dst);
 
             if (!HasAnyMappableProperty(srcProps, dstProps, enums))
+            {
+                // Report diagnostic for no mappable properties
+                context.ReportDiagnostic(Diagnostic.Create(
+                    NoMappableProperties,
+                    location,
+                    src.ToDisplayString(), dst.ToDisplayString()));
                 continue;
+            }
 
             if (!map.TryGetValue(src, out List<INamedTypeSymbol>? list))
             {

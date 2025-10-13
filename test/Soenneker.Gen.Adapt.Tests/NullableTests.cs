@@ -186,5 +186,34 @@ public sealed class NullableTests : UnitTest
         result2.Count.Should().Be(42);
         result2.Status.Should().BeNull();
     }
+
+    [Fact]
+    public void OrderWithNullableCustomer_to_PersonRecordDest_should_adapt()
+    {
+        var nullableSource = AutoFaker.Generate<OrderWithNullableCustomer>();
+
+        var clonedCustomer = nullableSource.Customer.Adapt<PersonRecordDest>();
+        clonedCustomer.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void PersonRecordDest_to_OrderWithNullableCustomer_should_adapt()
+    {
+        var nullableSource = AutoFaker.Generate<PersonRecordDest>();
+
+        var clonedCustomer = nullableSource.Adapt<PersonClass>();
+
+        clonedCustomer.Should().NotBeNull();
+    }
+
+    [Fact]
+    public void OrderWithNullablePerson_to_PersonClass_should_adapt()
+    {
+        var nullableSource = AutoFaker.Generate<OrderWithNullablePerson>();
+
+        var clonedCustomer = nullableSource.Person.Adapt<PersonClass>();
+
+        clonedCustomer.Should().NotBeNull();
+    }
 }
 
