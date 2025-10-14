@@ -19,7 +19,7 @@ dotnet add package Soenneker.Gen.Adapt
 
 ## Usage
 
-Once installed, the generator automatically detects usage of  `Adapt<TDest>()` and generates extension methods for your types:
+Once installed, the generator automatically detects usage of  `Adapt()` and generates extension methods for your types:
 
 ```csharp
 public class UserDto
