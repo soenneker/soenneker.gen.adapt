@@ -1,0 +1,55 @@
+@page "/array-collection-pattern"
+@using Soenneker.Gen.Adapt.Tests.Types
+@rendermode InteractiveWebAssembly
+
+<PageTitle>Array Collection Pattern Test</PageTitle>
+
+<h1>Array Collection Pattern Test</h1>
+
+<button class="btn btn-primary" @onclick="TestArrayCollectionPattern">Test Array Collection Pattern</button>
+
+@code {
+    private ExternalSourceDto[] _sourceArray = new ExternalSourceDto[]
+    {
+        new ExternalSourceDto { Id = "array-1" },
+        new ExternalSourceDto { Id = "array-2" },
+        new ExternalSourceDto { Id = "array-3" }
+    };
+    
+    private List<ExternalProjectDto> _sourceList = new List<ExternalProjectDto>
+    {
+        new ExternalProjectDto { Id = "list-1" },
+        new ExternalProjectDto { Id = "list-2" }
+    };
+
+    private void TestArrayCollectionPattern()
+    {
+        // Pattern: Adapt calls on individual array elements
+        for (int i = 0; i < _sourceArray.Length; i++)
+        {
+            var adaptedItem = _sourceArray[i].Adapt<ExternalDestDto>();
+        }
+        
+        // Pattern: Adapt calls in LINQ Select on arrays
+        var adaptedFromArray = _sourceArray.Select(x => x.Adapt<ExternalDestDto>()).ToList();
+        
+        // Pattern: Adapt calls in LINQ Select on lists
+        var adaptedFromList = _sourceList.Select(x => x.Adapt<ExternalDestDto>()).ToList();
+        
+        // Pattern: Adapt calls on IEnumerable elements
+        IEnumerable<ExternalSourceDto> sourceEnumerable = _sourceArray;
+        var adaptedEnumerable = sourceEnumerable.Select(x => x.Adapt<ExternalDestDto>()).ToList();
+        
+        // Pattern: Adapt calls on IList elements
+        IList<ExternalProjectDto> sourceIList = _sourceList;
+        var adaptedIList = sourceIList.Select(x => x.Adapt<ExternalDestDto>()).ToList();
+        
+        // Pattern: Adapt calls on Dictionary values
+        var sourceDict = new Dictionary<string, ExternalSourceDto>
+        {
+            ["key1"] = new ExternalSourceDto { Id = "dict-1" },
+            ["key2"] = new ExternalSourceDto { Id = "dict-2" }
+        };
+        var adaptedDict = sourceDict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Adapt<ExternalDestDto>());
+    }
+}

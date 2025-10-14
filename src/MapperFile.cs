@@ -174,9 +174,11 @@ internal static class MapperFile
         var dstProps = TypeProps.Build(dest);
         string dstFq = names.FullyQualified(dest);
 
-        // Find required properties
+        // Find required properties and init-only properties
         var requiredPropertyNames = GetRequiredPropertyNames(dest);
+        var initOnlyPropertyNames = GetInitOnlyPropertyNames(dest);
         bool hasRequiredProps = requiredPropertyNames.Count > 0;
+        bool hasInitOnlyProps = initOnlyPropertyNames.Count > 0;
 
         // Build list of property mappings
         var simpleMappings = new List<(string propName, string value)>();
@@ -221,9 +223,9 @@ internal static class MapperFile
         }
 
         // Emit object creation
-        if (hasRequiredProps)
+        if (hasRequiredProps || hasInitOnlyProps)
         {
-            // Use object initializer syntax
+            // Use object initializer syntax for required or init-only properties
             sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine();
             sb.Append(indent).AppendLine("{");
             for (int i = 0; i < simpleMappings.Count; i++)
@@ -364,6 +366,27 @@ internal static class MapperFile
                 result.Add(prop.Name);
             }
         }
+        return result;
+    }
+
+    private static HashSet<string> GetInitOnlyPropertyNames(INamedTypeSymbol type)
+    {
+        var result = new HashSet<string>();
+        
+        // Check all properties including base class properties
+        INamedTypeSymbol? current = type;
+        while (current is not null)
+        {
+            foreach (ISymbol member in current.GetMembers())
+            {
+                if (member is IPropertySymbol prop && prop.SetMethod?.IsInitOnly == true)
+                {
+                    result.Add(prop.Name);
+                }
+            }
+            current = current.BaseType;
+        }
+        
         return result;
     }
 
