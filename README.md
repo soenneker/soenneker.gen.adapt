@@ -9,6 +9,7 @@ A modern, high-performance C# source generator for compile-time object mapping; 
 - **Zero runtime cost** - All code is generated at compile time
 - **Type-safe** - Compiler errors instead of runtime failures
 - **Highly optimized** - Aggressive inlining, cached delegates, safe parsing
+- **Works with Blazor** 
 
 ## Installation
 
