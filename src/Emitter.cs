@@ -55,13 +55,42 @@ internal static class Emitter
     public static void Generate(
         SourceProductionContext context,
         Compilation compilation,
-        ImmutableArray<(InvocationExpressionSyntax, SemanticModel)> invocations)
+        ImmutableArray<(InvocationExpressionSyntax, SemanticModel)> invocations,
+        ImmutableArray<string> razorCalls = default)
     {
+        // Get the namespace from the compilation (use assembly name as fallback)
+        string targetNamespace = GetTargetNamespace(compilation);
+        
         // Extract type pairs from Adapt() invocations
         var typePairs = new List<TypePair>();
         var allTypes = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
         var enums = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
         var deferredCalls = new List<(InvocationExpressionSyntax invocation, SemanticModel model, INamedTypeSymbol destType)>();
+
+        // Process Razor-extracted Adapt calls
+        if (!razorCalls.IsDefaultOrEmpty)
+        {
+            foreach (string razorCall in razorCalls)
+            {
+                string[] parts = razorCall.Split('|');
+                if (parts.Length == 2)
+                {
+                    string sourceTypeName = parts[0];
+                    string destTypeName = parts[1];
+                    
+                    // Try to resolve types from compilation
+                    INamedTypeSymbol? sourceType = FindTypeByName(compilation, sourceTypeName);
+                    INamedTypeSymbol? destType = FindTypeByName(compilation, destTypeName);
+                    
+                    if (sourceType != null && destType != null)
+                    {
+                        typePairs.Add(new TypePair(sourceType, destType, Location.None));
+                        allTypes.Add(sourceType);
+                        allTypes.Add(destType);
+                    }
+                }
+            }
+        }
 
         foreach ((InvocationExpressionSyntax invocation, SemanticModel model) in invocations)
         {
@@ -196,7 +225,7 @@ internal static class Emitter
         // This handles scenarios where compile-time type info isn't available (generic type parameters, etc.)
         {
             var sb = new StringBuilder(2048);
-            ReflectionAdapter.EmitReflectionAdapter(sb);
+            ReflectionAdapter.EmitReflectionAdapter(sb, targetNamespace);
             Add(context, "Adapt.ReflectionAdapter.g.cs", sb);
         }
 
@@ -219,7 +248,7 @@ internal static class Emitter
         if (enumList.Count > 0)
         {
             var sb = new StringBuilder(2048);
-            EnumParsers.Emit(sb, enumList, nameCache);
+            EnumParsers.Emit(sb, enumList, nameCache, targetNamespace);
             Add(context, "Adapt.EnumParsers.g.cs", sb);
         }
 
@@ -235,7 +264,7 @@ internal static class Emitter
                 continue;
 
             var sb = new StringBuilder(16_384);
-            MapperFile.EmitSourceMapperAndDispatcher(sb, source, destinations, enumList, nameCache);
+            MapperFile.EmitSourceMapperAndDispatcher(sb, source, destinations, enumList, nameCache, targetNamespace);
 
             string sanitized = nameCache.Sanitized(source);
             if (sanitized.StartsWith("global__"))
@@ -249,7 +278,7 @@ internal static class Emitter
         // Collections
         {
             var sb = new StringBuilder(2048);
-            Collections.Emit(sb);
+            Collections.Emit(sb, targetNamespace);
             Add(context, "Adapt.Collections.g.cs", sb);
         }
     }
@@ -473,6 +502,66 @@ internal static class Emitter
         return null;
     }
 
+    private static INamedTypeSymbol? FindTypeByName(Compilation compilation, string typeName)
+    {
+        // Try to find the type in the compilation
+        // Handle both simple names and fully qualified names
+        INamedTypeSymbol? type = compilation.GetTypeByMetadataName(typeName);
+        if (type != null)
+            return type;
+        
+        // If not found, try searching through all types in all assemblies
+        var allTypes = compilation.GlobalNamespace.GetNamespaceMembers()
+            .SelectMany(ns => GetAllTypes(ns))
+            .Concat(GetAllTypes(compilation.GlobalNamespace));
+        
+        foreach (INamedTypeSymbol t in allTypes)
+        {
+            if (t.Name == typeName || t.ToDisplayString() == typeName)
+                return t;
+        }
+        
+        return null;
+    }
+    
+    private static IEnumerable<INamedTypeSymbol> GetAllTypes(INamespaceSymbol ns)
+    {
+        foreach (INamedTypeSymbol type in ns.GetTypeMembers())
+        {
+            yield return type;
+            foreach (INamedTypeSymbol nested in GetNestedTypes(type))
+                yield return nested;
+        }
+        
+        foreach (INamespaceSymbol childNs in ns.GetNamespaceMembers())
+        {
+            foreach (INamedTypeSymbol type in GetAllTypes(childNs))
+                yield return type;
+        }
+    }
+    
+    private static IEnumerable<INamedTypeSymbol> GetNestedTypes(INamedTypeSymbol type)
+    {
+        foreach (INamedTypeSymbol nested in type.GetTypeMembers())
+        {
+            yield return nested;
+            foreach (INamedTypeSymbol deepNested in GetNestedTypes(nested))
+                yield return deepNested;
+        }
+    }
+
     private static void Add(SourceProductionContext ctx, string fileName, StringBuilder sb)
         => ctx.AddSource(fileName, SourceText.From(sb.ToString(), Encoding.UTF8));
+
+    private static string GetTargetNamespace(Compilation compilation)
+    {
+        // Use the assembly name as the namespace
+        // Dots are valid in namespaces, so we keep them
+        string assemblyName = compilation.AssemblyName ?? "GeneratedAdapt";
+        
+        // Only clean up characters that are invalid in namespaces
+        assemblyName = assemblyName.Replace(" ", "").Replace("-", "_");
+        
+        return assemblyName;
+    }
 }

@@ -12,7 +12,8 @@ internal static class MapperFile
         INamedTypeSymbol source,
         List<INamedTypeSymbol> destinations,
         List<INamedTypeSymbol> enums,
-        NameCache names)
+        NameCache names,
+        string targetNamespace)
     {
         string srcFq = names.FullyQualified(source);
         string srcSan = names.Sanitized(source);
@@ -23,8 +24,10 @@ internal static class MapperFile
         sb.AppendLine("using System.Collections.Generic;");
         sb.AppendLine("using System.Runtime.CompilerServices;");
         sb.AppendLine();
-        sb.AppendLine("public static partial class GenAdapt");
+        sb.Append("namespace ").AppendLine(targetNamespace);
         sb.AppendLine("{");
+        sb.AppendLine("\tpublic static partial class GenAdapt");
+        sb.AppendLine("\t{");
 
         if (destinations.Count == 1)
         {
@@ -32,19 +35,19 @@ internal static class MapperFile
             INamedTypeSymbol d = destinations[0];
             string dFq = names.FullyQualified(d);
             
-            sb.AppendLine("\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
-            sb.Append("\tpublic static ").Append(dFq).Append(" Adapt(this ").Append(srcFq).AppendLine(" source)");
-            sb.AppendLine("\t{");
-            EmitMappingBody(sb, source, d, enums, names, "\t\t");
-            sb.AppendLine("\t}");
+            sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
+            sb.Append("\t\tpublic static ").Append(dFq).Append(" Adapt(this ").Append(srcFq).AppendLine(" source)");
+            sb.AppendLine("\t\t{");
+            EmitMappingBody(sb, source, d, enums, names, "\t\t\t");
+            sb.AppendLine("\t\t}");
             sb.AppendLine();
             
             // Generic overload (for explicit .Adapt<TDest>() calls)
-            sb.AppendLine("\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
-            sb.Append("\tpublic static TDest Adapt<TDest>(this ").Append(srcFq).AppendLine(" source)");
-            sb.AppendLine("\t{");
-            sb.AppendLine("\t\treturn (TDest)(object)source.Adapt();");
-            sb.AppendLine("\t}");
+            sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
+            sb.Append("\t\tpublic static TDest Adapt<TDest>(this ").Append(srcFq).AppendLine(" source)");
+            sb.AppendLine("\t\t{");
+            sb.AppendLine("\t\t\treturn (TDest)(object)source.Adapt();");
+            sb.AppendLine("\t\t}");
         }
         else
         {
@@ -59,18 +62,18 @@ internal static class MapperFile
                 string dFq = names.FullyQualified(d);
                 string dSan = names.Sanitized(d);
                 
-                sb.Append("\tprivate static readonly Func<").Append(srcFq).Append(", ").Append(dFq).Append("> _map_")
+                sb.Append("\t\tprivate static readonly Func<").Append(srcFq).Append(", ").Append(dFq).Append("> _map_")
                   .Append(srcSan).Append("_To_").Append(dSan).Append(" = Map_").Append(srcSan).Append("_To_").Append(dSan).AppendLine(";");
             }
             sb.AppendLine();
 
-            sb.Append("\tprivate static class AdaptCache_").Append(srcSan).AppendLine("<TDest>");
-            sb.AppendLine("\t{");
-            sb.Append("\t\tpublic static readonly Func<").Append(srcFq).Append(", TDest> Invoke = BuildMapper();").AppendLine();
-            sb.AppendLine();
-            sb.Append("\t\tprivate static Func<").Append(srcFq).Append(", TDest> BuildMapper()").AppendLine();
+            sb.Append("\t\tprivate static class AdaptCache_").Append(srcSan).AppendLine("<TDest>");
             sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t\tvar destType = typeof(TDest);");
+            sb.Append("\t\t\tpublic static readonly Func<").Append(srcFq).Append(", TDest> Invoke = BuildMapper();").AppendLine();
+            sb.AppendLine();
+            sb.Append("\t\t\tprivate static Func<").Append(srcFq).Append(", TDest> BuildMapper()").AppendLine();
+            sb.AppendLine("\t\t\t{");
+            sb.AppendLine("\t\t\t\tvar destType = typeof(TDest);");
 
             for (int i = 0; i < destinations.Count; i++)
             {
@@ -78,23 +81,24 @@ internal static class MapperFile
                 string dFq = names.FullyQualified(d);
                 string dSan = names.Sanitized(d);
 
-                sb.Append("\t\t\tif (destType == typeof(").Append(dFq).AppendLine("))");
-                sb.Append("\t\t\t\treturn (Func<").Append(srcFq).Append(", TDest>)(object)_map_")
+                sb.Append("\t\t\t\tif (destType == typeof(").Append(dFq).AppendLine("))");
+                sb.Append("\t\t\t\t\treturn (Func<").Append(srcFq).Append(", TDest>)(object)_map_")
                   .Append(srcSan).Append("_To_").Append(dSan).AppendLine(";");
             }
 
-            sb.AppendLine("\t\t\tthrow new NotSupportedException($\"Unsupported Adapt target type: {destType.FullName}\");");
+            sb.AppendLine("\t\t\t\tthrow new NotSupportedException($\"Unsupported Adapt target type: {destType.FullName}\");");
+            sb.AppendLine("\t\t\t}");
             sb.AppendLine("\t\t}");
-            sb.AppendLine("\t}");
             sb.AppendLine();
 
-            sb.AppendLine("\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
-            sb.Append("\tpublic static TDest Adapt<TDest>(this ").Append(srcFq).AppendLine(" source)");
-            sb.AppendLine("\t{");
-            sb.Append("\t\treturn AdaptCache_").Append(srcSan).AppendLine("<TDest>.Invoke(source);");
-            sb.AppendLine("\t}");
+            sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
+            sb.Append("\t\tpublic static TDest Adapt<TDest>(this ").Append(srcFq).AppendLine(" source)");
+            sb.AppendLine("\t\t{");
+            sb.Append("\t\t\treturn AdaptCache_").Append(srcSan).AppendLine("<TDest>.Invoke(source);");
+            sb.AppendLine("\t\t}");
         }
 
+        sb.AppendLine("\t}");
         sb.AppendLine("}");
     }
 
@@ -128,12 +132,12 @@ internal static class MapperFile
         string srcSan = names.Sanitized(source);
         string dstSan = names.Sanitized(dest);
 
-        sb.Append("\tprivate static ").Append(dstFq).Append(" Map_").Append(srcSan).Append("_To_").Append(dstSan).Append('(').Append(srcFq).AppendLine(" source)");
-        sb.AppendLine("\t{");
+        sb.Append("\t\tprivate static ").Append(dstFq).Append(" Map_").Append(srcSan).Append("_To_").Append(dstSan).Append('(').Append(srcFq).AppendLine(" source)");
+        sb.AppendLine("\t\t{");
         
-        EmitMappingBody(sb, source, dest, enums, names, "\t\t");
+        EmitMappingBody(sb, source, dest, enums, names, "\t\t\t");
         
-        sb.AppendLine("\t}");
+        sb.AppendLine("\t\t}");
         sb.AppendLine();
     }
 
