@@ -40,6 +40,7 @@ internal static class Assignment
         // Guid <-> string
         if (Types.IsGuid(srcType) && Types.IsString(dstType))
             return srcExpr + ".ToString()";
+
         if (Types.IsString(srcType) && Types.IsGuid(dstType))
             return null; // Handle Guid.TryParse specially in mapper
 

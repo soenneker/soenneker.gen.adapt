@@ -21,7 +21,7 @@
             .Adapt<ExternalDestDto>();
         
         // Pattern: Adapt calls after other operations
-        var tempSource = _source;
+        ExternalSourceDto tempSource = _source;
         var adaptedAfterAssignment = tempSource.Adapt<ExternalDestDto>();
         
         // Pattern: Adapt calls in string interpolation
@@ -30,12 +30,12 @@
         // Pattern: Adapt calls in conditional expressions with multiple conditions
         bool condition1 = _source.Id.Length > 5;
         bool condition2 = !string.IsNullOrEmpty(_source.Id);
-        var conditionalAdapted = (condition1 && condition2) 
+        ExternalDestDto conditionalAdapted = (condition1 && condition2) 
             ? _source.Adapt<ExternalDestDto>() 
             : new ExternalDestDto { Id = "default" };
         
         // Pattern: Adapt calls in switch expressions
-        var switchAdapted = _source.Id switch
+        ExternalDestDto switchAdapted = _source.Id switch
         {
             "complex-expr" => _source.Adapt<ExternalDestDto>(),
             "other" => _source.Adapt<ExternalDestDto>(),
@@ -43,11 +43,11 @@
         };
         
         // Pattern: Adapt calls in nested method calls
-        var nestedMethodResult = ProcessAdapt(GetSource().Adapt<ExternalDestDto>());
+        string nestedMethodResult = ProcessAdapt(GetSource().Adapt<ExternalDestDto>());
         
         // Pattern: Adapt calls with null-conditional and null-coalescing
         ExternalSourceDto? nullableSource = _source;
-        var nullConditionalResult = nullableSource?.Adapt<ExternalDestDto>() ?? new ExternalDestDto { Id = "null-fallback" };
+        ExternalDestDto nullConditionalResult = nullableSource?.Adapt<ExternalDestDto>() ?? new ExternalDestDto { Id = "null-fallback" };
     }
     
     private ExternalSourceDto GetSource()

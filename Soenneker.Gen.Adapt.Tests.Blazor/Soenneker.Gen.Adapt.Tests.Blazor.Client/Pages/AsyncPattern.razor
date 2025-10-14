@@ -17,13 +17,13 @@
         var adaptedResult = _asyncSource.Adapt<ExternalDestDto>();
         
         // Pattern: Adapt calls with async/await
-        var asyncAdapted = await ProcessAsyncAdapt(_asyncSource);
+        ExternalDestDto asyncAdapted = await ProcessAsyncAdapt(_asyncSource);
         
         // Pattern: Adapt calls in Task.Run
-        var taskAdapted = await Task.Run(() => _asyncSource.Adapt<ExternalDestDto>());
+        ExternalDestDto taskAdapted = await Task.Run(() => _asyncSource.Adapt<ExternalDestDto>());
         
         // Pattern: Adapt calls with ConfigureAwait
-        var configuredAdapted = await ProcessConfiguredAdapt(_asyncSource).ConfigureAwait(false);
+        ExternalDestDto configuredAdapted = await ProcessConfiguredAdapt(_asyncSource).ConfigureAwait(false);
     }
     
     private async Task<ExternalDestDto> ProcessAsyncAdapt(ExternalSourceDto source)
@@ -38,3 +38,4 @@
         return source.Adapt<ExternalDestDto>();
     }
 }
+

@@ -18,7 +18,7 @@
         var adaptedNullable = _nullableSource.Adapt<ExternalDestDto>();
         
         // Pattern: Adapt calls with null coalescing
-        var adaptedWithFallback = _nullableSource ?? new ExternalSourceDto { Id = "fallback" };
+        ExternalSourceDto adaptedWithFallback = _nullableSource ?? new ExternalSourceDto { Id = "fallback" };
         var finalResult = adaptedWithFallback.Adapt<ExternalDestDto>();
         
         // Pattern: Adapt calls in null-conditional expressions
@@ -31,3 +31,4 @@
         }
     }
 }
+

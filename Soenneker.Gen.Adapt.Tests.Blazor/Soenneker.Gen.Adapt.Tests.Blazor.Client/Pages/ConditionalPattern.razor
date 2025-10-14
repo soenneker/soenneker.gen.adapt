@@ -27,8 +27,9 @@
         }
         
         // Pattern: Adapt calls in ternary operator
-        var alternateResult = _useAdapt 
+        ExternalDestDto alternateResult = _useAdapt 
             ? _sourceDto.Adapt<ExternalDestDto>() 
             : new ExternalDestDto { Id = "ternary-fallback" };
     }
 }
+

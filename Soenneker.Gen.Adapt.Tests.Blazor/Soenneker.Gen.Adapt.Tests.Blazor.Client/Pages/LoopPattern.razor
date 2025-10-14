@@ -21,7 +21,7 @@
         var adaptedList = new List<ExternalDestDto>();
         
         // Pattern: Adapt calls in foreach loop
-        foreach (var source in _sourceList)
+        foreach (ExternalProjectDto source in _sourceList)
         {
             var adapted = source.Adapt<ExternalDestDto>();
             adaptedList.Add(adapted);
@@ -35,6 +35,7 @@
         }
         
         // Pattern: Adapt calls in LINQ
-        var linqAdapted = _sourceList.Select(x => x.Adapt<ExternalDestDto>()).ToList();
+        List<ExternalDestDto> linqAdapted = _sourceList.Select(x => x.Adapt<ExternalDestDto>()).ToList();
     }
 }
+

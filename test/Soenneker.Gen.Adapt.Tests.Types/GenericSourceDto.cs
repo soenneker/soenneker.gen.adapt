@@ -6,3 +6,4 @@ public class GenericSourceDto<T>
     public string Id { get; set; }
     public List<T> Items { get; set; } = new List<T>();
 }
+

@@ -175,8 +175,8 @@ internal static class MapperFile
         string dstFq = names.FullyQualified(dest);
 
         // Find required properties and init-only properties
-        var requiredPropertyNames = GetRequiredPropertyNames(dest);
-        var initOnlyPropertyNames = GetInitOnlyPropertyNames(dest);
+        HashSet<string> requiredPropertyNames = GetRequiredPropertyNames(dest);
+        HashSet<string> initOnlyPropertyNames = GetInitOnlyPropertyNames(dest);
         bool hasRequiredProps = requiredPropertyNames.Count > 0;
         bool hasInitOnlyProps = initOnlyPropertyNames.Count > 0;
 
@@ -230,7 +230,7 @@ internal static class MapperFile
             sb.Append(indent).AppendLine("{");
             for (int i = 0; i < simpleMappings.Count; i++)
             {
-                var (propName, value) = simpleMappings[i];
+                (string propName, string value) = simpleMappings[i];
                 sb.Append(indent).Append("\t").Append(propName).Append(" = ").Append(value);
                 if (i < simpleMappings.Count - 1)
                     sb.AppendLine(",");
@@ -244,14 +244,14 @@ internal static class MapperFile
             // Traditional approach
             sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("();");
             
-            foreach (var (propName, value) in simpleMappings)
+            foreach ((string propName, string value) in simpleMappings)
             {
                 sb.Append(indent).Append("target.").Append(propName).Append(" = ").Append(value).AppendLine(";");
             }
         }
 
         // Handle complex mappings (lists, dictionaries, special cases)
-        foreach (var (dp, sp) in complexMappings)
+        foreach ((Prop dp, Prop sp) in complexMappings)
         {
             if (Types.IsAnyList(sp.Type, out ITypeSymbol? sElem) && Types.IsAnyList(dp.Type, out ITypeSymbol? dElem))
             {

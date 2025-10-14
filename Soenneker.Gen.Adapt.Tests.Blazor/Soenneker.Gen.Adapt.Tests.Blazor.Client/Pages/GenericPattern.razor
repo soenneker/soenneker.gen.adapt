@@ -21,7 +21,7 @@
         var adaptedList = _sourceList.Adapt<List<ExternalDestDto>>();
         
         // Pattern: Adapt calls in generic methods with type inference
-        var methodAdapted = ProcessGenericList(_sourceList);
+        List<ExternalDestDto> methodAdapted = ProcessGenericList(_sourceList);
         
         // Pattern: Adapt calls with Dictionary<TKey, TValue>
         var sourceDict = new Dictionary<string, ExternalSourceDto>

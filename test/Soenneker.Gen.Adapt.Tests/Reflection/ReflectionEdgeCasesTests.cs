@@ -177,7 +177,7 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
     public void AdaptViaReflection_UtcDateTime_ShouldPreserveKind()
     {
         // Arrange
-        var utcNow = DateTime.UtcNow;
+        DateTime utcNow = DateTime.UtcNow;
         var source = new ReflectionAllPrimitivesSource
         {
             DateTimeValue = utcNow

@@ -19,10 +19,10 @@
     private void TestLambdaPattern()
     {
         // Pattern: Adapt calls in lambda expressions
-        var adaptedList = _sourceList.Select(x => x.Adapt<ExternalDestDto>()).ToList();
+        List<ExternalDestDto> adaptedList = _sourceList.Select(x => x.Adapt<ExternalDestDto>()).ToList();
         
         // Pattern: Adapt calls in Where lambda
-        var filteredAdapted = _sourceList
+        List<ExternalDestDto> filteredAdapted = _sourceList
             .Where(x => x.Id.Contains("lambda"))
             .Select(x => x.Adapt<ExternalDestDto>())
             .ToList();
@@ -38,7 +38,7 @@
         
         // Pattern: Adapt calls in Func lambda
         Func<ExternalSourceDto, ExternalDestDto> adaptFunc = source => source.Adapt<ExternalDestDto>();
-        var funcAdapted = _sourceList.Select(adaptFunc).ToList();
+        List<ExternalDestDto> funcAdapted = _sourceList.Select(adaptFunc).ToList();
         
         // Pattern: Adapt calls in local function with lambda
         ProcessWithLambda(x => x.Adapt<ExternalDestDto>());
@@ -46,6 +46,7 @@
     
     private void ProcessWithLambda(Func<ExternalSourceDto, ExternalDestDto> adapter)
     {
-        var result = adapter(_sourceList.First());
+        ExternalDestDto result = adapter(_sourceList.First());
     }
 }
+

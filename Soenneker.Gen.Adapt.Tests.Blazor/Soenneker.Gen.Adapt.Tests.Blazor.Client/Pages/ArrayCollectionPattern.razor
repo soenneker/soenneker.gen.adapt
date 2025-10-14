@@ -31,18 +31,18 @@
         }
         
         // Pattern: Adapt calls in LINQ Select on arrays
-        var adaptedFromArray = _sourceArray.Select(x => x.Adapt<ExternalDestDto>()).ToList();
+        List<ExternalDestDto> adaptedFromArray = _sourceArray.Select(x => x.Adapt<ExternalDestDto>()).ToList();
         
         // Pattern: Adapt calls in LINQ Select on lists
-        var adaptedFromList = _sourceList.Select(x => x.Adapt<ExternalDestDto>()).ToList();
+        List<ExternalDestDto> adaptedFromList = _sourceList.Select(x => x.Adapt<ExternalDestDto>()).ToList();
         
         // Pattern: Adapt calls on IEnumerable elements
         IEnumerable<ExternalSourceDto> sourceEnumerable = _sourceArray;
-        var adaptedEnumerable = sourceEnumerable.Select(x => x.Adapt<ExternalDestDto>()).ToList();
+        List<ExternalDestDto> adaptedEnumerable = sourceEnumerable.Select(x => x.Adapt<ExternalDestDto>()).ToList();
         
         // Pattern: Adapt calls on IList elements
         IList<ExternalProjectDto> sourceIList = _sourceList;
-        var adaptedIList = sourceIList.Select(x => x.Adapt<ExternalDestDto>()).ToList();
+        List<ExternalDestDto> adaptedIList = sourceIList.Select(x => x.Adapt<ExternalDestDto>()).ToList();
         
         // Pattern: Adapt calls on Dictionary values
         var sourceDict = new Dictionary<string, ExternalSourceDto>
@@ -50,6 +50,6 @@
             ["key1"] = new ExternalSourceDto { Id = "dict-1" },
             ["key2"] = new ExternalSourceDto { Id = "dict-2" }
         };
-        var adaptedDict = sourceDict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Adapt<ExternalDestDto>());
+        Dictionary<string, ExternalDestDto> adaptedDict = sourceDict.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Adapt<ExternalDestDto>());
     }
 }

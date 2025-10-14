@@ -287,7 +287,7 @@ internal static class Emitter
         // Collect all enums from all referenced assemblies that might be used
         CollectEnums(compilation, allTypes, enums);
 
-        var enumList = enums.ToList();
+        List<INamedTypeSymbol> enumList = enums.ToList();
 
         // Name cache
         var nameCache = new NameCache(capacity: allTypes.Count + enumList.Count);
@@ -521,16 +521,16 @@ internal static class Emitter
     private static INamedTypeSymbol? TraceIdentifierToAdaptCall(IdentifierNameSyntax identifier, SemanticModel model)
     {
         // Try to get the symbol for this identifier
-        var symbolInfo = model.GetSymbolInfo(identifier);
+        SymbolInfo symbolInfo = model.GetSymbolInfo(identifier);
         ILocalSymbol? localSymbol = symbolInfo.Symbol as ILocalSymbol;
         
         if (localSymbol != null)
         {
             // Find the variable declarator for this local symbol
-            var syntaxReference = localSymbol.DeclaringSyntaxReferences.FirstOrDefault();
+            SyntaxReference? syntaxReference = localSymbol.DeclaringSyntaxReferences.FirstOrDefault();
             if (syntaxReference != null)
             {
-                var declaratorSyntax = syntaxReference.GetSyntax();
+                SyntaxNode declaratorSyntax = syntaxReference.GetSyntax();
                 
                 // Check if it's a VariableDeclaratorSyntax with an initializer
                 if (declaratorSyntax is VariableDeclaratorSyntax declarator && declarator.Initializer?.Value != null)
@@ -554,17 +554,17 @@ internal static class Emitter
         {
             // Symbol couldn't be resolved (e.g. because type depends on our generator)
             // Fall back to syntax-only search in the containing method/block
-            var containingMethod = identifier.Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault();
+            MethodDeclarationSyntax? containingMethod = identifier.Ancestors().OfType<MethodDeclarationSyntax>().FirstOrDefault();
             if (containingMethod != null)
             {
-                var identifierName = identifier.Identifier.Text;
+                string identifierName = identifier.Identifier.Text;
                 
                 // Find variable declarations in the method before this usage
-                var declarators = containingMethod.DescendantNodes()
+                IEnumerable<VariableDeclaratorSyntax> declarators = containingMethod.DescendantNodes()
                     .OfType<VariableDeclaratorSyntax>()
                     .Where(v => v.Identifier.Text == identifierName);
                 
-                foreach (var declarator in declarators)
+                foreach (VariableDeclaratorSyntax? declarator in declarators)
                 {
                     // Check if this declarator comes before our identifier in the source
                     if (declarator.SpanStart < identifier.SpanStart && declarator.Initializer?.Value != null)
@@ -605,7 +605,7 @@ internal static class Emitter
             
             // Extract type arguments
             string typeArgsStr = typeName.Substring(anglePos + 1, typeName.Length - anglePos - 2); // Remove < and >
-            var typeArgNames = ParseGenericTypeArguments(typeArgsStr);
+            List<string> typeArgNames = ParseGenericTypeArguments(typeArgsStr);
             
             // Resolve each type argument
             var typeArgs = new List<ITypeSymbol>();
@@ -635,7 +635,7 @@ internal static class Emitter
             return frameworkType;
         
         // If not found, try searching through all types in all assemblies
-        var allTypes = compilation.GlobalNamespace.GetNamespaceMembers()
+        IEnumerable<INamedTypeSymbol> allTypes = compilation.GlobalNamespace.GetNamespaceMembers()
             .SelectMany(ns => GetAllTypes(ns))
             .Concat(GetAllTypes(compilation.GlobalNamespace));
         
@@ -668,7 +668,7 @@ internal static class Emitter
             ("ISet", "System.Collections.Generic.ISet`1"),
         };
         
-        foreach (var (simpleName, fullName) in commonTypes)
+        foreach ((string simpleName, string fullName) in commonTypes)
         {
             if (typeName == simpleName)
             {
