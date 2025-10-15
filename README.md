@@ -103,3 +103,6 @@ The generator creates multiple files per source type (e.g., `Adapt.BasicSource.g
 ```
 
 Generated files will appear in `Project -> Dependencies -> Analyzers -> Soenneker.Gen.Adapt`
+
+⚠️ Note: Source Generators don’t work transitively across project references.
+Any project that calls `Adapt()` must include its own direct package reference.
