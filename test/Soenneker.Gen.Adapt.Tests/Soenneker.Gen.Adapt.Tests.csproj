@@ -27,7 +27,7 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
             <PrivateAssets>all</PrivateAssets>
         </PackageReference>
-        <PackageReference Include="Soenneker.Documents.Audit" Version="3.0.2402" />
+        <PackageReference Include="Soenneker.Documents.Audit" Version="3.0.2403" />
         <PackageReference Include="Soenneker.Dtos.IdNamePair" Version="3.0.682" />
         <PackageReference Include="Soenneker.Utils.Test" Version="3.0.293" />
         <PackageReference Include="Soenneker.Tests.Unit" Version="3.0.917" />
