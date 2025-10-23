@@ -1,6 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 
 namespace Soenneker.Gen.Adapt;
@@ -211,7 +210,17 @@ internal static class MapperFile
             string? rhs = Assignment.TryBuild("source." + sp.Name, sp.Type, dp.Type, enums);
             if (rhs is null)
             {
-                if (Types.IsString(sp.Type) && Types.IsGuid(dp.Type))
+                // Check if it's a nested object that needs mapping
+                if (sp.Type is INamedTypeSymbol srcNamed && dp.Type is INamedTypeSymbol dstNamed &&
+                    (srcNamed.TypeKind == TypeKind.Class || srcNamed.TypeKind == TypeKind.Struct) &&
+                    (dstNamed.TypeKind == TypeKind.Class || dstNamed.TypeKind == TypeKind.Struct) &&
+                    !Types.IsFrameworkType(srcNamed) && !Types.IsFrameworkType(dstNamed) &&
+                    !SymbolEqualityComparer.Default.Equals(srcNamed, dstNamed))
+                {
+                    // This is a nested object that needs mapping
+                    complexMappings.Add((dp, sp));
+                }
+                else if (Types.IsString(sp.Type) && Types.IsGuid(dp.Type))
                 {
                     // Special case - will handle after object creation
                     complexMappings.Add((dp, sp));
@@ -343,6 +352,20 @@ internal static class MapperFile
                         }
                     }
                 }
+            }
+
+            // Handle nested object mappings
+            if (sp.Type is INamedTypeSymbol srcNamed && dp.Type is INamedTypeSymbol dstNamed &&
+                (srcNamed.TypeKind == TypeKind.Class || srcNamed.TypeKind == TypeKind.Struct) &&
+                (dstNamed.TypeKind == TypeKind.Class || dstNamed.TypeKind == TypeKind.Struct) &&
+                !Types.IsFrameworkType(srcNamed) && !Types.IsFrameworkType(dstNamed) &&
+                !SymbolEqualityComparer.Default.Equals(srcNamed, dstNamed))
+            {
+                sb.Append(indent).Append("if (source.").Append(sp.Name).AppendLine(" is not null)");
+                sb.Append(indent).AppendLine("{");
+                sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = source.").Append(sp.Name).Append(".Adapt<").Append(Types.Fq(dstNamed)).AppendLine(">();");
+                sb.Append(indent).AppendLine("}");
+                continue;
             }
 
             // Special case: string -> Guid with TryParse

@@ -1,5 +1,3 @@
-using System;
-
 namespace Soenneker.Gen.Adapt.Tests.Dtos;
 
 // Class without parameterless constructor - should trigger SGA002 diagnostic

@@ -3,8 +3,6 @@ using System.Collections.Generic;
 
 namespace Soenneker.Gen.Adapt;
 
-
-
 internal sealed class TypeProps
 {
     private readonly Dictionary<string, Prop> _readable; // by name
@@ -28,8 +26,10 @@ internal sealed class TypeProps
         {
             foreach (ISymbol? m in currentType.GetMembers())
             {
-                if (m is not IPropertySymbol p) continue;
-                if (p.DeclaredAccessibility != Accessibility.Public) continue;
+                if (m is not IPropertySymbol p)
+                    continue;
+                if (p.DeclaredAccessibility != Accessibility.Public)
+                    continue;
 
                 if (p.GetMethod is not null && !readable.ContainsKey(p.Name))
                     readable[p.Name] = new Prop(p.Name, p.Type);
@@ -43,7 +43,7 @@ internal sealed class TypeProps
                     settableNames.Add(p.Name);
                 }
             }
-            
+
             currentType = currentType.BaseType;
         }
 

@@ -16,4 +16,3 @@ public class NestedDestObjectDto
     public string NestedId { get; set; }
     public string NestedName { get; set; }
 }
-

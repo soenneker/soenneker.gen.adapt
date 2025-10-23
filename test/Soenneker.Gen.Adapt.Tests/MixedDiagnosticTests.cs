@@ -1,4 +1,3 @@
-using System;
 using AwesomeAssertions;
 using Soenneker.Tests.Unit;
 using Soenneker.Gen.Adapt.Tests.Dtos;

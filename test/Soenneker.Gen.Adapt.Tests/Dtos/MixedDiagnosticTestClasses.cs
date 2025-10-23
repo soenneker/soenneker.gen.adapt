@@ -1,5 +1,3 @@
-using System;
-
 namespace Soenneker.Gen.Adapt.Tests.Dtos;
 
 // Valid source class with matching properties
