@@ -62,9 +62,9 @@ public class NestedMappingBenchmark
     }
 
     [Benchmark]
-    public NestedDest Mapster()
+    public NestedDest MapsterBenchmark()
     {
-        return _nestedSource.Adapt<NestedDest>(_mapsterConfig);
+        return TypeAdapter.Adapt<NestedDest>(_nestedSource, _mapsterConfig);
     }
 
     [Benchmark]

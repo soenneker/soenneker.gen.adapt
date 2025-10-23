@@ -3,11 +3,13 @@ using BenchmarkDotNet.Attributes;
 using Facet.Extensions;
 using Mapster;
 using Microsoft.Extensions.Logging.Abstractions;
+using Riok.Mapperly.Abstractions;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 
 namespace Soenneker.Gen.Adapt.Tests.Benchmarks;
 
 [MemoryDiagnoser]
+[SimpleJob]
 public class SimpleMappingBenchmark
 {
     private BasicSource _basicSource;
@@ -53,9 +55,9 @@ public class SimpleMappingBenchmark
     }
 
     [Benchmark]
-    public BasicDest Mapster()
+    public BasicDest MapsterBenchmark()
     {
-        return _basicSource.Adapt<BasicDest>(_mapsterConfig);
+        return TypeAdapter.Adapt<BasicDest>(_basicSource, _mapsterConfig);
     }
 
     [Benchmark]

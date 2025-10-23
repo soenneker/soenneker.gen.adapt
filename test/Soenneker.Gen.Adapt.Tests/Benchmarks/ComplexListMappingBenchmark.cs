@@ -2,6 +2,7 @@ using AutoMapper;
 using BenchmarkDotNet.Attributes;
 using Mapster;
 using Microsoft.Extensions.Logging.Abstractions;
+using Riok.Mapperly.Abstractions;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 using System.Collections.Generic;
 using Facet.Extensions;
@@ -9,6 +10,7 @@ using Facet.Extensions;
 namespace Soenneker.Gen.Adapt.Tests.Benchmarks;
 
 [MemoryDiagnoser]
+[SimpleJob]
 public class ComplexListMappingBenchmark
 {
     private ComplexListSource _complexListSource;
@@ -74,9 +76,9 @@ public class ComplexListMappingBenchmark
     }
 
     [Benchmark]
-    public ComplexListDest Mapster()
+    public ComplexListDest MapsterBenchmark()
     {
-        return _complexListSource.Adapt<ComplexListDest>(_mapsterConfig);
+        return TypeAdapter.Adapt<ComplexListDest>(_complexListSource, _mapsterConfig);
     }
 
     [Benchmark]

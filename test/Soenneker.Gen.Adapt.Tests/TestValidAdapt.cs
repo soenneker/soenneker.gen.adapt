@@ -1,3 +1,5 @@
+using Soenneker.Documents.Audit;
+using Soenneker.Dtos.IdNamePair;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 
 namespace Soenneker.Gen.Adapt.Tests;
@@ -19,14 +21,4 @@ public class TestValidAdapt
         System.Console.WriteLine($"Name: {result.Name}, Value: {result.Value}");
     }
     
-    public void TestInvalidMapping()
-    {
-        var source = new ValidSource { Name = "test", Value = 42 };
-        
-        // This will cause compilation error SGA002 - no parameterless constructor
-        // var result1 = source.Adapt<InvalidDestNoCtor>();
-        
-        // This will cause compilation error SGA003 - no matching properties  
-        // var result2 = source.Adapt<InvalidDestNoProps>();
-    }
 }

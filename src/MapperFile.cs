@@ -22,6 +22,8 @@ internal static class MapperFile
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Collections.Generic;");
         sb.AppendLine("using System.Runtime.CompilerServices;");
+        sb.AppendLine("using System.Diagnostics.CodeAnalysis;");
+        sb.AppendLine("using System.CodeDom.Compiler;");
         sb.AppendLine();
         sb.Append("namespace ").AppendLine(targetNamespace);
         sb.AppendLine("{");
@@ -34,6 +36,8 @@ internal static class MapperFile
             INamedTypeSymbol d = destinations[0];
             string dFq = names.FullyQualified(d);
             
+            sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+            sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
             sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.Append("\t\tpublic static ").Append(dFq).Append(" Adapt(this ").Append(srcFq).AppendLine(" source)");
             sb.AppendLine("\t\t{");
@@ -42,6 +46,8 @@ internal static class MapperFile
             sb.AppendLine();
             
             // Generic overload (for explicit .Adapt<TDest>() calls)
+            sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+            sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
             sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.Append("\t\tpublic static TDest Adapt<TDest>(this ").Append(srcFq).AppendLine(" source)");
             sb.AppendLine("\t\t{");
@@ -50,50 +56,58 @@ internal static class MapperFile
         }
         else
         {
-            // Multiple destinations: emit private mapping methods + delegate cache
+            // Multiple destinations: emit private mapping methods + per-TDest id cache with switch dispatch
             for (int i = 0; i < destinations.Count; i++)
                 EmitMappingMethod(sb, source, destinations[i], enums, names);
-            
-            // Static readonly delegate fields
-            for (int i = 0; i < destinations.Count; i++)
-            {
-                INamedTypeSymbol? d = destinations[i];
-                string dFq = names.FullyQualified(d);
-                string dSan = names.Sanitized(d);
-                
-                sb.Append("\t\tprivate static readonly Func<").Append(srcFq).Append(", ").Append(dFq).Append("> _map_")
-                  .Append(srcSan).Append("_To_").Append(dSan).Append(" = Map_").Append(srcSan).Append("_To_").Append(dSan).AppendLine(";");
-            }
-            sb.AppendLine();
 
-            sb.Append("\t\tprivate static class AdaptCache_").Append(srcSan).AppendLine("<TDest>");
+            // Enum for dispatch ids (unique per source)
+            sb.Append("\t\tprivate enum _MapId_").Append(srcSan).AppendLine();
             sb.AppendLine("\t\t{");
-            sb.Append("\t\t\tpublic static readonly Func<").Append(srcFq).Append(", TDest> Invoke = BuildMapper();").AppendLine();
-            sb.AppendLine();
-            sb.Append("\t\t\tprivate static Func<").Append(srcFq).Append(", TDest> BuildMapper()").AppendLine();
-            sb.AppendLine("\t\t\t{");
-            sb.AppendLine("\t\t\t\tvar destType = typeof(TDest);");
-
             for (int i = 0; i < destinations.Count; i++)
             {
                 INamedTypeSymbol? d = destinations[i];
-                string dFq = names.FullyQualified(d);
                 string dSan = names.Sanitized(d);
-
-                sb.Append("\t\t\t\tif (destType == typeof(").Append(dFq).AppendLine("))");
-                sb.Append("\t\t\t\t\treturn (Func<").Append(srcFq).Append(", TDest>)(object)_map_")
-                  .Append(srcSan).Append("_To_").Append(dSan).AppendLine(";");
+                sb.Append("\t\t\t").Append(dSan).Append(',').AppendLine();
             }
-
-            sb.AppendLine("\t\t\t\tthrow new NotSupportedException($\"Unsupported Adapt target type: {destType.FullName}\");");
-            sb.AppendLine("\t\t\t}");
+            sb.AppendLine("\t\t\tUnknown");
             sb.AppendLine("\t\t}");
             sb.AppendLine();
 
+            
+
+            // Closed-generic cache for map id
+            sb.Append("\t\tprivate static class _MapIdCache_").Append(srcSan).AppendLine("<TDest>");
+            sb.AppendLine("\t\t{");
+            sb.Append("\t\t\tpublic static readonly _MapId_").Append(srcSan).Append(" Id = ").AppendLine();
+            for (int i = 0; i < destinations.Count; i++)
+            {
+                INamedTypeSymbol? d = destinations[i];
+                string dFq = names.FullyQualified(d);
+                string dSan = names.Sanitized(d);
+                sb.Append("\t\t\t\ttypeof(TDest) == typeof(").Append(dFq).Append(") ? _MapId_").Append(srcSan).Append('.').Append(dSan).Append(" :").AppendLine();
+            }
+            sb.Append("\t\t\t\t").Append("_MapId_").Append(srcSan).AppendLine(".Unknown;");
+            sb.AppendLine("\t\t}");
+            sb.AppendLine();
+
+            // Wrapper that switches on cached id; JIT can inline chosen arm
+            sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+            sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
             sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.Append("\t\tpublic static TDest Adapt<TDest>(this ").Append(srcFq).AppendLine(" source)");
             sb.AppendLine("\t\t{");
-            sb.Append("\t\t\treturn AdaptCache_").Append(srcSan).AppendLine("<TDest>.Invoke(source);");
+            sb.Append("\t\t\tswitch (_MapIdCache_").Append(srcSan).AppendLine("<TDest>.Id)");
+            sb.AppendLine("\t\t\t{");
+            for (int i = 0; i < destinations.Count; i++)
+            {
+                INamedTypeSymbol? d = destinations[i];
+                string dSan = names.Sanitized(d);
+                sb.Append("\t\t\t\tcase _MapId_").Append(srcSan).Append('.').Append(dSan).AppendLine(":");
+                sb.Append("\t\t\t\t\treturn (TDest)(object)Map_").Append(srcSan).Append("_To_").Append(dSan).AppendLine("(source);");
+            }
+            sb.AppendLine("\t\t\t\tdefault:");
+            sb.AppendLine("\t\t\t\t\tthrow new NotSupportedException($\"Unsupported Adapt target type: {typeof(TDest).FullName}\");");
+            sb.AppendLine("\t\t\t}");
             sb.AppendLine("\t\t}");
         }
 
@@ -131,6 +145,8 @@ internal static class MapperFile
         string srcSan = names.Sanitized(source);
         string dstSan = names.Sanitized(dest);
 
+        sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.Append("\t\tprivate static ").Append(dstFq).Append(" Map_").Append(srcSan).Append("_To_").Append(dstSan).Append('(').Append(srcFq).AppendLine(" source)");
         sb.AppendLine("\t\t{");
         
@@ -269,43 +285,103 @@ internal static class MapperFile
                 
                 bool destIsArray = Types.IsArray(dp.Type, out _);
                 bool destIsHashSet = Types.IsHashSet(dp.Type, out _) || Types.IsISet(dp.Type, out _);
-                
-                sb.Append(indent).Append("\tvar list_").Append(dp.Name).Append(" = new List<").Append(Types.Fq(dElem!)).AppendLine(">();");
 
-                if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
-                {
-                    sb.Append(indent).Append("\tforeach (var item in source.").Append(sp.Name).AppendLine(")");
-                    sb.Append(indent).Append("\t\tlist_").Append(dp.Name).AppendLine(".Add(item);");
-                }
-                else
-                {
-                    sb.Append(indent).Append("\tforeach (var item in source.").Append(sp.Name).AppendLine(")");
-                    sb.Append(indent).AppendLine("\t{");
-                    string? assn = Assignment.TryBuild("item", sElem!, dElem!, enums);
-                    
-                    if (assn is null && Types.IsString(sElem!) && Types.IsGuid(dElem!))
-                    {
-                        sb.Append(indent).AppendLine("\t\tif (global::System.Guid.TryParse(item, out var g))");
-                        sb.Append(indent).Append("\t\t\tlist_").Append(dp.Name).AppendLine(".Add(g);");
-                    }
-                    else
-                    {
-                        sb.Append(indent).Append("\t\tlist_").Append(dp.Name).Append(".Add(").Append(assn ?? "item").AppendLine(");");
-                    }
-                    sb.Append(indent).AppendLine("\t}");
-                }
+                bool srcIsArray = Types.IsArray(sp.Type, out _);
+                bool elementsEqual = SymbolEqualityComparer.Default.Equals(sElem, dElem);
 
                 if (destIsArray)
                 {
-                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = list_").Append(dp.Name).AppendLine(".ToArray();");
-                }
-                else if (destIsHashSet)
-                {
-                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = new HashSet<").Append(Types.Fq(dElem!)).Append(">(list_").Append(dp.Name).AppendLine(");");
+                    if (srcIsArray && elementsEqual)
+                    {
+                        // Zero-copy aliasing for array->array with identical element types
+                        sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = ").Append("source.").Append(sp.Name).AppendLine(";");
+                    }
+                    else if (srcIsArray)
+                    {
+                        sb.Append(indent).Append("\tint n_").Append(dp.Name).Append(" = ").Append("source.").Append(sp.Name).AppendLine(".Length;");
+                        sb.Append(indent).Append("\tvar a_").Append(dp.Name).Append(" = new ").Append(Types.Fq(dElem!)).AppendLine("[n_" + dp.Name + "];");
+                        sb.Append(indent).AppendLine("\tfor (int i = 0; i < n_" + dp.Name + "; i++)");
+                        string? assnArr = Assignment.TryBuild("source." + sp.Name + "[i]", sElem!, dElem!, enums) ?? ("source." + sp.Name + "[i]");
+                        sb.Append(indent).Append("\t\ta_").Append(dp.Name).Append("[i] = ").Append(assnArr).AppendLine(";");
+                        sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = a_").Append(dp.Name).AppendLine(";");
+                    }
+                    else
+                    {
+                        // Non-array to array: pre-materialize via list then ToArray as fallback
+                        sb.Append(indent).Append("\tvar list_").Append(dp.Name).Append(" = new List<").Append(Types.Fq(dElem!)).AppendLine(")();");
+                        sb.Append(indent).Append("\tforeach (var item in source.").Append(sp.Name).AppendLine(")");
+                        string? assn = Assignment.TryBuild("item", sElem!, dElem!, enums) ?? "item";
+                        sb.Append(indent).Append("\t\tlist_").Append(dp.Name).Append(".Add(").Append(assn).AppendLine(");");
+                        sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = list_").Append(dp.Name).AppendLine(".ToArray();");
+                    }
                 }
                 else
                 {
-                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = list_").Append(dp.Name).AppendLine(";");
+                    // Dest is not array
+                    if (srcIsArray && elementsEqual)
+                    {
+                        // Array->List<T> can use the copying ctor
+                        if (!destIsHashSet)
+                        {
+                            sb.Append(indent)
+                              .Append("\ttarget.")
+                              .Append(dp.Name)
+                              .Append(" = new List<")
+                              .Append(Types.Fq(dElem!))
+                              .Append(">(source.")
+                              .Append(sp.Name)
+                              .AppendLine(");");
+                        }
+                        else
+                        {
+                            sb.Append(indent)
+                              .Append("\ttarget.")
+                              .Append(dp.Name)
+                              .Append(" = new HashSet<")
+                              .Append(Types.Fq(dElem!))
+                              .Append(">(source.")
+                              .Append(sp.Name)
+                              .AppendLine(");");
+                        }
+                    }
+                    else
+                    {
+                        // Build list (pre-sized when Count is available), then assign to dest
+                        bool srcHasCount = Types.IsIReadOnlyCollection(sp.Type, out _) || Types.IsICollection(sp.Type, out _) || srcIsArray;
+                        if (srcHasCount)
+                        {
+                            if (srcIsArray)
+                                sb.Append(indent).Append("\tint count_").Append(dp.Name).Append(" = ").Append("source.").Append(sp.Name).AppendLine(".Length;");
+                            else
+                                sb.Append(indent).Append("\tint count_").Append(dp.Name).Append(" = ").Append("source.").Append(sp.Name).AppendLine(".Count;");
+                            sb.Append(indent).Append("\tvar list_").Append(dp.Name).Append(" = new List<").Append(Types.Fq(dElem!)).Append(">(count_").Append(dp.Name).AppendLine(");");
+                        }
+                        else
+                        {
+                            sb.Append(indent).Append("\tvar list_").Append(dp.Name).Append(" = new List<").Append(Types.Fq(dElem!)).AppendLine(">(0);");
+                        }
+                        if (srcIsArray)
+                        {
+                            sb.Append(indent).AppendLine("\tfor (int i = 0; i < (" + ("source." + sp.Name) + ").Length; i++)");
+                            string? assn = Assignment.TryBuild("source." + sp.Name + "[i]", sElem!, dElem!, enums) ?? ("source." + sp.Name + "[i]");
+                            sb.Append(indent).Append("\t\tlist_").Append(dp.Name).Append(".Add(").Append(assn).AppendLine(");");
+                        }
+                        else
+                        {
+                            sb.Append(indent).Append("\tforeach (var item in source.").Append(sp.Name).AppendLine(")");
+                            string? assn = Assignment.TryBuild("item", sElem!, dElem!, enums) ?? "item";
+                            sb.Append(indent).Append("\t\tlist_").Append(dp.Name).Append(".Add(").Append(assn).AppendLine(");");
+                        }
+
+                        if (destIsHashSet)
+                        {
+                            sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = new HashSet<").Append(Types.Fq(dElem!)).Append(">(list_").Append(dp.Name).AppendLine(");");
+                        }
+                        else
+                        {
+                            sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = list_").Append(dp.Name).AppendLine(";");
+                        }
+                    }
                 }
                 
                 sb.Append(indent).AppendLine("}");
@@ -327,7 +403,7 @@ internal static class MapperFile
                     {
                         sb.Append(indent).Append("if (source.").Append(sp.Name).AppendLine(" is not null)");
                         sb.Append(indent).AppendLine("{");
-                        sb.Append(indent).Append("\tvar dict_").Append(dp.Name).Append(" = new Dictionary<").Append(Types.Fq(dKey!)).Append(", ").Append(Types.Fq(dValue!)).AppendLine(">();");
+                        sb.Append(indent).Append("\tvar dict_").Append(dp.Name).Append(" = new Dictionary<").Append(Types.Fq(dKey!)).Append(", ").Append(Types.Fq(dValue!)).Append(">(source.").Append(sp.Name).AppendLine(".Count);");
                         sb.Append(indent).Append("\tforeach (var kv in source.").Append(sp.Name).AppendLine(")");
                         sb.Append(indent).Append("\t\tdict_").Append(dp.Name).AppendLine("[kv.Key] = kv.Value;");
                         sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = dict_").Append(dp.Name).AppendLine(";");
@@ -341,7 +417,7 @@ internal static class MapperFile
                         {
                             sb.Append(indent).Append("if (source.").Append(sp.Name).AppendLine(" is not null)");
                             sb.Append(indent).AppendLine("{");
-                            sb.Append(indent).Append("\tvar dict_").Append(dp.Name).Append(" = new Dictionary<").Append(Types.Fq(dKey!)).Append(", ").Append(Types.Fq(dValue!)).AppendLine(">();");
+                            sb.Append(indent).Append("\tvar dict_").Append(dp.Name).Append(" = new Dictionary<").Append(Types.Fq(dKey!)).Append(", ").Append(Types.Fq(dValue!)).Append(">(source.").Append(sp.Name).AppendLine(".Count);");
                             sb.Append(indent).Append("\tforeach (var kv in source.").Append(sp.Name).AppendLine(")");
                             sb.Append(indent).AppendLine("\t{");
                             sb.Append(indent).Append("\t\tdict_").Append(dp.Name).Append("[kv.Key] = ").Append(assn).AppendLine(";");
@@ -441,7 +517,10 @@ internal static class MapperFile
     {
         string dstFq = names.FullyQualified(dest);
         
-        sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("();");
+        sb.Append(indent).Append("if (source is null || source.Count == 0)").AppendLine();
+        sb.Append(indent).Append("\treturn new ").Append(dstFq).AppendLine("();");
+        sb.AppendLine();
+        sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("(source.Count);");
         
         if (SymbolEqualityComparer.Default.Equals(sKey, dKey) && SymbolEqualityComparer.Default.Equals(sValue, dValue))
         {
@@ -481,26 +560,55 @@ internal static class MapperFile
     {
         string dstFq = names.FullyQualified(dest);
         
-        sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("();");
-        
-        if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
+        // If source is a concrete list, use Count, capacity pre-sizing, and indexer for best perf
+        if (Types.IsAnyList(source, out _))
         {
-            // Same types - direct copy
-            sb.Append(indent).Append("foreach (var item in source)").AppendLine();
-            sb.Append(indent).Append("\ttarget.Add(item);").AppendLine();
+            sb.Append(indent).Append("if (source is null || source.Count == 0)").AppendLine();
+            sb.Append(indent).Append("\treturn new ").Append(dstFq).AppendLine("();");
+            sb.AppendLine();
+            sb.Append(indent).Append("int count = source.Count;").AppendLine();
+            sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("(count);");
+            sb.AppendLine();
+
+            if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
+            {
+                sb.Append(indent).Append("for (int i = 0; i < count; i++)").AppendLine();
+                sb.Append(indent).AppendLine("{");
+                sb.Append(indent).Append("\ttarget.Add(source[i]);").AppendLine();
+                sb.Append(indent).AppendLine("}");
+            }
+            else
+            {
+                sb.Append(indent).Append("for (int i = 0; i < count; i++)").AppendLine();
+                sb.Append(indent).AppendLine("{");
+                string itemExpr = GetConversionExpression("source[i]", sElem, dElem);
+                sb.Append(indent).Append("\ttarget.Add(").Append(itemExpr).AppendLine(");");
+                sb.Append(indent).AppendLine("}");
+            }
+
+            sb.Append(indent).AppendLine("return target;");
         }
         else
         {
-            // Different types - need conversion
-            sb.Append(indent).Append("foreach (var item in source)").AppendLine();
-            sb.Append(indent).AppendLine("{");
+            // Fallback for non-indexable IEnumerable sources
+            sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("();");
             
-            string itemExpr = GetConversionExpression("item", sElem, dElem);
-            sb.Append(indent).Append("\ttarget.Add(").Append(itemExpr).AppendLine(");");
-            sb.Append(indent).AppendLine("}");
+            if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
+            {
+                sb.Append(indent).Append("foreach (var item in source)").AppendLine();
+                sb.Append(indent).Append("\ttarget.Add(item);").AppendLine();
+            }
+            else
+            {
+                sb.Append(indent).Append("foreach (var item in source)").AppendLine();
+                sb.Append(indent).AppendLine("{");
+                string itemExpr = GetConversionExpression("item", sElem, dElem);
+                sb.Append(indent).Append("\ttarget.Add(").Append(itemExpr).AppendLine(");");
+                sb.Append(indent).AppendLine("}");
+            }
+            
+            sb.Append(indent).AppendLine("return target;");
         }
-        
-        sb.Append(indent).AppendLine("return target;");
     }
 
     private static string GetConversionExpression(string expr, ITypeSymbol fromType, ITypeSymbol toType)

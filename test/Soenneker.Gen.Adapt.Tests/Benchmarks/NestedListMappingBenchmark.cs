@@ -3,6 +3,7 @@ using BenchmarkDotNet.Attributes;
 using Facet.Extensions;
 using Mapster;
 using Microsoft.Extensions.Logging.Abstractions;
+using Riok.Mapperly.Abstractions;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +11,7 @@ using System.Linq;
 namespace Soenneker.Gen.Adapt.Tests.Benchmarks;
 
 [MemoryDiagnoser]
+[SimpleJob]
 public class NestedListMappingBenchmark
 {
     private List<NestedSource> _nestedList;
@@ -63,9 +65,9 @@ public class NestedListMappingBenchmark
     }
 
     [Benchmark]
-    public List<NestedDest> Mapster()
+    public List<NestedDest> MapsterBenchmark()
     {
-        return _nestedList.Adapt<List<NestedDest>>(_mapsterConfig);
+        return TypeAdapter.Adapt<List<NestedDest>>(_nestedList, _mapsterConfig);
     }
 
     [Benchmark]

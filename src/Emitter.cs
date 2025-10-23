@@ -117,7 +117,7 @@ internal static class Emitter
         int adaptMethodCount = 0;
         int failedToResolveSource = 0;
         int failedToResolveSourceError = 0;
-        var nonAdaptInvocations = new System.Collections.Generic.List<string>();
+        var nonAdaptInvocations = new List<string>();
         
         foreach ((InvocationExpressionSyntax invocation, SemanticModel model) in invocations)
         {
@@ -125,7 +125,7 @@ internal static class Emitter
             INamedTypeSymbol? sourceType = null;
             INamedTypeSymbol? destType = null;
 
-            // Check if it's an extension method call: source.Adapt<TDest>()
+            // Check if it's an Adapt call
             if (invocation.Expression is MemberAccessExpressionSyntax memberAccess)
             {
                 // Check if the method name is "Adapt"
@@ -141,6 +141,16 @@ internal static class Emitter
                     }
                     continue;
                 }
+
+                // Exclude Mapster's static calls: Mapster.TypeAdapter.Adapt<...>(...)
+                IMethodSymbol? invoked = model.GetSymbolInfo(invocation).Symbol as IMethodSymbol;
+                if (invoked?.ContainingType?.ToDisplayString() == "Mapster.TypeAdapter")
+                    continue;
+
+                // Also exclude when the left side is the TypeAdapter type
+                ISymbol? lhsSymbol = model.GetSymbolInfo(memberAccess.Expression).Symbol;
+                if (lhsSymbol is INamedTypeSymbol lhsType && lhsType.ToDisplayString() == "Mapster.TypeAdapter")
+                    continue;
                     
                 adaptMethodCount++;
 
