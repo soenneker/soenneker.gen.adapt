@@ -6,3 +6,4 @@ namespace Soenneker.Gen.Adapt.Tests.Dtos;
 public partial class NestedFacetDest
 {
 }
+

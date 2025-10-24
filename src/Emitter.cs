@@ -317,7 +317,9 @@ internal static class Emitter
         // Build mapping graph from discovered type pairs
         Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map = BuildMappingGraphFromPairs(typePairs, enumList, context);
 
-        // Per-source mapper files
+        // Compute which source->dest pairs are referenced by other mappings (nested usage)
+        var referencedPairs = BuildReferencedPairs(map, enumList);
+
         foreach (KeyValuePair<INamedTypeSymbol, List<INamedTypeSymbol>> kv in map)
         {
             INamedTypeSymbol? source = kv.Key;
@@ -326,7 +328,7 @@ internal static class Emitter
                 continue;
 
             var sb = new StringBuilder(16_384);
-            MapperFile.EmitSourceMapperAndDispatcher(sb, source, destinations, enumList, nameCache, targetNamespace);
+            MapperFile.EmitSourceMapperAndDispatcher(sb, source, destinations, enumList, nameCache, targetNamespace, referencedPairs);
 
             string sanitized = nameCache.Sanitized(source);
             if (sanitized.StartsWith("global__"))
@@ -413,6 +415,7 @@ internal static class Emitter
                     if (!destList.Contains(dst))
                     {
                         destList.Add(dst);
+                        AddNestedPairs(map, src, dst, enums);
                     }
                     continue;
                 }
@@ -438,6 +441,7 @@ internal static class Emitter
                     if (!destList.Contains(dst))
                     {
                         destList.Add(dst);
+                        AddNestedPairs(map, src, dst, enums);
                     }
                     continue;
                 }
@@ -476,11 +480,164 @@ internal static class Emitter
             if (!list.Contains(dst, SymbolEqualityComparer.Default))
             {
                 list.Add(dst);
+                AddNestedPairs(map, src, dst, enums);
             }
         }
 
         return map;
     }
+
+    private static Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> BuildReferencedPairs(
+        Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map,
+        List<INamedTypeSymbol> enums)
+    {
+        var referenced = new Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>(SymbolEqualityComparer.Default);
+
+        foreach (var kv in map)
+        {
+            INamedTypeSymbol src = kv.Key;
+            List<INamedTypeSymbol> dests = kv.Value;
+
+            foreach (INamedTypeSymbol dst in dests)
+            {
+                // Walk the dst's settable properties; if any property requires a user-defined mapping
+                // from some nested source type to nested dest type, mark that nested mapping as referenced.
+                TypeProps srcProps = TypeProps.Build(src);
+                TypeProps dstProps = TypeProps.Build(dst);
+
+                for (int i = 0; i < dstProps.Settable.Count; i++)
+                {
+                    Prop dp = dstProps.Settable[i];
+                    if (!srcProps.TryGet(dp.Name, out Prop sp))
+                        continue;
+
+                    // Nested object mapping
+                    if (sp.Type is INamedTypeSymbol sNamed && dp.Type is INamedTypeSymbol dNamed &&
+                        (sNamed.TypeKind == TypeKind.Class || sNamed.TypeKind == TypeKind.Struct) &&
+                        (dNamed.TypeKind == TypeKind.Class || dNamed.TypeKind == TypeKind.Struct) &&
+                        !Types.IsFrameworkType(sNamed) && !Types.IsFrameworkType(dNamed) &&
+                        !SymbolEqualityComparer.Default.Equals(sNamed, dNamed))
+                    {
+                        if (!referenced.TryGetValue(sNamed, out var set))
+                        {
+                            set = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+                            referenced[sNamed] = set;
+                        }
+                        set.Add(dNamed);
+                    }
+
+                    // Nested lists
+                    if (Types.IsAnyList(sp.Type, out ITypeSymbol? sElem) && Types.IsAnyList(dp.Type, out ITypeSymbol? dElem))
+                    {
+                        if (sElem is INamedTypeSymbol sElemNamed && dElem is INamedTypeSymbol dElemNamed &&
+                            !Types.IsFrameworkType(sElemNamed) && !Types.IsFrameworkType(dElemNamed))
+                        {
+                            if (!referenced.TryGetValue(sElemNamed, out var set))
+                            {
+                                set = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+                                referenced[sElemNamed] = set;
+                            }
+                            set.Add(dElemNamed);
+                        }
+                    }
+
+                    // Nested dictionaries (value types)
+                    if (Types.IsAnyDictionary(sp.Type, out _, out ITypeSymbol? sVal) &&
+                        Types.IsAnyDictionary(dp.Type, out _, out ITypeSymbol? dVal))
+                    {
+                        if (sVal is INamedTypeSymbol sValNamed && dVal is INamedTypeSymbol dValNamed &&
+                            Assignment.CanAssign(sVal, dVal, enums) &&
+                            !Types.IsFrameworkType(sValNamed) && !Types.IsFrameworkType(dValNamed))
+                        {
+                            if (!referenced.TryGetValue(sValNamed, out var set))
+                            {
+                                set = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+                                referenced[sValNamed] = set;
+                            }
+                            set.Add(dValNamed);
+                        }
+                    }
+                }
+            }
+        }
+
+        return referenced;
+    }
+
+    private static void AddNestedPairs(
+        Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map,
+        INamedTypeSymbol src,
+        INamedTypeSymbol dst,
+        List<INamedTypeSymbol> enums)
+    {
+        // Walk properties to ensure nested user-defined type pairs are present
+        TypeProps srcProps = TypeProps.Build(src);
+        TypeProps dstProps = TypeProps.Build(dst);
+
+        for (int i = 0; i < dstProps.Settable.Count; i++)
+        {
+            Prop dp = dstProps.Settable[i];
+            if (!srcProps.TryGet(dp.Name, out Prop sp))
+                continue;
+
+            // Nested object
+            if (sp.Type is INamedTypeSymbol sNamed && dp.Type is INamedTypeSymbol dNamed &&
+                (sNamed.TypeKind == TypeKind.Class || sNamed.TypeKind == TypeKind.Struct) &&
+                (dNamed.TypeKind == TypeKind.Class || dNamed.TypeKind == TypeKind.Struct) &&
+                !Types.IsFrameworkType(sNamed) && !Types.IsFrameworkType(dNamed) &&
+                !SymbolEqualityComparer.Default.Equals(sNamed, dNamed))
+            {
+                if (!map.TryGetValue(sNamed, out List<INamedTypeSymbol>? list))
+                {
+                    list = new List<INamedTypeSymbol>(4);
+                    map[sNamed] = list;
+                }
+                if (!list.Contains(dNamed, SymbolEqualityComparer.Default))
+                {
+                    list.Add(dNamed);
+                }
+            }
+
+            // Nested collection element types
+            if (Types.IsAnyList(sp.Type, out ITypeSymbol? sElem) && Types.IsAnyList(dp.Type, out ITypeSymbol? dElem))
+            {
+                if (sElem is INamedTypeSymbol sElemNamed && dElem is INamedTypeSymbol dElemNamed &&
+                    !Types.IsFrameworkType(sElemNamed) && !Types.IsFrameworkType(dElemNamed))
+                {
+                    if (!map.TryGetValue(sElemNamed, out List<INamedTypeSymbol>? list))
+                    {
+                        list = new List<INamedTypeSymbol>(4);
+                        map[sElemNamed] = list;
+                    }
+                    if (!list.Contains(dElemNamed, SymbolEqualityComparer.Default))
+                    {
+                        list.Add(dElemNamed);
+                    }
+                }
+            }
+
+            if (Types.IsAnyDictionary(sp.Type, out ITypeSymbol? sKey, out ITypeSymbol? sVal) &&
+                Types.IsAnyDictionary(dp.Type, out ITypeSymbol? dKey, out ITypeSymbol? dVal))
+            {
+                if (sVal is INamedTypeSymbol sValNamed && dVal is INamedTypeSymbol dValNamed &&
+                    SymbolEqualityComparer.Default.Equals(sKey, dKey) &&
+                    Assignment.CanAssign(sVal, dVal, enums) &&
+                    !Types.IsFrameworkType(sValNamed) && !Types.IsFrameworkType(dValNamed))
+                {
+                    if (!map.TryGetValue(sValNamed, out List<INamedTypeSymbol>? list))
+                    {
+                        list = new List<INamedTypeSymbol>(4);
+                        map[sValNamed] = list;
+                    }
+                    if (!list.Contains(dValNamed, SymbolEqualityComparer.Default))
+                    {
+                        list.Add(dValNamed);
+                    }
+                }
+            }
+        }
+    }
+
 
 
     private static bool HasParameterlessCtorLocal(INamedTypeSymbol type)

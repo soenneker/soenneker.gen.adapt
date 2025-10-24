@@ -6,6 +6,12 @@ using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
+public static class Test
+{
+
+
+}
+
 public sealed class InterfaceCollectionTests : UnitTest
 {
     public InterfaceCollectionTests(ITestOutputHelper output) : base(output)

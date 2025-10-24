@@ -1,3 +1,7 @@
+using System.CodeDom.Compiler;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+
 namespace Soenneker.Gen.Adapt.Tests.Types;
 
 public class ComplexDestDto
@@ -15,4 +19,11 @@ public class NestedDestObjectDto
 {
     public string NestedId { get; set; }
     public string NestedName { get; set; }
+
+}
+
+public static class Test
+{
+
+
 }

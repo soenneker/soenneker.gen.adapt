@@ -12,7 +12,8 @@ internal static class MapperFile
         List<INamedTypeSymbol> destinations,
         List<INamedTypeSymbol> enums,
         NameCache names,
-        string targetNamespace)
+        string targetNamespace,
+        Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>? referencedPairs = null)
     {
         string srcFq = names.FullyQualified(source);
         string srcSan = names.Sanitized(source);
@@ -32,19 +33,42 @@ internal static class MapperFile
 
         if (destinations.Count == 1)
         {
-            // Single destination: inline everything directly
+            // Single destination: emit private Map_* method and have public Adapt forward to it
             INamedTypeSymbol d = destinations[0];
             string dFq = names.FullyQualified(d);
-            
+            string dstSan = names.Sanitized(d);
+
+            // Determine if this source->dest mapping is referenced by other mappings (nested usage)
+            bool isReferencedByOthers = referencedPairs != null
+                && referencedPairs.TryGetValue(source, out var destSet)
+                && destSet.Contains(d);
+
+            if (isReferencedByOthers)
+            {
+                // Private map method only when other sources may call it
+                sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+                sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
+                sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
+                sb.Append("\t\tprivate static ").Append(dFq).Append(" Map_").Append(srcSan).Append("_To_").Append(dstSan).Append('(').Append(srcFq).AppendLine(" source)");
+                sb.AppendLine("\t\t{");
+                EmitMappingBody(sb, source, d, enums, names, "\t\t\t");
+                sb.AppendLine("\t\t}");
+                sb.AppendLine();
+            }
+
+            // Public Adapt wrapper (non-generic, single destination)
             sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
             sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
             sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.Append("\t\tpublic static ").Append(dFq).Append(" Adapt(this ").Append(srcFq).AppendLine(" source)");
             sb.AppendLine("\t\t{");
-            EmitMappingBody(sb, source, d, enums, names, "\t\t\t");
+            if (isReferencedByOthers)
+                sb.Append("\t\t\treturn Map_").Append(srcSan).Append("_To_").Append(dstSan).AppendLine("(source);");
+            else
+                EmitMappingBody(sb, source, d, enums, names, "\t\t\t");
             sb.AppendLine("\t\t}");
             sb.AppendLine();
-            
+
             // Generic overload (for explicit .Adapt<TDest>() calls)
             sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
             sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
@@ -147,6 +171,7 @@ internal static class MapperFile
 
         sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
+        sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
         sb.Append("\t\tprivate static ").Append(dstFq).Append(" Map_").Append(srcSan).Append("_To_").Append(dstSan).Append('(').Append(srcFq).AppendLine(" source)");
         sb.AppendLine("\t\t{");
         
@@ -439,7 +464,10 @@ internal static class MapperFile
             {
                 sb.Append(indent).Append("if (source.").Append(sp.Name).AppendLine(" is not null)");
                 sb.Append(indent).AppendLine("{");
-                sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = source.").Append(sp.Name).Append(".Adapt<").Append(Types.Fq(dstNamed)).AppendLine(">();");
+                string srcSanLocal = names.Sanitized(srcNamed);
+                string dstSanLocal = names.Sanitized(dstNamed);
+                sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = Map_").Append(srcSanLocal).Append("_To_").Append(dstSanLocal).Append("(")
+                  .Append("source.").Append(sp.Name).AppendLine(");");
                 sb.Append(indent).AppendLine("}");
                 continue;
             }
@@ -536,11 +564,11 @@ internal static class MapperFile
             
             string keyExpr = SymbolEqualityComparer.Default.Equals(sKey, dKey) 
                 ? "kv.Key" 
-                : GetConversionExpression("kv.Key", sKey, dKey);
+                : GetConversionExpression("kv.Key", sKey, dKey, names);
                 
             string valueExpr = SymbolEqualityComparer.Default.Equals(sValue, dValue) 
                 ? "kv.Value" 
-                : GetConversionExpression("kv.Value", sValue, dValue);
+                : GetConversionExpression("kv.Value", sValue, dValue, names);
                 
             sb.Append(indent).Append("\ttarget[").Append(keyExpr).Append("] = ").Append(valueExpr).AppendLine(";");
             sb.Append(indent).AppendLine("}");
@@ -581,7 +609,7 @@ internal static class MapperFile
             {
                 sb.Append(indent).Append("for (int i = 0; i < count; i++)").AppendLine();
                 sb.Append(indent).AppendLine("{");
-                string itemExpr = GetConversionExpression("source[i]", sElem, dElem);
+                string itemExpr = GetConversionExpression("source[i]", sElem, dElem, names);
                 sb.Append(indent).Append("\ttarget.Add(").Append(itemExpr).AppendLine(");");
                 sb.Append(indent).AppendLine("}");
             }
@@ -602,7 +630,7 @@ internal static class MapperFile
             {
                 sb.Append(indent).Append("foreach (var item in source)").AppendLine();
                 sb.Append(indent).AppendLine("{");
-                string itemExpr = GetConversionExpression("item", sElem, dElem);
+                string itemExpr = GetConversionExpression("item", sElem, dElem, names);
                 sb.Append(indent).Append("\ttarget.Add(").Append(itemExpr).AppendLine(");");
                 sb.Append(indent).AppendLine("}");
             }
@@ -611,7 +639,7 @@ internal static class MapperFile
         }
     }
 
-    private static string GetConversionExpression(string expr, ITypeSymbol fromType, ITypeSymbol toType)
+    private static string GetConversionExpression(string expr, ITypeSymbol fromType, ITypeSymbol toType, NameCache names)
     {
         // Handle basic type conversions
         if (SymbolEqualityComparer.Default.Equals(fromType, toType))
@@ -650,7 +678,9 @@ internal static class MapperFile
             (toNamed.TypeKind == TypeKind.Class || toNamed.TypeKind == TypeKind.Struct) &&
             !Types.IsFrameworkType(fromNamed) && !Types.IsFrameworkType(toNamed))
         {
-            return expr + ".Adapt<" + Types.Fq(toType) + ">()";
+            string fromSan = names.Sanitized(fromNamed);
+            string toSan = names.Sanitized(toNamed);
+            return "Map_" + fromSan + "_To_" + toSan + "(" + expr + ")";
         }
         
         // Default: cast
