@@ -6,6 +6,7 @@ internal static class CollectionsEmitter
 {
     public static void Emit(StringBuilder sb, string targetNamespace)
     {
+        sb.AppendLine("#nullable enable");
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Collections.Generic;");
         sb.AppendLine("using System.Collections.ObjectModel;");

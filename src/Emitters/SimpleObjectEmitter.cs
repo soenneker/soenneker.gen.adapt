@@ -108,6 +108,138 @@ internal static class SimpleObjectEmitter
         // Handle complex mappings (lists, dictionaries, special cases)
         foreach ((Prop dp, Prop sp) in complexMappings)
         {
+            // Handle collection mappings
+            if (Types.IsAnyList(sp.Type, out ITypeSymbol? srcElement) && Types.IsAnyList(dp.Type, out ITypeSymbol? dstElement))
+            {
+                sb.Append(indent).Append("if (source.").Append(sp.Name).Append(" != null)").AppendLine();
+                sb.Append(indent).AppendLine("{");
+                
+                // Generate proper collection mapping logic
+                if (Types.IsList(sp.Type, out _))
+                {
+                    sb.Append(indent).Append("\tvar src = CollectionsMarshal.AsSpan(source.").Append(sp.Name).AppendLine(");");
+                    sb.Append(indent).Append("\tvar targetList = new ").Append(Types.ShortName(dp.Type)).AppendLine("(src.Length);");
+                    sb.AppendLine();
+                    sb.Append(indent).Append("\tfor (int i = 0; i < src.Length; i++)").AppendLine();
+                    sb.Append(indent).AppendLine("\t{");
+                    sb.Append(indent).Append("\t\tref readonly var s = ref src[i];").AppendLine();
+                    if (SymbolEqualityComparer.Default.Equals(srcElement, dstElement))
+                    {
+                        sb.Append(indent).Append("\t\ttargetList.Add(s);").AppendLine();
+                    }
+                    else
+                    {
+                        string itemExpr = GetConversionExpression("s", srcElement, dstElement, names);
+                        sb.Append(indent).Append("\t\ttargetList.Add(").Append(itemExpr).AppendLine(");");
+                    }
+                    sb.Append(indent).AppendLine("\t}");
+                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = targetList;").AppendLine();
+                }
+                else if (Types.IsArray(sp.Type, out _))
+                {
+                    if (Types.IsArray(dp.Type, out _))
+                    {
+                        // Array to Array mapping
+                        sb.Append(indent).Append("\tint n = source.").Append(sp.Name).AppendLine(".Length;");
+                        sb.Append(indent).Append("\tvar targetArray = new ").Append(Types.ShortName(dp.Type).Replace("[]", "")).AppendLine("[n];");
+                        sb.AppendLine();
+                        sb.Append(indent).Append("\tfor (int i = 0; i < n; i++)").AppendLine();
+                        sb.Append(indent).AppendLine("\t{");
+                        if (SymbolEqualityComparer.Default.Equals(srcElement, dstElement))
+                        {
+                            sb.Append(indent).Append("\t\ttargetArray[i] = source.").Append(sp.Name).AppendLine("[i];");
+                        }
+                        else
+                        {
+                            string itemExpr = GetConversionExpression("source." + sp.Name + "[i]", srcElement, dstElement, names);
+                            sb.Append(indent).Append("\t\ttargetArray[i] = ").Append(itemExpr).AppendLine(";");
+                        }
+                        sb.Append(indent).AppendLine("\t}");
+                        sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = targetArray;").AppendLine();
+                    }
+                    else
+                    {
+                        // Array to List mapping
+                        sb.Append(indent).Append("\tint n = source.").Append(sp.Name).AppendLine(".Length;");
+                        sb.Append(indent).Append("\tvar targetList = new ").Append(Types.ShortName(dp.Type)).AppendLine("(n);");
+                        sb.AppendLine();
+                        sb.Append(indent).Append("\tfor (int i = 0; i < n; i++)").AppendLine();
+                        sb.Append(indent).AppendLine("\t{");
+                        if (SymbolEqualityComparer.Default.Equals(srcElement, dstElement))
+                        {
+                            sb.Append(indent).Append("\t\ttargetList.Add(source.").Append(sp.Name).AppendLine("[i]);");
+                        }
+                        else
+                        {
+                            string itemExpr = GetConversionExpression("source." + sp.Name + "[i]", srcElement, dstElement, names);
+                            sb.Append(indent).Append("\t\ttargetList.Add(").Append(itemExpr).AppendLine(");");
+                        }
+                        sb.Append(indent).AppendLine("\t}");
+                        sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = targetList;").AppendLine();
+                    }
+                }
+                else
+                {
+                    // Handle IEnumerable<T> and other collection types
+                    sb.Append(indent).Append("\tvar targetList = new ").Append(Types.ShortName(dp.Type)).AppendLine("();");
+                    sb.Append(indent).Append("\tforeach (var item in source.").Append(sp.Name).AppendLine(")");
+                    sb.Append(indent).AppendLine("\t{");
+                    if (SymbolEqualityComparer.Default.Equals(srcElement, dstElement))
+                    {
+                        sb.Append(indent).Append("\t\ttargetList.Add(item);").AppendLine();
+                    }
+                    else
+                    {
+                        string itemExpr = GetConversionExpression("item", srcElement, dstElement, names);
+                        sb.Append(indent).Append("\t\ttargetList.Add(").Append(itemExpr).AppendLine(");");
+                    }
+                    sb.Append(indent).AppendLine("\t}");
+                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = targetList;").AppendLine();
+                }
+                
+                sb.Append(indent).AppendLine("}");
+                sb.Append(indent).AppendLine("else");
+                sb.Append(indent).AppendLine("{");
+                // Initialize as empty collection when source is null
+                if (Types.IsArray(dp.Type, out _))
+                {
+                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = Array.Empty<").Append(Types.ShortName(dp.Type).Replace("[]", "")).AppendLine(">();");
+                }
+                else
+                {
+                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = new ").Append(Types.ShortName(dp.Type)).AppendLine("();");
+                }
+                sb.Append(indent).AppendLine("}");
+                continue;
+            }
+
+            // Handle dictionary mappings
+            if (Types.IsAnyDictionary(sp.Type, out ITypeSymbol? srcKey, out ITypeSymbol? srcValue) &&
+                Types.IsAnyDictionary(dp.Type, out ITypeSymbol? dstKey, out ITypeSymbol? dstValue))
+            {
+                sb.Append(indent).Append("if (source.").Append(sp.Name).Append(" != null)").AppendLine();
+                sb.Append(indent).AppendLine("{");
+                
+                // Generate proper dictionary mapping logic
+                sb.Append(indent).Append("\tvar targetDict = new ").Append(Types.ShortName(dp.Type)).AppendLine("();");
+                sb.Append(indent).Append("\tforeach (var kvp in source.").Append(sp.Name).AppendLine(")");
+                sb.Append(indent).AppendLine("\t{");
+                
+                string keyExpr = SymbolEqualityComparer.Default.Equals(srcKey, dstKey) ? "kvp.Key" : GetConversionExpression("kvp.Key", srcKey, dstKey, names);
+                string valueExpr = SymbolEqualityComparer.Default.Equals(srcValue, dstValue) ? "kvp.Value" : GetConversionExpression("kvp.Value", srcValue, dstValue, names);
+                
+                sb.Append(indent).Append("\t\ttargetDict[").Append(keyExpr).Append("] = ").Append(valueExpr).AppendLine(";");
+                sb.Append(indent).AppendLine("\t}");
+                sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = targetDict;").AppendLine();
+                
+                sb.Append(indent).AppendLine("}");
+                sb.Append(indent).AppendLine("else");
+                sb.Append(indent).AppendLine("{");
+                sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = new ").Append(Types.ShortName(dp.Type)).AppendLine("();");
+                sb.Append(indent).AppendLine("}");
+                continue;
+            }
+
             // Handle nested object mappings
             if (sp.Type is INamedTypeSymbol srcNamed && dp.Type is INamedTypeSymbol dstNamed &&
                 (srcNamed.TypeKind == TypeKind.Class || srcNamed.TypeKind == TypeKind.Struct) &&
@@ -193,5 +325,68 @@ internal static class SimpleObjectEmitter
         }
 
         return "null!";
+    }
+
+    private static string GetConversionExpression(string expr, ITypeSymbol fromType, ITypeSymbol toType, NameCache names)
+    {
+        // Handle basic type conversions
+        if (SymbolEqualityComparer.Default.Equals(fromType, toType))
+            return expr;
+
+        // Handle enum conversions
+        if (fromType.TypeKind == TypeKind.Enum && Types.IsString(toType))
+            return expr + ".ToString()";
+
+        if (Types.IsString(fromType) && toType.TypeKind == TypeKind.Enum)
+            return "GenAdapt_EnumParsers.Parse_" + San((INamedTypeSymbol)toType) + "(" + expr + ")";
+
+        if (fromType.TypeKind == TypeKind.Enum && Types.IsInt(toType))
+            return "(int)" + expr;
+
+        if (Types.IsInt(fromType) && toType.TypeKind == TypeKind.Enum)
+            return "(" + Types.Fq(toType) + ")" + expr;
+
+        // Handle Guid conversions
+        if (Types.IsGuid(fromType) && Types.IsString(toType))
+            return expr + ".ToString()";
+
+        if (Types.IsString(fromType) && Types.IsGuid(toType))
+            return "global::System.Guid.TryParse(" + expr + ", out var g) ? g : default(global::System.Guid)";
+
+        // Handle nullable conversions
+        if (Types.IsNullableOf(fromType, out ITypeSymbol? fromInner) && Types.IsNullableOf(toType, out ITypeSymbol? toInner))
+        {
+            if (SymbolEqualityComparer.Default.Equals(fromInner!, toInner!))
+                return expr; // same nullable type
+        }
+
+        // Handle user-defined type conversions
+        if (fromType is INamedTypeSymbol fromNamed && toType is INamedTypeSymbol toNamed &&
+            (fromNamed.TypeKind == TypeKind.Class || fromNamed.TypeKind == TypeKind.Struct) &&
+            (toNamed.TypeKind == TypeKind.Class || toNamed.TypeKind == TypeKind.Struct) && !Types.IsFrameworkType(fromNamed) && !Types.IsFrameworkType(toNamed))
+        {
+            string fromSan = names.Sanitized(fromNamed);
+            string toSan = names.Sanitized(toNamed);
+            if (fromNamed.TypeKind == TypeKind.Struct)
+                return "Map_" + fromSan + "_To_" + toSan + "(in " + expr + ")";
+            return "Map_" + fromSan + "_To_" + toSan + "(" + expr + ")";
+        }
+
+        // Handle interface to concrete type conversions
+        if (fromType.TypeKind == TypeKind.Interface && toType is INamedTypeSymbol toNamedType && 
+            (toNamedType.TypeKind == TypeKind.Class || toNamedType.TypeKind == TypeKind.Struct) && !Types.IsFrameworkType(toNamedType))
+        {
+            // For interface to concrete type, we need to use the Adapt method
+            return "(" + expr + ").Adapt<" + Types.ShortName(toNamedType) + ">()";
+        }
+
+        // Default: cast
+        return "(" + Types.Fq(toType) + ")" + expr;
+    }
+
+    private static string San(INamedTypeSymbol type)
+    {
+        // Simple sanitization for enum parser names
+        return type.Name.Replace(".", "_").Replace("`", "_");
     }
 }

@@ -21,9 +21,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="AutoMapper" Version="15.0.1" />
+        <PackageReference Include="AutoMapper" Version="15.1.0" />
         <PackageReference Include="AwesomeAssertions" Version="9.2.1" />
-        <PackageReference Include="Facet.Extensions" Version="3.1.12" />
+        <PackageReference Include="Facet.Extensions" Version="3.1.14" />
         <PackageReference Include="Mapster" Version="9.0.0-pre01" />
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
         <PackageReference Include="coverlet.collector" Version="6.0.4">
