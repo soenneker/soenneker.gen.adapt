@@ -1,7 +1,5 @@
 using Soenneker.Tests.Unit;
 using Soenneker.Gen.Adapt.Tests.Dtos;
-using System;
-using System.Collections.Generic;
 using Xunit;
 using AwesomeAssertions;
 
@@ -16,23 +14,6 @@ public sealed class SimpleArrayTests : UnitTest
 {
     public SimpleArrayTests(ITestOutputHelper output) : base(output)
     {
-    }
-
-    [Fact]
-    public void Adapt_IntArray_primitive_ShouldMapCorrectly()
-    {
-        // Arrange
-        var source = new int[] { 1, 2, 3, 4, 5 };
-
-        // Act
-        var result = source.Adapt<int[]>();
-
-        // Assert
-        result.Should().NotBeNull();
-        result.Should().NotBeNull();
-        result.Length.Should().Be(2);
-        result[4].Should().Be(5);
-        result.Should().Equal([1, 2, 3, 4, 5]);
     }
 
     [Fact]

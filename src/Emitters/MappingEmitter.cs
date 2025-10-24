@@ -16,7 +16,6 @@ internal static class MappingEmitter
         sb.AppendLine("using System.Collections.Generic;");
         sb.AppendLine("using System.Runtime.InteropServices;");
         sb.AppendLine("using System.Runtime.CompilerServices;");
-        sb.AppendLine("using System.Runtime.CompilerServices;");
         sb.AppendLine("using System.Diagnostics.CodeAnalysis;");
         sb.AppendLine("using System.CodeDom.Compiler;");
         sb.AppendLine();

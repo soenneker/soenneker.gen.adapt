@@ -292,22 +292,24 @@ internal static class SimpleObjectEmitter
                 (dstNamed.TypeKind == TypeKind.Class || dstNamed.TypeKind == TypeKind.Struct) && !Types.IsFrameworkType(srcNamed) &&
                 !Types.IsFrameworkType(dstNamed) && !SymbolEqualityComparer.Default.Equals(srcNamed, dstNamed))
             {
-                sb.Append(indent).Append("if (source.").Append(sp.Name).AppendLine(" is not null)");
-                sb.Append(indent).AppendLine("{");
                 string srcSanLocal = names.Sanitized(srcNamed);
                 string dstSanLocal = names.Sanitized(dstNamed);
-                if (srcNamed.TypeKind == TypeKind.Struct)
+                
+                // Only generate null checks for reference types (classes), not value types (structs)
+                if (srcNamed.TypeKind == TypeKind.Class)
                 {
+                    sb.Append(indent).Append("if (source.").Append(sp.Name).AppendLine(" is not null)");
+                    sb.Append(indent).AppendLine("{");
                     sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = Map_").Append(srcSanLocal).Append("_To_").Append(dstSanLocal).Append("(")
-                        .Append("in source.").Append(sp.Name).AppendLine(");");
+                        .Append("source.").Append(sp.Name).AppendLine(");");
+                    sb.Append(indent).AppendLine("}");
                 }
-                else
+                else // Struct
                 {
-                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = Map_").Append(srcSanLocal).Append("_To_").Append(dstSanLocal).Append("(")
+                    sb.Append(indent).Append("target.").Append(dp.Name).Append(" = Map_").Append(srcSanLocal).Append("_To_").Append(dstSanLocal).Append("(")
                         .Append("source.").Append(sp.Name).AppendLine(");");
                 }
 
-                sb.Append(indent).AppendLine("}");
                 continue;
             }
 
