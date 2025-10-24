@@ -229,20 +229,66 @@ internal static class SimpleObjectEmitter
                 else
                 {
                     // Handle IEnumerable<T> and other collection types
-                    sb.Append(indent).Append("\tvar targetList = new ").Append(Types.ShortName(dp.Type)).AppendLine("();");
-                    sb.Append(indent).Append("\tforeach (var item in source.").Append(sp.Name).AppendLine(")");
+                    // Optimize by pre-sizing the collection when possible
+                    sb.Append(indent).Append("\tvar sourceCollection = source.").Append(sp.Name).AppendLine(";");
+                    sb.Append(indent).Append("\tif (sourceCollection is ICollection<").Append(Types.ShortName(srcListToElement)).AppendLine("> coll && coll.Count > 0)");
                     sb.Append(indent).AppendLine("\t{");
+                    sb.Append(indent).Append("\t\tint count = coll.Count;").AppendLine();
+                    sb.Append(indent).Append("\t\tvar targetList = new ").Append(Types.ShortName(dp.Type)).AppendLine("(count);");
+                    // Only use CollectionsMarshal optimization for List<T> destinations
+                    if (dp.Type.Name == "List`1")
+                    {
+                        sb.Append(indent).Append("\t\tCollectionsMarshal.SetCount<").Append(Types.ShortName(dstListToElement)).Append(">(targetList, count);").AppendLine();
+                        sb.Append(indent).Append("\t\tvar targetSpan = CollectionsMarshal.AsSpan<").Append(Types.ShortName(dstListToElement)).Append(">(targetList);").AppendLine();
+                        sb.Append(indent).Append("\t\tint index = 0;").AppendLine();
+                        sb.Append(indent).Append("\t\tforeach (var item in coll)").AppendLine();
+                        sb.Append(indent).AppendLine("\t\t{");
+                        if (SymbolEqualityComparer.Default.Equals(srcListToElement, dstListToElement))
+                        {
+                            sb.Append(indent).Append("\t\t\ttargetSpan[index++] = item;").AppendLine();
+                        }
+                        else
+                        {
+                            string itemExpr = GetConversionExpression("item", srcListToElement, dstListToElement, names);
+                            sb.Append(indent).Append("\t\t\ttargetSpan[index++] = ").Append(itemExpr).AppendLine(";");
+                        }
+                        sb.Append(indent).AppendLine("\t\t}");
+                    }
+                    else
+                    {
+                        // Fallback to Add() for non-List<T> destinations
+                        sb.Append(indent).Append("\t\tforeach (var item in coll)").AppendLine();
+                        sb.Append(indent).AppendLine("\t\t{");
+                        if (SymbolEqualityComparer.Default.Equals(srcListToElement, dstListToElement))
+                        {
+                            sb.Append(indent).Append("\t\t\ttargetList.Add(item);").AppendLine();
+                        }
+                        else
+                        {
+                            string itemExpr = GetConversionExpression("item", srcListToElement, dstListToElement, names);
+                            sb.Append(indent).Append("\t\t\ttargetList.Add(").Append(itemExpr).AppendLine(");");
+                        }
+                        sb.Append(indent).AppendLine("\t\t}");
+                    }
+                    sb.Append(indent).Append("\t\ttarget.").Append(dp.Name).Append(" = targetList;").AppendLine();
+                    sb.Append(indent).AppendLine("\t}");
+                    sb.Append(indent).Append("\telse").AppendLine();
+                    sb.Append(indent).AppendLine("\t{");
+                    sb.Append(indent).Append("\t\tvar targetList = new ").Append(Types.ShortName(dp.Type)).AppendLine("();");
+                    sb.Append(indent).Append("\t\tforeach (var item in sourceCollection)").AppendLine();
+                    sb.Append(indent).AppendLine("\t\t{");
                     if (SymbolEqualityComparer.Default.Equals(srcListToElement, dstListToElement))
                     {
-                        sb.Append(indent).Append("\t\ttargetList.Add(item);").AppendLine();
+                        sb.Append(indent).Append("\t\t\ttargetList.Add(item);").AppendLine();
                     }
                     else
                     {
                         string itemExpr = GetConversionExpression("item", srcListToElement, dstListToElement, names);
-                        sb.Append(indent).Append("\t\ttargetList.Add(").Append(itemExpr).AppendLine(");");
+                        sb.Append(indent).Append("\t\t\ttargetList.Add(").Append(itemExpr).AppendLine(");");
                     }
+                    sb.Append(indent).AppendLine("\t\t}");
+                    sb.Append(indent).Append("\t\ttarget.").Append(dp.Name).Append(" = targetList;").AppendLine();
                     sb.Append(indent).AppendLine("\t}");
-                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = targetList;").AppendLine();
                 }
                 
                 sb.Append(indent).AppendLine("}");
