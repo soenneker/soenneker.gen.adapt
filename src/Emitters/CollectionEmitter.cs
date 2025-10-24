@@ -32,11 +32,13 @@ internal static class CollectionEmitter
             }
             else
             {
+                sb.Append(indent).Append("CollectionsMarshal.SetCount(target, n);").AppendLine();
+                sb.Append(indent).Append("var targetSpan = CollectionsMarshal.AsSpan(target);").AppendLine();
                 sb.Append(indent).Append("for (int i = 0; i < n; i++)").AppendLine();
                 sb.Append(indent).AppendLine("{");
                 sb.Append(indent).Append("\tref readonly var s = ref src[i];").AppendLine();
                 string itemExpr = GetConversionExpression("s", sElem, dElem, names);
-                sb.Append(indent).Append("\ttarget.Add(").Append(itemExpr).AppendLine(");");
+                sb.Append(indent).Append("\ttargetSpan[i] = ").Append(itemExpr).AppendLine(";");
                 sb.Append(indent).AppendLine("}");
             }
         }
@@ -53,10 +55,12 @@ internal static class CollectionEmitter
             }
             else
             {
+                sb.Append(indent).Append("CollectionsMarshal.SetCount(target, n);").AppendLine();
+                sb.Append(indent).Append("var targetSpan = CollectionsMarshal.AsSpan(target);").AppendLine();
                 sb.Append(indent).Append("for (int i = 0; i < n; i++)").AppendLine();
                 sb.Append(indent).AppendLine("{");
                 string itemExpr = GetConversionExpression("source[i]", sElem, dElem, names);
-                sb.Append(indent).Append("\ttarget.Add(").Append(itemExpr).AppendLine(");");
+                sb.Append(indent).Append("\ttargetSpan[i] = ").Append(itemExpr).AppendLine(";");
                 sb.Append(indent).AppendLine("}");
             }
         }
@@ -77,10 +81,12 @@ internal static class CollectionEmitter
             }
             else
             {
+                sb.Append(indent).Append("CollectionsMarshal.SetCount(target, count);").AppendLine();
+                sb.Append(indent).Append("var targetSpan = CollectionsMarshal.AsSpan(target);").AppendLine();
                 sb.Append(indent).Append("for (int i = 0; i < count; i++)").AppendLine();
                 sb.Append(indent).AppendLine("{");
                 string itemExpr = GetConversionExpression("source[i]", sElem, dElem, names);
-                sb.Append(indent).Append("\ttarget.Add(").Append(itemExpr).AppendLine(");");
+                sb.Append(indent).Append("\ttargetSpan[i] = ").Append(itemExpr).AppendLine(";");
                 sb.Append(indent).AppendLine("}");
             }
         }

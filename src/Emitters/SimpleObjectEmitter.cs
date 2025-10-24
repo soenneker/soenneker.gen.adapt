@@ -215,11 +215,13 @@ internal static class SimpleObjectEmitter
                     }
                     else
                     {
+                        sb.Append(indent).Append("\tCollectionsMarshal.SetCount(targetList, n);").AppendLine();
+                        sb.Append(indent).Append("\tvar targetSpan = CollectionsMarshal.AsSpan(targetList);").AppendLine();
                         sb.Append(indent).Append("\tfor (int i = 0; i < n; i++)").AppendLine();
                         sb.Append(indent).AppendLine("\t{");
                         sb.Append(indent).Append("\t\tref readonly var s = ref src[i];").AppendLine();
                         string itemExpr = GetConversionExpression("s", srcListToElement, dstListToElement, names);
-                        sb.Append(indent).Append("\t\ttargetList.Add(").Append(itemExpr).AppendLine(");");
+                        sb.Append(indent).Append("\t\ttargetSpan[i] = ").Append(itemExpr).AppendLine(";");
                         sb.Append(indent).AppendLine("\t}");
                     }
                     sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = targetList;").AppendLine();

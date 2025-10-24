@@ -18,7 +18,8 @@ internal static class BasicCollectionsEmitter
         sb.AppendLine("\t\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
         sb.AppendLine("\t\t\tvar src = CollectionsMarshal.AsSpan(source);");
         sb.AppendLine("\t\t\tvar result = new List<TElement>(src.Length);");
-        sb.AppendLine("\t\t\tfor (int i = 0; i < src.Length; i++) result.Add(src[i]);");
+        sb.AppendLine("\t\t\tCollectionsMarshal.SetCount(result, src.Length);");
+        sb.AppendLine("\t\t\tsrc.CopyTo(CollectionsMarshal.AsSpan(result));");
         sb.AppendLine("\t\t\treturn result;");
         sb.AppendLine("\t\t}");
         sb.AppendLine();
@@ -34,13 +35,15 @@ internal static class BasicCollectionsEmitter
         sb.AppendLine("\t\t\t{");
         sb.AppendLine("\t\t\t\tvar s = CollectionsMarshal.AsSpan(l);");
         sb.AppendLine("\t\t\t\tvar list = new List<TElement>(s.Length);");
-        sb.AppendLine("\t\t\t\tfor (int i = 0; i < s.Length; i++) list.Add(s[i]);");
+        sb.AppendLine("\t\t\t\tCollectionsMarshal.SetCount(list, s.Length);");
+        sb.AppendLine("\t\t\t\ts.CopyTo(CollectionsMarshal.AsSpan(list));");
         sb.AppendLine("\t\t\t\treturn list;");
         sb.AppendLine("\t\t\t}");
         sb.AppendLine("\t\t\telse if (source is TElement[] a)");
         sb.AppendLine("\t\t\t{");
         sb.AppendLine("\t\t\t\tvar list = new List<TElement>(a.Length);");
-        sb.AppendLine("\t\t\t\tfor (int i = 0; i < a.Length; i++) list.Add(a[i]);");
+        sb.AppendLine("\t\t\t\tCollectionsMarshal.SetCount(list, a.Length);");
+        sb.AppendLine("\t\t\t\ta.AsSpan().CopyTo(CollectionsMarshal.AsSpan(list));");
         sb.AppendLine("\t\t\t\treturn list;");
         sb.AppendLine("\t\t\t}");
         sb.AppendLine("\t\t\telse");
