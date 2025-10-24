@@ -43,9 +43,9 @@ public class LargeListMappingBenchmark
         _mapperly = new LargeListTestMapper();
     }
 
-    [Benchmark(Baseline = true)]
+    [Benchmark(Baseline = true)] 
     public List<BasicDest> GenAdapt()
-    {
+    { 
         return _basicList.Adapt<List<BasicDest>>();
     }
 

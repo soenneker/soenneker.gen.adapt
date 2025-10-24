@@ -35,58 +35,60 @@ internal static class MapperFile
 
         if (destinations.Count == 1)
         {
-            // Single destination: emit private Map_* method and have public Adapt forward to it
+            // Single destination: for collection sources emit Adapt(source); for object sources emit Map_* for nested calls
             INamedTypeSymbol d = destinations[0];
             string dFq = names.FullyQualified(d);
-            string dstSan = names.Sanitized(d);
+            bool sourceIsList = Types.IsAnyList(source, out _);
+            bool sourceIsDict = Types.IsAnyDictionary(source, out _, out _);
+            bool sourceIsIEnum = Types.IsIEnumerable(source, out _);
+            bool _srcIsStruct = source.TypeKind == TypeKind.Struct;
 
-            // Always emit a private map method (keeps generic paths lean and inlineable)
             sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
             sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
             sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
-            bool _srcIsStruct = source.TypeKind == TypeKind.Struct;
-            sb.Append("\t\tprivate static ").Append(dFq).Append(" Map_").Append(srcSan).Append("_To_").Append(dstSan).Append('(');
-            if (_srcIsStruct) sb.Append("in ");
-            sb.Append(srcFq).AppendLine(" source)");
+            if (sourceIsList || sourceIsDict || sourceIsIEnum)
+            {
+                // Private non-generic method: Adapt(source) for collection mapping rename
+                sb.Append("\t\tprivate static ").Append(dFq).Append(" Adapt(");
+                if (_srcIsStruct) sb.Append("in ");
+                sb.Append(srcFq).AppendLine(" source)");
+            }
+            else
+            {
+                // Private Map_* for object mapping to support nested calls
+                string srcSanLocal0 = names.Sanitized(source);
+                string dstSanLocal0 = names.Sanitized(d);
+                sb.Append("\t\tprivate static ").Append(dFq).Append(" Map_").Append(srcSanLocal0).Append("_To_").Append(dstSanLocal0).Append('(');
+                if (_srcIsStruct) sb.Append("in ");
+                sb.Append(srcFq).AppendLine(" source)");
+            }
             sb.AppendLine("\t\t{");
             EmitMappingBody(sb, source, d, enums, names, "\t\t\t");
             sb.AppendLine("\t\t}");
             sb.AppendLine();
 
-            // Public Adapt wrapper (non-generic, single destination)
-            sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
-            sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
-            sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
-            sb.Append("\t\tpublic static ").Append(dFq).Append(" Adapt(this ").Append(srcFq).AppendLine(" source)");
-            sb.AppendLine("\t\t{");
-            // Always call the private method
-            if (source.TypeKind == TypeKind.Struct)
-                sb.Append("\t\t\treturn Map_").Append(srcSan).Append("_To_").Append(dstSan).AppendLine("(in source);");
-            else
-                sb.Append("\t\t\treturn Map_").Append(srcSan).Append("_To_").Append(dstSan).AppendLine("(source);");
-            sb.AppendLine("\t\t}");
-            sb.AppendLine();
-
             // Generic overload (for explicit .Adapt<TDest>() calls) with Unsafe.As
-            // Fallback generic using typeof + Unsafe.As
             sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
             sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
             sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.Append("\t\tpublic static TDest Adapt<TDest>(this ").Append(srcFq).AppendLine(" source)");
             sb.AppendLine("\t\t{");
-            sb.Append("\t\t\tif (typeof(TDest) == typeof(").Append(dFq).AppendLine("))");
-            sb.AppendLine("\t\t\t{");
-            if (source.TypeKind == TypeKind.Struct)
-                sb.Append("\t\t\t\tvar r = Map_").Append(srcSan).Append("_To_").Append(dstSan).AppendLine("(in source);");
+            if (sourceIsList || sourceIsDict || sourceIsIEnum)
+            {
+                sb.AppendLine("\t\t\tvar r = Adapt(source);");
+            }
             else
-                sb.Append("\t\t\t\tvar r = Map_").Append(srcSan).Append("_To_").Append(dstSan).AppendLine("(source);");
-            sb.Append("\t\t\t\treturn Unsafe.As<").Append(dFq).Append(", TDest>(ref r);").AppendLine();
-            sb.AppendLine("\t\t\t}");
-            sb.AppendLine("\t\t\tthrow new NotSupportedException(\"Unsupported Adapt target type: \" + typeof(TDest).FullName);");
+            {
+                string srcSanLocal1 = names.Sanitized(source);
+                string dstSanLocal1 = names.Sanitized(d);
+                if (_srcIsStruct)
+                    sb.Append("\t\t\tvar r = Map_").Append(srcSanLocal1).Append("_To_").Append(dstSanLocal1).AppendLine("(in source);");
+                else
+                    sb.Append("\t\t\tvar r = Map_").Append(srcSanLocal1).Append("_To_").Append(dstSanLocal1).AppendLine("(source);");
+            }
+            sb.Append("\t\t\treturn Unsafe.As<").Append(dFq).Append(", TDest>(ref r);").AppendLine();
             sb.AppendLine("\t\t}");
             sb.AppendLine();
-
-            // (removed) Bulk path for List<T> since not used
 
             // No per-call throw helper emitted here; __ThrowUnsupported_* is used by the function pointer
         }
@@ -565,9 +567,6 @@ internal static class MapperFile
     {
         string dstFq = names.FullyQualified(dest);
         
-        sb.Append(indent).Append("if (source is null || source.Count == 0)").AppendLine();
-        sb.Append(indent).Append("\treturn new ").Append(dstFq).AppendLine("();");
-        sb.AppendLine();
         sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("(source.Count);");
         
         if (SymbolEqualityComparer.Default.Equals(sKey, dKey) && SymbolEqualityComparer.Default.Equals(sValue, dValue))
@@ -615,9 +614,6 @@ internal static class MapperFile
 
         if (srcIsList)
         {
-            sb.Append(indent).Append("if (source is null || source.Count == 0)").AppendLine();
-            sb.Append(indent).Append("\treturn new ").Append(dstFq).AppendLine("();");
-            sb.AppendLine();
             sb.Append(indent).Append("var src = CollectionsMarshal.AsSpan(source);").AppendLine();
             sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("(src.Length);");
             sb.AppendLine();
@@ -638,9 +634,6 @@ internal static class MapperFile
         }
         else if (srcIsArray)
         {
-            sb.Append(indent).Append("if (source is null || source.Length == 0)").AppendLine();
-            sb.Append(indent).Append("\treturn new ").Append(dstFq).AppendLine("();");
-            sb.AppendLine();
             sb.Append(indent).Append("int n = source.Length;").AppendLine();
             sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("(n);");
             sb.AppendLine();
@@ -660,9 +653,6 @@ internal static class MapperFile
         }
         else if (srcIsROList || srcIsIList)
         {
-            sb.Append(indent).Append("if (source is null || source.Count == 0)").AppendLine();
-            sb.Append(indent).Append("\treturn new ").Append(dstFq).AppendLine("();");
-            sb.AppendLine();
             sb.Append(indent).Append("int count = source.Count;").AppendLine();
             sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("(count);");
             sb.AppendLine();

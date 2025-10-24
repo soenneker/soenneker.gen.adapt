@@ -59,16 +59,14 @@ internal static class Assignment
         if (Types.IsInt(srcType) && dstType is INamedTypeSymbol cls2 && Types.HasStaticFromInt(cls2))
             return Types.Fq(cls2) + ".From(" + srcExpr + ")";
 
-        // User-defined type -> user-defined type (call specific Map_* method within GenAdapt)
+        // User-defined type -> user-defined type (call Adapt<Dest> extension)
         if (srcType is INamedTypeSymbol sType &&
             dstType is INamedTypeSymbol dType &&
             (sType.TypeKind == TypeKind.Class || sType.TypeKind == TypeKind.Struct || sType.TypeKind == TypeKind.Interface) &&
             (dType.TypeKind == TypeKind.Class || dType.TypeKind == TypeKind.Struct) &&
             !Types.IsFrameworkType(sType) && !Types.IsFrameworkType(dType))
         {
-            string sSan = San(sType);
-            string dSan = San(dType);
-            return "Map_" + sSan + "_To_" + dSan + "(" + srcExpr + ")";
+            return "GenAdapt.Adapt<" + Types.Fq(dType) + ">(" + srcExpr + ")";
         }
 
         return null;
