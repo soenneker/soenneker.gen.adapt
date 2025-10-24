@@ -46,17 +46,17 @@ public class SimpleMappingBenchmark
         return _basicSource.Adapt<BasicDest>();
     }
 
-    //[Benchmark]
-    //public BasicDest AutoMapper()
-    //{
-    //    return _autoMapper.Map<BasicDest>(_basicSource);
-    //}
+    [Benchmark]
+    public BasicDest AutoMapper()
+    {
+        return _autoMapper.Map<BasicDest>(_basicSource);
+    }
 
-    //[Benchmark]
-    //public BasicDest MapsterBenchmark()
-    //{
-    //    return Mapster.TypeAdapter.Adapt<BasicDest>(_basicSource, _mapsterConfig);
-    //}
+    [Benchmark]
+    public BasicDest MapsterBenchmark()
+    {
+        return Mapster.TypeAdapter.Adapt<BasicDest>(_basicSource, _mapsterConfig);
+    }
 
     [Benchmark]
     public BasicDest Mapperly()
@@ -64,11 +64,11 @@ public class SimpleMappingBenchmark
         return _mapperly.MapToBasicDest(_basicSource);
     }
 
-    //[Benchmark]
-    //public BasicFacetDest Facet()
-    //{
-    //    return _basicSource.ToFacet<BasicFacetDest>();
-    //}
+    [Benchmark]
+    public BasicFacetDest Facet()
+    {
+        return _basicSource.ToFacet<BasicFacetDest>();
+    }
 }
 
 // Mapperly mapper class

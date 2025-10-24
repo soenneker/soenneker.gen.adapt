@@ -49,17 +49,17 @@ public class LargeListMappingBenchmark
         return _basicList.Adapt<List<BasicDest>>();
     }
 
-    //[Benchmark]
-    //public List<BasicDest> AutoMapper()
-    //{
-    //    return _autoMapper.Map<List<BasicDest>>(_basicList);
-    //}
+    [Benchmark]
+    public List<BasicDest> AutoMapper()
+    {
+        return _autoMapper.Map<List<BasicDest>>(_basicList);
+    }
 
-    //[Benchmark]
-    //public List<BasicDest> MapsterBenchmark()
-    //{
-    //    return Mapster.TypeAdapter.Adapt<List<BasicDest>>(_basicList, _mapsterConfig);
-    //}
+    [Benchmark]
+    public List<BasicDest> MapsterBenchmark()
+    {
+        return Mapster.TypeAdapter.Adapt<List<BasicDest>>(_basicList, _mapsterConfig);
+    }
 
     [Benchmark]
     public List<BasicDest> Mapperly()

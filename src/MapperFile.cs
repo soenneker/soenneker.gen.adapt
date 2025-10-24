@@ -24,6 +24,7 @@ internal static class MapperFile
         sb.AppendLine("using System.Collections.Generic;");
         sb.AppendLine("using System.Runtime.InteropServices;");
         sb.AppendLine("using System.Runtime.CompilerServices;");
+        sb.AppendLine("using System.Runtime.CompilerServices;");
         sb.AppendLine("using System.Diagnostics.CodeAnalysis;");
         sb.AppendLine("using System.CodeDom.Compiler;");
         sb.AppendLine();
@@ -39,26 +40,18 @@ internal static class MapperFile
             string dFq = names.FullyQualified(d);
             string dstSan = names.Sanitized(d);
 
-            // Determine if this source->dest mapping is referenced by other mappings (nested usage)
-            bool isReferencedByOthers = referencedPairs != null
-                && referencedPairs.TryGetValue(source, out var destSet)
-                && destSet.Contains(d);
-
-            if (isReferencedByOthers)
-            {
-                // Private map method only when other sources may call it
-                sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
-                sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
-                sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
-                bool _srcIsStruct = source.TypeKind == TypeKind.Struct;
-                sb.Append("\t\tprivate static ").Append(dFq).Append(" Map_").Append(srcSan).Append("_To_").Append(dstSan).Append('(');
-                if (_srcIsStruct) sb.Append("in ");
-                sb.Append(srcFq).AppendLine(" source)");
-                sb.AppendLine("\t\t{");
-                EmitMappingBody(sb, source, d, enums, names, "\t\t\t");
-                sb.AppendLine("\t\t}");
-                sb.AppendLine();
-            }
+            // Always emit a private map method (keeps generic paths lean and inlineable)
+            sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+            sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
+            sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
+            bool _srcIsStruct = source.TypeKind == TypeKind.Struct;
+            sb.Append("\t\tprivate static ").Append(dFq).Append(" Map_").Append(srcSan).Append("_To_").Append(dstSan).Append('(');
+            if (_srcIsStruct) sb.Append("in ");
+            sb.Append(srcFq).AppendLine(" source)");
+            sb.AppendLine("\t\t{");
+            EmitMappingBody(sb, source, d, enums, names, "\t\t\t");
+            sb.AppendLine("\t\t}");
+            sb.AppendLine();
 
             // Public Adapt wrapper (non-generic, single destination)
             sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
@@ -66,26 +59,36 @@ internal static class MapperFile
             sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.Append("\t\tpublic static ").Append(dFq).Append(" Adapt(this ").Append(srcFq).AppendLine(" source)");
             sb.AppendLine("\t\t{");
-            if (isReferencedByOthers)
-            {
-                if (source.TypeKind == TypeKind.Struct)
-                    sb.Append("\t\t\treturn Map_").Append(srcSan).Append("_To_").Append(dstSan).AppendLine("(in source);");
-                else
-                    sb.Append("\t\t\treturn Map_").Append(srcSan).Append("_To_").Append(dstSan).AppendLine("(source);");
-            }
+            // Always call the private method
+            if (source.TypeKind == TypeKind.Struct)
+                sb.Append("\t\t\treturn Map_").Append(srcSan).Append("_To_").Append(dstSan).AppendLine("(in source);");
             else
-                EmitMappingBody(sb, source, d, enums, names, "\t\t\t");
+                sb.Append("\t\t\treturn Map_").Append(srcSan).Append("_To_").Append(dstSan).AppendLine("(source);");
             sb.AppendLine("\t\t}");
             sb.AppendLine();
 
-            // Generic overload (for explicit .Adapt<TDest>() calls)
+            // Generic overload (for explicit .Adapt<TDest>() calls) with Unsafe.As
+            // Fallback generic using typeof + Unsafe.As
             sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
             sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
             sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.Append("\t\tpublic static TDest Adapt<TDest>(this ").Append(srcFq).AppendLine(" source)");
             sb.AppendLine("\t\t{");
-            sb.AppendLine("\t\t\treturn (TDest)(object)source.Adapt();");
+            sb.Append("\t\t\tif (typeof(TDest) == typeof(").Append(dFq).AppendLine("))");
+            sb.AppendLine("\t\t\t{");
+            if (source.TypeKind == TypeKind.Struct)
+                sb.Append("\t\t\t\tvar r = Map_").Append(srcSan).Append("_To_").Append(dstSan).AppendLine("(in source);");
+            else
+                sb.Append("\t\t\t\tvar r = Map_").Append(srcSan).Append("_To_").Append(dstSan).AppendLine("(source);");
+            sb.Append("\t\t\t\treturn Unsafe.As<").Append(dFq).Append(", TDest>(ref r);").AppendLine();
+            sb.AppendLine("\t\t\t}");
+            sb.AppendLine("\t\t\tthrow new NotSupportedException(\"Unsupported Adapt target type: \" + typeof(TDest).FullName);");
             sb.AppendLine("\t\t}");
+            sb.AppendLine();
+
+            // (removed) Bulk path for List<T> since not used
+
+            // No per-call throw helper emitted here; __ThrowUnsupported_* is used by the function pointer
         }
         else
         {
@@ -93,58 +96,33 @@ internal static class MapperFile
             for (int i = 0; i < destinations.Count; i++)
                 EmitMappingMethod(sb, source, destinations[i], enums, names);
 
-            // Enum for dispatch ids (unique per source)
-            sb.Append("\t\tprivate enum _MapId_").Append(srcSan).AppendLine();
-            sb.AppendLine("\t\t{");
-            for (int i = 0; i < destinations.Count; i++)
-            {
-                INamedTypeSymbol? d = destinations[i];
-                string dSan = names.Sanitized(d);
-                sb.Append("\t\t\t").Append(dSan).Append(',').AppendLine();
-            }
-            sb.AppendLine("\t\t\tUnknown");
-            sb.AppendLine("\t\t}");
-            sb.AppendLine();
-
-            
-
-            // Closed-generic cache for map id
-            sb.Append("\t\tprivate static class _MapIdCache_").Append(srcSan).AppendLine("<TDest>");
-            sb.AppendLine("\t\t{");
-            sb.Append("\t\t\tpublic static readonly _MapId_").Append(srcSan).Append(" Id = ").AppendLine();
-            for (int i = 0; i < destinations.Count; i++)
-            {
-                INamedTypeSymbol? d = destinations[i];
-                string dFq = names.FullyQualified(d);
-                string dSan = names.Sanitized(d);
-                sb.Append("\t\t\t\ttypeof(TDest) == typeof(").Append(dFq).Append(") ? _MapId_").Append(srcSan).Append('.').Append(dSan).Append(" :").AppendLine();
-            }
-            sb.Append("\t\t\t\t").Append("_MapId_").Append(srcSan).AppendLine(".Unknown;");
-            sb.AppendLine("\t\t}");
-            sb.AppendLine();
-
-            // Wrapper that switches on cached id; JIT can inline chosen arm
+            // Generic overload using typeof-dispatch and Unsafe.As
             sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
             sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
             sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.Append("\t\tpublic static TDest Adapt<TDest>(this ").Append(srcFq).AppendLine(" source)");
             sb.AppendLine("\t\t{");
-            sb.Append("\t\t\tswitch (_MapIdCache_").Append(srcSan).AppendLine("<TDest>.Id)");
-            sb.AppendLine("\t\t\t{");
             for (int i = 0; i < destinations.Count; i++)
             {
                 INamedTypeSymbol? d = destinations[i];
+                string dFq = names.FullyQualified(d);
                 string dSan = names.Sanitized(d);
-                sb.Append("\t\t\t\tcase _MapId_").Append(srcSan).Append('.').Append(dSan).AppendLine(":");
+                sb.Append("\t\t\tif (typeof(TDest) == typeof(").Append(dFq).AppendLine("))");
+                sb.AppendLine("\t\t\t{");
                 if (source.TypeKind == TypeKind.Struct)
-                    sb.Append("\t\t\t\t\treturn (TDest)(object)Map_").Append(srcSan).Append("_To_").Append(dSan).AppendLine("(in source);");
+                    sb.Append("\t\t\t\tvar r = Map_").Append(srcSan).Append("_To_").Append(dSan).AppendLine("(in source);");
                 else
-                    sb.Append("\t\t\t\t\treturn (TDest)(object)Map_").Append(srcSan).Append("_To_").Append(dSan).AppendLine("(source);");
+                    sb.Append("\t\t\t\tvar r = Map_").Append(srcSan).Append("_To_").Append(dSan).AppendLine("(source);");
+                sb.Append("\t\t\t\treturn Unsafe.As<").Append(dFq).Append(", TDest>(ref r);").AppendLine();
+                sb.AppendLine("\t\t\t}");
             }
-            sb.AppendLine("\t\t\t\tdefault:");
-            sb.AppendLine("\t\t\t\t\tthrow new NotSupportedException($\"Unsupported Adapt target type: {typeof(TDest).FullName}\");");
-            sb.AppendLine("\t\t\t}");
+            sb.AppendLine("\t\t\tthrow new NotSupportedException(\"Unsupported Adapt target type: \" + typeof(TDest).FullName);");
             sb.AppendLine("\t\t}");
+            sb.AppendLine();
+
+            // (removed) Bulk path for List<source> since not used
+
+            // No per-call throw helper emitted here; __ThrowUnsupported_* is used by the function pointer
         }
 
         sb.AppendLine("\t}");
@@ -411,7 +389,7 @@ internal static class MapperFile
                         }
                         else if (srcIsListProp)
                         {
-                            sb.Append(indent).Append("\tvar span_").Append(dp.Name).Append(" = global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(source.").Append(sp.Name).AppendLine(");");
+                            sb.Append(indent).Append("\tvar span_").Append(dp.Name).Append(" = CollectionsMarshal.AsSpan(source.").Append(sp.Name).AppendLine(");");
                             sb.Append(indent).AppendLine("\tfor (int i = 0; i < span_" + dp.Name + ".Length; i++)");
                             sb.Append(indent).AppendLine("\t{");
                             sb.Append(indent).Append("\t\tref readonly var s = ref span_").Append(dp.Name).AppendLine("[i];");
@@ -640,7 +618,7 @@ internal static class MapperFile
             sb.Append(indent).Append("if (source is null || source.Count == 0)").AppendLine();
             sb.Append(indent).Append("\treturn new ").Append(dstFq).AppendLine("();");
             sb.AppendLine();
-            sb.Append(indent).Append("var src = global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(source);").AppendLine();
+            sb.Append(indent).Append("var src = CollectionsMarshal.AsSpan(source);").AppendLine();
             sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("(src.Length);");
             sb.AppendLine();
             sb.Append(indent).Append("for (int i = 0; i < src.Length; i++)").AppendLine();

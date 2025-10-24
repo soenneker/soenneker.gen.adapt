@@ -12,6 +12,7 @@ internal static class Collections
         sb.AppendLine("using System.Collections.Generic;");
         sb.AppendLine("using System.Runtime.InteropServices;");
         sb.AppendLine("using System.CodeDom.Compiler;");
+        sb.AppendLine("using System.Runtime.CompilerServices;");
         sb.AppendLine("using System.Diagnostics.CodeAnalysis;");
         sb.AppendLine();
         sb.Append("namespace ").AppendLine(targetNamespace);
@@ -21,7 +22,7 @@ internal static class Collections
         // List<T> -> clone
         sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
-        sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
+        sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static List<TElement> Adapt<TElement>(this List<TElement> source)");
         sb.AppendLine("\t\t{");
         sb.AppendLine("\t\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
@@ -35,7 +36,7 @@ internal static class Collections
         // IEnumerable<T> -> materialize (stable behavior)
         sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
-        sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
+        sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static IEnumerable<TElement> Adapt<TElement>(this IEnumerable<TElement> source)");
         sb.AppendLine("\t\t{");
         sb.AppendLine("\t\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
@@ -64,7 +65,7 @@ internal static class Collections
         // Dictionary<TKey,TValue>
         sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
-        sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
+        sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static Dictionary<TKey, TValue> Adapt<TKey, TValue>(this Dictionary<TKey, TValue> source)");
         sb.AppendLine("\t\t{");
         sb.AppendLine("\t\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
@@ -78,7 +79,7 @@ internal static class Collections
         // IDictionary<TKey,TValue>
         sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
-        sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
+        sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static IDictionary<TKey, TValue> Adapt<TKey, TValue>(this IDictionary<TKey, TValue> source)");
         sb.AppendLine("\t\t{");
         sb.AppendLine("\t\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
@@ -91,7 +92,7 @@ internal static class Collections
         // IReadOnlyDictionary<TKey,TValue>
         sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
-        sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
+        sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static IReadOnlyDictionary<TKey, TValue> Adapt<TKey, TValue>(this IReadOnlyDictionary<TKey, TValue> source)");
         sb.AppendLine("\t\t{");
         sb.AppendLine("\t\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
@@ -104,7 +105,7 @@ internal static class Collections
         // IReadOnlyList<T>
         sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
-        sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
+        sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static IReadOnlyList<TElement> Adapt<TElement>(this IReadOnlyList<TElement> source)");
         sb.AppendLine("\t\t{");
         sb.AppendLine("\t\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
@@ -117,7 +118,7 @@ internal static class Collections
         // IReadOnlyCollection<T>
         sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
-        sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
+        sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static IReadOnlyCollection<TElement> Adapt<TElement>(this IReadOnlyCollection<TElement> source)");
         sb.AppendLine("\t\t{");
         sb.AppendLine("\t\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
@@ -130,7 +131,7 @@ internal static class Collections
         // Array<T>
         sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
-        sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
+        sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static TElement[] Adapt<TElement>(this TElement[] source)");
         sb.AppendLine("\t\t{");
         sb.AppendLine("\t\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
