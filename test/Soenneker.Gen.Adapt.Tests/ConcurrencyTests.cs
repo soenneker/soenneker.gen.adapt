@@ -30,7 +30,7 @@ public sealed class ConcurrencyTests : UnitTest
         });
 
         // Assert
-        for (int i = 0; i < 1000; i++)
+        for (var i = 0; i < 1000; i++)
         {
             results[i].Id.Should().Be($"id_{i + 1}");
             results[i].Name.Should().Be($"name_{i + 1}");
@@ -92,7 +92,7 @@ public sealed class ConcurrencyTests : UnitTest
 
         // Act
         var results = new BasicDest[10000];
-        for (int i = 0; i < 10000; i++)
+        for (var i = 0; i < 10000; i++)
         {
             results[i] = source.Adapt<BasicDest>();
         }
@@ -106,7 +106,7 @@ public sealed class ConcurrencyTests : UnitTest
         });
         
         // Verify they're all different instances
-        for (int i = 0; i < 100; i++)
+        for (var i = 0; i < 100; i++)
         {
             for (int j = i + 1; j < 100; j++)
             {
@@ -120,7 +120,7 @@ public sealed class ConcurrencyTests : UnitTest
     {
         // Arrange
         var sources = new List<MultiListSource>();
-        for (int i = 0; i < 100; i++)
+        for (var i = 0; i < 100; i++)
         {
             sources.Add(new MultiListSource
             {
@@ -205,7 +205,7 @@ public sealed class ConcurrencyTests : UnitTest
 
         // Act - convert back and forth 100 times (starting with Source, ending with Source after 100 conversions)
         object current = original;
-        for (int i = 0; i < 100; i++)
+        for (var i = 0; i < 100; i++)
         {
             if (i % 2 == 0)
                 current = ((BasicSource)current).Adapt<BasicDest>();
@@ -236,7 +236,7 @@ public sealed class ConcurrencyTests : UnitTest
         });
 
         // Assert
-        for (int i = 0; i < 300; i++)
+        for (var i = 0; i < 300; i++)
         {
             results[i].Status.Should().Be(i % 3);
         }
@@ -322,7 +322,7 @@ public sealed class ConcurrencyTests : UnitTest
     {
         // Arrange
         var source = new Dictionary<string, BasicSource>();
-        for (int i = 0; i < 100; i++)
+        for (var i = 0; i < 100; i++)
         {
             source[$"key_{i}"] = new BasicSource
             {
@@ -333,7 +333,7 @@ public sealed class ConcurrencyTests : UnitTest
         }
 
         // Act
-        Dictionary<string, BasicSource> result = source.Adapt<Dictionary<string, BasicSource>>();
+        var result = source.Adapt<Dictionary<string, BasicSource>>();
 
         // Assert
         result.Count.Should().Be(100);

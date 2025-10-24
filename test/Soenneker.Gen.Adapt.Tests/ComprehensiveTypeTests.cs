@@ -19,13 +19,13 @@ public sealed class ComprehensiveTypeTests : UnitTest
         // Arrange
         var source = new ArraySource
         {
-            Names = new[] { "Alice", "Bob", "Charlie" },
-            Numbers = new[] { 1, 2, 3, 4, 5 },
-            People = new IPersonInterface[]
-            {
+            Names = ["Alice", "Bob", "Charlie"],
+            Numbers = [1, 2, 3, 4, 5],
+            People =
+            [
                 new PersonImplementation { FirstName = "John", LastName = "Doe", Age = 30 },
                 new PersonImplementation { FirstName = "Jane", LastName = "Smith", Age = 25 }
-            }
+            ]
         };
 
         // Act
@@ -55,12 +55,14 @@ public sealed class ComprehensiveTypeTests : UnitTest
         // Arrange
         var source = new HashSetSource
         {
-            Tags = new HashSet<string> { "tag1", "tag2", "tag3" },
+            Tags =
+            [
+                "tag1",
+                "tag2",
+                "tag3"
+            ],
             Numbers = new HashSet<int> { 10, 20, 30 },
-            People = new HashSet<IPersonInterface>
-            {
-                new PersonImplementation { FirstName = "Alice", LastName = "Wonder", Age = 35 }
-            }
+            People = [new PersonImplementation { FirstName = "Alice", LastName = "Wonder", Age = 35 }]
         };
 
         // Act
@@ -130,9 +132,9 @@ public sealed class ComprehensiveTypeTests : UnitTest
         // Arrange
         var source = new ArraySource
         {
-            Names = Array.Empty<string>(),
-            Numbers = Array.Empty<int>(),
-            People = Array.Empty<IPersonInterface>()
+            Names = [],
+            Numbers = [],
+            People = []
         };
 
         // Act
@@ -150,14 +152,14 @@ public sealed class ComprehensiveTypeTests : UnitTest
     {
         // Arrange
         var numbers = new int[1000];
-        for (int i = 0; i < 1000; i++)
+        for (var i = 0; i < 1000; i++)
             numbers[i] = i;
 
         var source = new ArraySource
         {
-            Names = Array.Empty<string>(),
+            Names = [],
             Numbers = numbers,
-            People = Array.Empty<IPersonInterface>()
+            People = []
         };
 
         // Act
@@ -175,9 +177,9 @@ public sealed class ComprehensiveTypeTests : UnitTest
         // Arrange
         var source = new HashSetSource
         {
-            Tags = new HashSet<string>(),
+            Tags = [],
             Numbers = new HashSet<int>(),
-            People = new HashSet<IPersonInterface>()
+            People = []
         };
 
         // Act

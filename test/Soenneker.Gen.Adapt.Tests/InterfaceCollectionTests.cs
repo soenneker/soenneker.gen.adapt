@@ -24,16 +24,18 @@ public sealed class InterfaceCollectionTests : UnitTest
         // Arrange
         var source = new ListOfInterfacesSource
         {
-            People = new List<IPersonInterface>
-            {
+            People =
+            [
                 new PersonImplementation { FirstName = "John", LastName = "Doe", Age = 30 },
+
                 new PersonImplementation { FirstName = "Jane", LastName = "Smith", Age = 25 }
-            },
-            Products = new List<IProductInterface>
-            {
+            ],
+            Products =
+            [
                 new ProductImplementation { Id = "P1", Name = "Product 1", Price = 99.99m },
+
                 new ProductImplementation { Id = "P2", Name = "Product 2", Price = 149.99m }
-            }
+            ]
         };
 
         // Act
@@ -101,8 +103,8 @@ public sealed class InterfaceCollectionTests : UnitTest
         // Arrange
         var source = new ListOfInterfacesSource
         {
-            People = new List<IPersonInterface>(),
-            Products = new List<IProductInterface>()
+            People = [],
+            Products = []
         };
 
         // Act
@@ -121,7 +123,7 @@ public sealed class InterfaceCollectionTests : UnitTest
     {
         // Arrange
         var people = new List<IPersonInterface>();
-        for (int i = 0; i < 100; i++)
+        for (var i = 0; i < 100; i++)
         {
             people.Add(new PersonImplementation 
             { 
@@ -134,7 +136,7 @@ public sealed class InterfaceCollectionTests : UnitTest
         var source = new ListOfInterfacesSource
         {
             People = people,
-            Products = new List<IProductInterface>()
+            Products = []
         };
 
         // Act
@@ -154,8 +156,8 @@ public sealed class InterfaceCollectionTests : UnitTest
         var person = new PersonImplementation { FirstName = "Original", LastName = "Name", Age = 30 };
         var source = new ListOfInterfacesSource
         {
-            People = new List<IPersonInterface> { person },
-            Products = new List<IProductInterface>()
+            People = [person],
+            Products = []
         };
 
         // Act

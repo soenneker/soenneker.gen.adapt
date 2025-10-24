@@ -119,7 +119,7 @@ internal static class Assignment
     {
         string s = sym.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         var sb = new StringBuilder(s.Length);
-        for (int i = 0; i < s.Length; i++)
+        for (var i = 0; i < s.Length; i++)
         {
             char ch = s[i];
             if ((ch >= 'a' && ch <= 'z') ||

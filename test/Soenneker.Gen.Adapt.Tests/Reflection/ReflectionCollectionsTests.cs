@@ -19,15 +19,43 @@ public sealed class ReflectionCollectionsTests : UnitTest
         // Arrange
         var source = new ListCollectionsSource
         {
-            IntList = new List<int> { 1, 2, 3, 4, 5 },
-            StringList = new List<string> { "one", "two", "three" },
-            DoubleList = new List<double> { 1.1, 2.2, 3.3 },
-            NestedIntList = new List<List<int>>
-            {
-                new List<int> { 1, 2 },
-                new List<int> { 3, 4 },
-                new List<int> { 5, 6 }
-            }
+            IntList =
+            [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            StringList =
+            [
+                "one",
+                "two",
+                "three"
+            ],
+            DoubleList =
+            [
+                1.1,
+                2.2,
+                3.3
+            ],
+            NestedIntList =
+            [
+                [
+                    1,
+                    2
+                ],
+
+                [
+                    3,
+                    4
+                ],
+
+                [
+                    5,
+                    6
+                ]
+            ]
         };
 
         // Act
@@ -49,10 +77,10 @@ public sealed class ReflectionCollectionsTests : UnitTest
         // Arrange
         var source = new ListCollectionsSource
         {
-            IntList = new List<int>(),
-            StringList = new List<string>(),
-            DoubleList = new List<double>(),
-            NestedIntList = new List<List<int>>()
+            IntList = [],
+            StringList = [],
+            DoubleList = [],
+            NestedIntList = []
         };
 
         // Act
@@ -93,15 +121,15 @@ public sealed class ReflectionCollectionsTests : UnitTest
         // Arrange
         var source = new ArrayCollectionsSource
         {
-            IntArray = new[] { 1, 2, 3, 4, 5 },
-            StringArray = new[] { "alpha", "beta", "gamma" },
-            DoubleArray = new[] { 1.1, 2.2, 3.3 },
-            JaggedArray = new[]
-            {
-                new[] { 1, 2 },
-                new[] { 3, 4, 5 },
-                new[] { 6 }
-            },
+            IntArray = [1, 2, 3, 4, 5],
+            StringArray = ["alpha", "beta", "gamma"],
+            DoubleArray = [1.1, 2.2, 3.3],
+            JaggedArray =
+            [
+                [1, 2],
+                [3, 4, 5],
+                [6]
+            ],
             MultiDimensionalArray = new[,] { { 1, 2 }, { 3, 4 }, { 5, 6 } }
         };
 
@@ -126,9 +154,9 @@ public sealed class ReflectionCollectionsTests : UnitTest
         // Arrange
         var source = new ArrayCollectionsSource
         {
-            IntArray = new int[0],
-            StringArray = new string[0],
-            DoubleArray = new double[0]
+            IntArray = [],
+            StringArray = [],
+            DoubleArray = []
         };
 
         // Act
@@ -161,8 +189,18 @@ public sealed class ReflectionCollectionsTests : UnitTest
             },
             StringListDict = new Dictionary<string, List<int>>
             {
-                { "evens", new List<int> { 2, 4, 6 } },
-                { "odds", new List<int> { 1, 3, 5 } }
+                { "evens", [
+                        2,
+                        4,
+                        6
+                    ]
+                },
+                { "odds", [
+                        1,
+                        3,
+                        5
+                    ]
+                }
             },
             NestedDict = new Dictionary<string, Dictionary<string, int>>
             {
@@ -212,9 +250,28 @@ public sealed class ReflectionCollectionsTests : UnitTest
         // Arrange
         var source = new SetCollectionsSource
         {
-            IntHashSet = new HashSet<int> { 1, 2, 3, 4, 5 },
-            StringHashSet = new HashSet<string> { "apple", "banana", "cherry" },
-            IntSortedSet = new SortedSet<int> { 5, 3, 1, 4, 2 }
+            IntHashSet =
+            [
+                1,
+                2,
+                3,
+                4,
+                5
+            ],
+            StringHashSet =
+            [
+                "apple",
+                "banana",
+                "cherry"
+            ],
+            IntSortedSet =
+            [
+                5,
+                3,
+                1,
+                4,
+                2
+            ]
         };
 
         // Act
@@ -284,8 +341,22 @@ public sealed class ReflectionCollectionsTests : UnitTest
         // Arrange
         var source = new ListCollectionsSource
         {
-            IntList = new List<int> { 1, 1, 2, 2, 3, 3 },
-            StringList = new List<string> { "a", "a", "b", "b" }
+            IntList =
+            [
+                1,
+                1,
+                2,
+                2,
+                3,
+                3
+            ],
+            StringList =
+            [
+                "a",
+                "a",
+                "b",
+                "b"
+            ]
         };
 
         // Act

@@ -95,17 +95,23 @@ public sealed class ReflectionComplexTypesTests : UnitTest
         var source = new ComplexWithCollectionsSource
         {
             Name = "Complex Object",
-            Tags = new List<string> { "tag1", "tag2", "tag3" },
+            Tags =
+            [
+                "tag1",
+                "tag2",
+                "tag3"
+            ],
             Counts = new Dictionary<string, int>
             {
                 { "apples", 5 },
                 { "oranges", 10 }
             },
-            Children = new List<ChildItemSource>
-            {
+            Children =
+            [
                 new ChildItemSource { Id = 1, Name = "Child1", CreatedAt = DateTime.Now },
+
                 new ChildItemSource { Id = 2, Name = "Child2", CreatedAt = DateTime.Now.AddDays(-1) }
-            }
+            ]
         };
 
         // Act
@@ -134,9 +140,9 @@ public sealed class ReflectionComplexTypesTests : UnitTest
         var source = new ComplexWithCollectionsSource
         {
             Name = "Empty Collections",
-            Tags = new List<string>(),
+            Tags = [],
             Counts = new Dictionary<string, int>(),
-            Children = new List<ChildItemSource>()
+            Children = []
         };
 
         // Act
@@ -278,10 +284,10 @@ public sealed class ReflectionComplexTypesTests : UnitTest
         var source = new ComplexWithCollectionsSource
         {
             Name = "Large Collections",
-            Tags = new List<string>()
+            Tags = []
         };
 
-        for (int i = 0; i < 1000; i++)
+        for (var i = 0; i < 1000; i++)
         {
             source.Tags.Add($"Tag{i}");
         }
@@ -306,7 +312,7 @@ public sealed class ReflectionComplexTypesTests : UnitTest
             Counts = new Dictionary<string, int>()
         };
 
-        for (int i = 0; i < 100; i++)
+        for (var i = 0; i < 100; i++)
         {
             source.Counts[$"key{i}"] = i * 10;
         }

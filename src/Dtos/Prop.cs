@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace Soenneker.Gen.Adapt;
+namespace Soenneker.Gen.Adapt.Dtos;
 
 internal readonly struct Prop
 {

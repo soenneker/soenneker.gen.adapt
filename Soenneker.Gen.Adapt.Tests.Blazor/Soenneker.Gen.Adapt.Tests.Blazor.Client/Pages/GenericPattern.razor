@@ -8,11 +8,12 @@
 <button class="btn btn-primary" @onclick="TestGenericPattern">Test Generic Pattern</button>
 
 @code {
-    private List<ExternalSourceDto> _sourceList = new List<ExternalSourceDto>
-    {
+    private List<ExternalSourceDto> _sourceList =
+    [
         new ExternalSourceDto { Id = "generic-1" },
+
         new ExternalSourceDto { Id = "generic-2" }
-    };
+    ];
 
     private void TestGenericPattern()
     {

@@ -1,6 +1,7 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
+using Soenneker.Gen.Adapt.Emitters;
 using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 
@@ -68,9 +69,9 @@ public sealed class AdaptGenerator : IIncrementalGenerator
         
         // Pass 1: Extract all type declarations
         // Use simpler approach: find all variable/field declarations and extract their types manually
-        string[] lines = content.Split(new[] { '\r', '\n' }, System.StringSplitOptions.None);
+        string[] lines = content.Split(['\r', '\n'], System.StringSplitOptions.None);
         
-        for (int lineIndex = 0; lineIndex < lines.Length; lineIndex++)
+        for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++)
         {
             string line = lines[lineIndex];
             string trimmed = line.Trim();
@@ -270,9 +271,9 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 }
             }
             // Check if expression is a known variable/field/property
-            else if (declarations.ContainsKey(expression))
+            else if (declarations.TryGetValue(expression, out string? declaration))
             {
-                sourceType = declarations[expression];
+                sourceType = declaration;
             }
             // Check if it's a nested property access like "_result.Value" or "_container.NestedSource"
             else if (expression.Contains("."))
@@ -280,11 +281,10 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 string[] parts = expression.Split('.');
                 string varName = parts[0];
                 
-                if (declarations.ContainsKey(varName))
+                if (declarations.TryGetValue(varName, out string? baseTypeName))
                 {
                     // We know the base type, need to find the property type
-                    string baseTypeName = declarations[varName];
-                    
+
                     // For nested properties, we'd need to look up the property type
                     // For now, try to find property declarations in nested classes
                     if (parts.Length == 2)
@@ -320,7 +320,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             // If we found a valid source type, add it
             if (!string.IsNullOrEmpty(sourceType) && !IsKeyword(sourceType))
             {
-                string pair = $"{sourceType}|{destType}";
+                var pair = $"{sourceType}|{destType}";
                 if (seen.Add(pair))
                 {
                     results.Add(pair);
@@ -348,7 +348,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 // Always add List mappings if we have a sourceType
                 if (!string.IsNullOrEmpty(sourceType) && !IsKeyword(sourceType))
                 {
-                    string pair = $"{sourceType}|{destType}";
+                    var pair = $"{sourceType}|{destType}";
                     if (seen.Add(pair))
                     {
                         results.Add(pair);
@@ -401,7 +401,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                         
                         if (!string.IsNullOrEmpty(sourceType) && !IsKeyword(sourceType))
                         {
-                            string pair = $"{sourceType}|{destType}";
+                            var pair = $"{sourceType}|{destType}";
                             if (seen.Add(pair))
                             {
                                 results.Add(pair);
@@ -416,7 +416,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
         // This is a workaround for cases where the heuristic doesn't trigger
         if (content.Contains("List<ExternalSourceDto>") && content.Contains("List<ExternalDestDto>"))
         {
-            string testPair = "List<ExternalSourceDto>|List<ExternalDestDto>";
+            var testPair = "List<ExternalSourceDto>|List<ExternalDestDto>";
             if (seen.Add(testPair))
             {
                 results.Add(testPair);
@@ -456,7 +456,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
     
     private static string ExtractTypeWithinAngleBrackets(string content, int startPos)
     {
-        int depth = 1;
+        var depth = 1;
         int pos = startPos;
         
         while (pos < content.Length && depth > 0)
@@ -486,7 +486,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
     private static bool IsKeyword(string word)
     {
         var keywords = new[] { "var", "int", "string", "bool", "double", "float", "long", "short", "byte", "char", "object", "dynamic", "void" };
-        for (int i = 0; i < keywords.Length; i++)
+        for (var i = 0; i < keywords.Length; i++)
         {
             if (keywords[i] == word)
                 return true;

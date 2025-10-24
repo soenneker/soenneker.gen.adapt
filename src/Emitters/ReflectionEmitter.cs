@@ -1,8 +1,8 @@
 using System.Text;
 
-namespace Soenneker.Gen.Adapt;
+namespace Soenneker.Gen.Adapt.Emitters;
 
-internal static class ReflectionAdapter
+internal static class ReflectionEmitter
 {
     /// <summary>
     /// Generates a reflection-based Adapt method as a fallback for when compile-time type information isn't available.

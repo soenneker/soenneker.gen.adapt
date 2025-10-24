@@ -154,7 +154,7 @@ public sealed class EdgeCaseTests : UnitTest
         var source = new List<Guid> { default, default, default };
 
         // Act
-        List<Guid> result = source.Adapt<List<Guid>>();
+        var result = source.Adapt<List<Guid>>();
 
         // Assert
         result.Count.Should().Be(3);
@@ -204,7 +204,7 @@ public sealed class EdgeCaseTests : UnitTest
         var source = new List<int> { 1, 2, 3 };
 
         // Act
-        List<int> result = source.Adapt<List<int>>();
+        var result = source.Adapt<List<int>>();
         result.Add(4);
         result.Add(5);
 
@@ -222,7 +222,7 @@ public sealed class EdgeCaseTests : UnitTest
         var source = new Dictionary<string, int> { { "a", 1 }, { "b", 2 } };
 
         // Act
-        Dictionary<string, int> result = source.Adapt<Dictionary<string, int>>();
+        var result = source.Adapt<Dictionary<string, int>>();
         result["c"] = 3;
         result["b"] = 999;
 
@@ -260,7 +260,7 @@ public sealed class EdgeCaseTests : UnitTest
         };
 
         // Act
-        List<string> result = source.Adapt<List<string>>();
+        var result = source.Adapt<List<string>>();
 
         // Assert
         result.Count.Should().Be(6);

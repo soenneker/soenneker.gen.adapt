@@ -8,12 +8,14 @@
 <button class="btn btn-primary" @onclick="TestLoopPattern">Test Loop Pattern</button>
 
 @code {
-    private List<ExternalProjectDto> _sourceList = new List<ExternalProjectDto>
-    {
+    private List<ExternalProjectDto> _sourceList =
+    [
         new ExternalProjectDto { Id = "loop-item-1" },
+
         new ExternalProjectDto { Id = "loop-item-2" },
+
         new ExternalProjectDto { Id = "loop-item-3" }
-    };
+    ];
 
     private void TestLoopPattern()
     {
@@ -27,7 +29,7 @@
         }
         
         // Pattern: Adapt calls in for loop
-        for (int i = 0; i < _sourceList.Count; i++)
+        for (var i = 0; i < _sourceList.Count; i++)
         {
             var adapted = _sourceList[i].Adapt<ExternalDestDto>();
             adaptedList.Add(adapted);

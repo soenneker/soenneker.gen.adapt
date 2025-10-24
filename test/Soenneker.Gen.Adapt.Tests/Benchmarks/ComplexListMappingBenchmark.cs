@@ -2,7 +2,6 @@ using AutoMapper;
 using BenchmarkDotNet.Attributes;
 using Microsoft.Extensions.Logging.Abstractions;
 using Soenneker.Gen.Adapt.Tests.Dtos;
-using System.Collections.Generic;
 using Facet.Extensions;
 
 namespace Soenneker.Gen.Adapt.Tests.Benchmarks;
@@ -34,12 +33,14 @@ public class ComplexListMappingBenchmark
 
         _complexListSource = new ComplexListSource
         {
-            NestedItems = new List<NestedSource>
-            {
+            NestedItems =
+            [
                 nestedSource,
+
                 new NestedSource { Name = "Second Item", Child = basicSource },
+
                 new NestedSource { Name = "Third Item", Child = basicSource }
-            }
+            ]
         };
 
         // Setup AutoMapper

@@ -8,7 +8,7 @@ public class ComplexDestDto
     public DateTime CreatedAt { get; set; }
     public bool IsActive { get; set; }
     public NestedDestObjectDto NestedObject { get; set; }
-    public List<string> Tags { get; set; } = new List<string>();
+    public List<string> Tags { get; set; } = [];
 }
 
 public class NestedDestObjectDto

@@ -24,7 +24,7 @@ public sealed class NestedCollectionTests : UnitTest
         };
 
         // Act
-        List<List<int>> result = source.Adapt<List<List<int>>>();
+        var result = source.Adapt<List<List<int>>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -47,7 +47,7 @@ public sealed class NestedCollectionTests : UnitTest
         };
 
         // Act
-        List<List<string>> result = source.Adapt<List<List<string>>>();
+        var result = source.Adapt<List<List<string>>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -67,7 +67,7 @@ public sealed class NestedCollectionTests : UnitTest
         };
 
         // Act
-        List<Dictionary<string, int>> result = source.Adapt<List<Dictionary<string, int>>>();
+        var result = source.Adapt<List<Dictionary<string, int>>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -97,7 +97,7 @@ public sealed class NestedCollectionTests : UnitTest
         };
 
         // Act
-        Dictionary<string, List<int>> result = source.Adapt<Dictionary<string, List<int>>>();
+        var result = source.Adapt<Dictionary<string, List<int>>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -148,7 +148,7 @@ public sealed class NestedCollectionTests : UnitTest
         var source = new List<List<int>>();
 
         // Act
-        List<List<int>> result = source.Adapt<List<List<int>>>();
+        var result = source.Adapt<List<List<int>>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -167,7 +167,7 @@ public sealed class NestedCollectionTests : UnitTest
         };
 
         // Act
-        List<List<int>> result = source.Adapt<List<List<int>>>();
+        var result = source.Adapt<List<List<int>>>();
 
         // Assert
         result.Count.Should().Be(3);
@@ -187,7 +187,7 @@ public sealed class NestedCollectionTests : UnitTest
         };
 
         // Act
-        Dictionary<string, Dictionary<string, int>> result = source.Adapt<Dictionary<string, Dictionary<string, int>>>();
+        var result = source.Adapt<Dictionary<string, Dictionary<string, int>>>();
 
         // Assert
         result.Count.Should().Be(2);
@@ -208,7 +208,7 @@ public sealed class NestedCollectionTests : UnitTest
         };
 
         // Act
-        List<List<int>> result = source.Adapt<List<List<int>>>();
+        var result = source.Adapt<List<List<int>>>();
 
         // Assert
         result.Count.Should().Be(3);
@@ -235,7 +235,7 @@ public sealed class NestedCollectionTests : UnitTest
         };
 
         // Act
-        List<List<List<int>>> result = source.Adapt<List<List<List<int>>>>();
+        var result = source.Adapt<List<List<List<int>>>>();
 
         // Assert
         result.Count.Should().Be(2);
@@ -272,7 +272,7 @@ public sealed class NestedCollectionTests : UnitTest
         };
 
         // Act
-        List<Dictionary<string, List<int>>> result = source.Adapt<List<Dictionary<string, List<int>>>>();
+        var result = source.Adapt<List<Dictionary<string, List<int>>>>();
 
         // Assert
         result.Count.Should().Be(2);

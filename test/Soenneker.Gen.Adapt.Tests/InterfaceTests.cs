@@ -279,8 +279,8 @@ public sealed class InterfaceTests : UnitTest
         };
 
         // Act
-        PersonImplementation implementation = sourceClass.Adapt<PersonImplementation>();
-        PersonClass backToClass = implementation.Adapt<PersonClass>();
+        var implementation = sourceClass.Adapt<PersonImplementation>();
+        var backToClass = implementation.Adapt<PersonClass>();
 
         // Assert
         backToClass.Should().NotBeNull();

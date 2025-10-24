@@ -10,7 +10,7 @@
 @code {
     private void TestMethodParameterPattern()
     {
-        ExternalProjectDto source = new ExternalProjectDto { Id = "method-param-test" };
+        var source = new ExternalProjectDto { Id = "method-param-test" };
         
         // Pattern: Adapt call with method parameter
         ProcessAdaptedData(source.Adapt<ExternalSourceDto>());

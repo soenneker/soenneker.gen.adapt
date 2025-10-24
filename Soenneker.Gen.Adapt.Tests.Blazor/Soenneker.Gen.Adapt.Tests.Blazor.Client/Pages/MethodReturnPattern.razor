@@ -15,7 +15,7 @@
 
     private ExternalSourceDto TestMethodReturnPattern()
     {
-        ExternalProjectDto source = new ExternalProjectDto { Id = "method-return-test" };
+        var source = new ExternalProjectDto { Id = "method-return-test" };
         
         // Pattern: return source.Adapt<Type>()
         return source.Adapt<ExternalSourceDto>();

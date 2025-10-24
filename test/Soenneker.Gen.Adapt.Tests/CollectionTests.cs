@@ -23,7 +23,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<int> { 1, 2, 3, 4, 5 };
 
         // Act
-        List<int> result = source.Adapt<List<int>>();
+        var result = source.Adapt<List<int>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -37,7 +37,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<string> { "1", "2" };
 
         // Act
-        List<string> result = source.Adapt<List<string>>();
+        var result = source.Adapt<List<string>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -78,7 +78,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<int>();
 
         // Act
-        List<int> result = source.Adapt<List<int>>();
+        var result = source.Adapt<List<int>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -92,7 +92,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<int> { 1, 2, 2, 3, 3, 3 };
 
         // Act
-        List<int> result = source.Adapt<List<int>>();
+        var result = source.Adapt<List<int>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -107,7 +107,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<int>(Enumerable.Range(1, 1000));
 
         // Act
-        List<int> result = source.Adapt<List<int>>();
+        var result = source.Adapt<List<int>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -125,7 +125,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<Guid> { guid1, guid2 };
 
         // Act
-        List<Guid> result = source.Adapt<List<Guid>>();
+        var result = source.Adapt<List<Guid>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -143,7 +143,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<DateTime> { now, tomorrow };
 
         // Act
-        List<DateTime> result = source.Adapt<List<DateTime>>();
+        var result = source.Adapt<List<DateTime>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -159,7 +159,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<decimal> { 1.5m, 2.75m, 3.99m };
 
         // Act
-        List<decimal> result = source.Adapt<List<decimal>>();
+        var result = source.Adapt<List<decimal>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -173,7 +173,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<long> { 1000000000L, 2000000000L, 3000000000L };
 
         // Act
-        List<long> result = source.Adapt<List<long>>();
+        var result = source.Adapt<List<long>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -187,7 +187,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<bool> { true, false, true, true };
 
         // Act
-        List<bool> result = source.Adapt<List<bool>>();
+        var result = source.Adapt<List<bool>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -201,7 +201,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<string> { "z", "a", "m", "b", "y" };
 
         // Act
-        List<string> result = source.Adapt<List<string>>();
+        var result = source.Adapt<List<string>>();
 
         // Assert
         result.Should().NotBeNull();
@@ -249,7 +249,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<string> { "only" };
 
         // Act
-        List<string> result = source.Adapt<List<string>>();
+        var result = source.Adapt<List<string>>();
 
         // Assert
         result.Count.Should().Be(1);
@@ -263,7 +263,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<string> { "a", null, "c" };
 
         // Act
-        List<string> result = source.Adapt<List<string>>();
+        var result = source.Adapt<List<string>>();
 
         // Assert
         result.Count.Should().Be(3);
@@ -279,7 +279,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<double> { 1.1, 2.2, 3.3 };
 
         // Act
-        List<double> result = source.Adapt<List<double>>();
+        var result = source.Adapt<List<double>>();
 
         // Assert
         result.Should().BeEquivalentTo([1.1, 2.2, 3.3]);
@@ -292,7 +292,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<float> { 1.1f, 2.2f, 3.3f };
 
         // Act
-        List<float> result = source.Adapt<List<float>>();
+        var result = source.Adapt<List<float>>();
 
         // Assert
         result.Should().BeEquivalentTo([1.1f, 2.2f, 3.3f]);
@@ -305,7 +305,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<byte> { 0, 128, 255 };
 
         // Act
-        List<byte> result = source.Adapt<List<byte>>();
+        var result = source.Adapt<List<byte>>();
 
         // Assert
         result.Should().BeEquivalentTo(new byte[] { 0, 128, 255 });
@@ -318,7 +318,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<short> { -100, 0, 100 };
 
         // Act
-        List<short> result = source.Adapt<List<short>>();
+        var result = source.Adapt<List<short>>();
 
         // Assert
         result.Should().BeEquivalentTo(new short[] { -100, 0, 100 });
@@ -331,7 +331,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<uint> { 0, 100, uint.MaxValue };
 
         // Act
-        List<uint> result = source.Adapt<List<uint>>();
+        var result = source.Adapt<List<uint>>();
 
         // Assert
         result.Should().BeEquivalentTo(new uint[] { 0, 100, uint.MaxValue });
@@ -344,7 +344,7 @@ public sealed class CollectionTests : UnitTest
         var source = new List<char> { 'a', 'b', 'c', 'Z' };
 
         // Act
-        List<char> result = source.Adapt<List<char>>();
+        var result = source.Adapt<List<char>>();
 
         // Assert
         result.Should().BeEquivalentTo(['a', 'b', 'c', 'Z']);

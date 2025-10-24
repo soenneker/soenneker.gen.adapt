@@ -18,7 +18,7 @@ public sealed class GenericTypeParameterTests : UnitTest
     [Fact]
     public void Adapt_TEntity_To_TDocument_CustomerScenario()
     {
-        CustomerEntity entity = new CustomerEntity
+        var entity = new CustomerEntity
         {
             Id = "customer-123",
             CreatedAt = DateTime.UtcNow,
@@ -26,7 +26,7 @@ public sealed class GenericTypeParameterTests : UnitTest
             Email = "john@example.com"
         };
 
-        CustomerDocument document = entity.Adapt<CustomerDocument>();
+        var document = entity.Adapt<CustomerDocument>();
 
         document.Should().NotBeNull();
         document.Name.Should().Be("John Doe");
@@ -36,7 +36,7 @@ public sealed class GenericTypeParameterTests : UnitTest
     [Fact]
     public void Adapt_TDocument_To_TEntity_GetScenario()
     {
-        CustomerDocument document = new CustomerDocument
+        var document = new CustomerDocument
         {
             DocumentId = Guid.NewGuid().ToString(),
             PartitionKey = "partition-1",
@@ -44,7 +44,7 @@ public sealed class GenericTypeParameterTests : UnitTest
             Email = "jane@example.com"
         };
 
-        CustomerEntity entity = document.Adapt<CustomerEntity>();
+        var entity = document.Adapt<CustomerEntity>();
 
         entity.Should().NotBeNull();
         entity.Name.Should().Be("Jane Smith");
@@ -54,7 +54,7 @@ public sealed class GenericTypeParameterTests : UnitTest
     [Fact]
     public void Adapt_TEntity_To_TDocument_ProductScenario()
     {
-        ProductEntity entity = new ProductEntity
+        var entity = new ProductEntity
         {
             Id = "product-456",
             CreatedAt = DateTime.UtcNow,
@@ -62,7 +62,7 @@ public sealed class GenericTypeParameterTests : UnitTest
             Price = 99.99m
         };
 
-        ProductDocument document = entity.Adapt<ProductDocument>();
+        var document = entity.Adapt<ProductDocument>();
 
         document.Should().NotBeNull();
         document.ProductName.Should().Be("Widget");
@@ -72,19 +72,19 @@ public sealed class GenericTypeParameterTests : UnitTest
     [Fact]
     public void Adapt_RoundTrip_SimulatesYourCreateAndGetMethods()
     {
-        CustomerEntity entityToCreate = new CustomerEntity
+        var entityToCreate = new CustomerEntity
         {
             Name = "Bob Johnson",
             Email = "bob@example.com",
             CreatedAt = DateTime.UtcNow
         };
 
-        CustomerDocument document = entityToCreate.Adapt<CustomerDocument>();
+        var document = entityToCreate.Adapt<CustomerDocument>();
         document.DocumentId = Guid.NewGuid().ToString();
         document.PartitionKey = document.DocumentId;
         entityToCreate.Id = document.DocumentId;
 
-        CustomerEntity retrievedEntity = document.Adapt<CustomerEntity>();
+        var retrievedEntity = document.Adapt<CustomerEntity>();
 
         retrievedEntity.Name.Should().Be("Bob Johnson");
         retrievedEntity.Email.Should().Be("bob@example.com");
@@ -93,7 +93,7 @@ public sealed class GenericTypeParameterTests : UnitTest
     [Fact]
     public void Adapt_UpdateWorkflow_SimulatesYourUpdateMethod()
     {
-        CustomerEntity entity = new CustomerEntity
+        var entity = new CustomerEntity
         {
             Id = "existing-789",
             CreatedAt = DateTime.UtcNow.AddDays(-5),
@@ -102,11 +102,11 @@ public sealed class GenericTypeParameterTests : UnitTest
         };
 
         entity.ModifiedAt = DateTime.UtcNow;
-        CustomerDocument toUpdateDocument = entity.Adapt<CustomerDocument>();
+        var toUpdateDocument = entity.Adapt<CustomerDocument>();
         toUpdateDocument.DocumentId = entity.Id;
         toUpdateDocument.PartitionKey = entity.Id;
 
-        CustomerEntity result = toUpdateDocument.Adapt<CustomerEntity>();
+        var result = toUpdateDocument.Adapt<CustomerEntity>();
 
         result.Name.Should().Be("Original Name");
         result.Email.Should().Be("original@example.com");
@@ -118,14 +118,14 @@ public sealed class GenericTypeParameterTests : UnitTest
         var customerEntity = new CustomerEntity { Name = "Customer1", Email = "c1@test.com" };
         var productEntity = new ProductEntity { ProductName = "Product1", Price = 50m };
 
-        CustomerDocument customerDoc = customerEntity.Adapt<CustomerDocument>();
-        ProductDocument productDoc = productEntity.Adapt<ProductDocument>();
+        var customerDoc = customerEntity.Adapt<CustomerDocument>();
+        var productDoc = productEntity.Adapt<ProductDocument>();
 
         customerDoc.Name.Should().Be("Customer1");
         productDoc.ProductName.Should().Be("Product1");
 
-        CustomerEntity customerBack = customerDoc.Adapt<CustomerEntity>();
-        ProductEntity productBack = productDoc.Adapt<ProductEntity>();
+        var customerBack = customerDoc.Adapt<CustomerEntity>();
+        var productBack = productDoc.Adapt<ProductEntity>();
 
         customerBack.Email.Should().Be("c1@test.com");
         productBack.Price.Should().Be(50m);

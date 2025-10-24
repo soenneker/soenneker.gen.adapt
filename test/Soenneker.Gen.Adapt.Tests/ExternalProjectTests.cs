@@ -58,7 +58,7 @@ public sealed class ExternalProjectTests : UnitTest
         };
 
         // Act
-        BasicDest intermediate = original.Adapt<BasicDest>();
+        var intermediate = original.Adapt<BasicDest>();
         var result = intermediate.Adapt<ExternalProjectDto>();
 
         // Assert

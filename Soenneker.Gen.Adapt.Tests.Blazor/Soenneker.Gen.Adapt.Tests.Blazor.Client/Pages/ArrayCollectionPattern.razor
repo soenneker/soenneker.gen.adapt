@@ -8,23 +8,24 @@
 <button class="btn btn-primary" @onclick="TestArrayCollectionPattern">Test Array Collection Pattern</button>
 
 @code {
-    private ExternalSourceDto[] _sourceArray = new ExternalSourceDto[]
-    {
+    private ExternalSourceDto[] _sourceArray =
+    [
         new ExternalSourceDto { Id = "array-1" },
         new ExternalSourceDto { Id = "array-2" },
         new ExternalSourceDto { Id = "array-3" }
-    };
+    ];
     
-    private List<ExternalProjectDto> _sourceList = new List<ExternalProjectDto>
-    {
+    private List<ExternalProjectDto> _sourceList =
+    [
         new ExternalProjectDto { Id = "list-1" },
+
         new ExternalProjectDto { Id = "list-2" }
-    };
+    ];
 
     private void TestArrayCollectionPattern()
     {
         // Pattern: Adapt calls on individual array elements
-        for (int i = 0; i < _sourceArray.Length; i++)
+        for (var i = 0; i < _sourceArray.Length; i++)
         {
             var adaptedItem = _sourceArray[i].Adapt<ExternalDestDto>();
         }

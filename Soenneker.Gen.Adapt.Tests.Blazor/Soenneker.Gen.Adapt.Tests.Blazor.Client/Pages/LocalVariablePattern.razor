@@ -10,7 +10,7 @@
 @code {
     private void TestLocalVariable()
     {
-        ExternalSourceDto localVar = new ExternalSourceDto { Id = "local-123" };
+        var localVar = new ExternalSourceDto { Id = "local-123" };
         
         // Pattern: localVariable.Adapt<Type>()
         var dest = localVar.Adapt<ExternalDestDto>();

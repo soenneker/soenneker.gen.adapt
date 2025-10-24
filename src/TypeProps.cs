@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using Soenneker.Gen.Adapt.Dtos;
 using System.Collections.Generic;
 
 namespace Soenneker.Gen.Adapt;

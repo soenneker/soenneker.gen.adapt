@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using AwesomeAssertions;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 using Soenneker.Gen.Adapt.Tests.Dtos.Reflection.Primitives;
@@ -247,7 +246,14 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
         // Arrange
         var source = new ListCollectionsSource
         {
-            StringList = new List<string> { "one", null, "three", null, "five" }
+            StringList =
+            [
+                "one",
+                null,
+                "three",
+                null,
+                "five"
+            ]
         };
 
         // Act
@@ -336,7 +342,13 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
     {
         // Arrange
         var primitiveSource = new ReflectionAllPrimitivesSource { IntValue = 100 };
-        var listSource = new ListCollectionsSource { IntList = new List<int> { 1, 2, 3 } };
+        var listSource = new ListCollectionsSource { IntList =
+            [
+                1,
+                2,
+                3
+            ]
+        };
         var nestedSource = new NestedObjectSource { Name = "Nested" };
 
         // Act - Different type pairs should each cache their own mappers

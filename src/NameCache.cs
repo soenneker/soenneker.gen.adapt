@@ -44,7 +44,7 @@ internal sealed class NameCache
     private static string Sanitize(string s)
     {
         var sb = new StringBuilder(s.Length);
-        for (int i = 0; i < s.Length; i++)
+        for (var i = 0; i < s.Length; i++)
         {
             char ch = s[i];
             if ((ch >= 'a' && ch <= 'z') ||

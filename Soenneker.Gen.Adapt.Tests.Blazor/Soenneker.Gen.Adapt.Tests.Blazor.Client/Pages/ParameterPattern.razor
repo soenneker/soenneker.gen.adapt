@@ -10,7 +10,7 @@
 @code {
     private void TestParameterPattern()
     {
-        ExternalProjectDto source = new ExternalProjectDto { Id = "param-test" };
+        var source = new ExternalProjectDto { Id = "param-test" };
         
         // Pattern: variable with explicit type.Adapt<Type>()
         var dest = source.Adapt<ExternalDestDto>();

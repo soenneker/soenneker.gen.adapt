@@ -8,7 +8,7 @@ public class ComplexSourceDto
     public DateTime CreatedAt { get; set; }
     public bool IsActive { get; set; }
     public NestedObjectDto NestedObject { get; set; }
-    public List<string> Tags { get; set; } = new List<string>();
+    public List<string> Tags { get; set; } = [];
 }
 
 public class NestedObjectDto

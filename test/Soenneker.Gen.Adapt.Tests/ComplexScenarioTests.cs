@@ -62,9 +62,9 @@ public sealed class ComplexScenarioTests : UnitTest
         var source = new BasicSource { Id = "test", Name = "Test Name", Count = 100 };
 
         // Act - adapt to intermediate, then to final
-        BasicDest intermediate = source.Adapt<BasicDest>();
+        var intermediate = source.Adapt<BasicDest>();
         intermediate.Count = 200; // Modify intermediate
-        BasicSource final = intermediate.Adapt<BasicSource>();
+        var final = intermediate.Adapt<BasicSource>();
 
         // Assert
         final.Id.Should().Be("test");
@@ -177,7 +177,7 @@ public sealed class ComplexScenarioTests : UnitTest
         };
 
         // Act
-        Dictionary<Guid, BasicSource> result = source.Adapt<Dictionary<Guid, BasicSource>>();
+        var result = source.Adapt<Dictionary<Guid, BasicSource>>();
 
         // Assert
         result.Count.Should().Be(2);
@@ -193,9 +193,9 @@ public sealed class ComplexScenarioTests : UnitTest
         var stringDict = new Dictionary<string, string> { { "x", "y" } };
         var boolDict = new Dictionary<string, bool> { { "flag", true } };
 
-        Dictionary<string, int> intResult = intDict.Adapt<Dictionary<string, int>>();
-        Dictionary<string, string> stringResult = stringDict.Adapt<Dictionary<string, string>>();
-        Dictionary<string, bool> boolResult = boolDict.Adapt<Dictionary<string, bool>>();
+        var intResult = intDict.Adapt<Dictionary<string, int>>();
+        var stringResult = stringDict.Adapt<Dictionary<string, string>>();
+        var boolResult = boolDict.Adapt<Dictionary<string, bool>>();
 
         intResult["a"].Should().Be(1);
         stringResult["x"].Should().Be("y");

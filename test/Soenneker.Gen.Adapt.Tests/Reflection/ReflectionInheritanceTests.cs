@@ -139,7 +139,7 @@ public sealed class ReflectionInheritanceTests : UnitTest
     public void AdaptViaReflection_BaseVehicle_ToBaseCar_ShouldMapCommonProperties()
     {
         // Arrange - Create a Car but reference it as Vehicle
-        CarSource source = new CarSource
+        var source = new CarSource
         {
             Make = "Honda",
             Model = "Accord",

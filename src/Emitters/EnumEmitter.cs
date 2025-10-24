@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Soenneker.Gen.Adapt;
+namespace Soenneker.Gen.Adapt.Emitters;
 
-internal static class EnumParsers
+internal static class EnumEmitter
 {
     public static void Emit(StringBuilder sb, List<INamedTypeSymbol> enums, NameCache names, string targetNamespace)
     {
@@ -19,7 +19,7 @@ internal static class EnumParsers
         sb.AppendLine("\tpublic static partial class GenAdapt_EnumParsers");
         sb.AppendLine("\t{");
 
-        for (int i = 0; i < enums.Count; i++)
+        for (var i = 0; i < enums.Count; i++)
         {
             INamedTypeSymbol? e = enums[i];
             string fq = names.FullyQualified(e);
@@ -34,7 +34,7 @@ internal static class EnumParsers
             sb.AppendLine("\t\t{");
             sb.AppendLine("\t\t\tswitch (value)");
             sb.AppendLine("\t\t\t{");
-            for (int m = 0; m < members.Count; m++)
+            for (var m = 0; m < members.Count; m++)
             {
                 string? name = members[m];
                 sb.Append("\t\t\t\tcase \"").Append(name).Append("\": return ").Append(fq).Append('.').Append(name).AppendLine(";");
