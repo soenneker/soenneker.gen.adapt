@@ -10,6 +10,7 @@ internal static class Collections
         sb.AppendLine("#nullable enable");
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Collections.Generic;");
+        sb.AppendLine("using System.Runtime.InteropServices;");
         sb.AppendLine("using System.CodeDom.Compiler;");
         sb.AppendLine("using System.Diagnostics.CodeAnalysis;");
         sb.AppendLine();
@@ -24,8 +25,9 @@ internal static class Collections
         sb.AppendLine("\t\tpublic static List<TElement> Adapt<TElement>(this List<TElement> source)");
         sb.AppendLine("\t\t{");
         sb.AppendLine("\t\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
-        sb.AppendLine("\t\t\tvar result = new List<TElement>(source.Count);");
-        sb.AppendLine("\t\t\tfor (int i = 0; i < source.Count; i++) result.Add(source[i]);");
+        sb.AppendLine("\t\t\tvar src = CollectionsMarshal.AsSpan(source);");
+        sb.AppendLine("\t\t\tvar result = new List<TElement>(src.Length);");
+        sb.AppendLine("\t\t\tfor (int i = 0; i < src.Length; i++) result.Add(src[i]);");
         sb.AppendLine("\t\t\treturn result;");
         sb.AppendLine("\t\t}");
         sb.AppendLine();
@@ -37,9 +39,25 @@ internal static class Collections
         sb.AppendLine("\t\tpublic static IEnumerable<TElement> Adapt<TElement>(this IEnumerable<TElement> source)");
         sb.AppendLine("\t\t{");
         sb.AppendLine("\t\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
-        sb.AppendLine("\t\t\tvar list = new List<TElement>();");
-        sb.AppendLine("\t\t\tforeach (var item in source) list.Add(item);");
-        sb.AppendLine("\t\t\treturn list;");
+        sb.AppendLine("\t\t\tif (source is List<TElement> l)");
+        sb.AppendLine("\t\t\t{");
+        sb.AppendLine("\t\t\t\tvar s = CollectionsMarshal.AsSpan(l);");
+        sb.AppendLine("\t\t\t\tvar list = new List<TElement>(s.Length);");
+        sb.AppendLine("\t\t\t\tfor (int i = 0; i < s.Length; i++) list.Add(s[i]);");
+        sb.AppendLine("\t\t\t\treturn list;");
+        sb.AppendLine("\t\t\t}");
+        sb.AppendLine("\t\t\telse if (source is TElement[] a)");
+        sb.AppendLine("\t\t\t{");
+        sb.AppendLine("\t\t\t\tvar list = new List<TElement>(a.Length);");
+        sb.AppendLine("\t\t\t\tfor (int i = 0; i < a.Length; i++) list.Add(a[i]);");
+        sb.AppendLine("\t\t\t\treturn list;");
+        sb.AppendLine("\t\t\t}");
+        sb.AppendLine("\t\t\telse");
+        sb.AppendLine("\t\t\t{");
+        sb.AppendLine("\t\t\t\tvar list = new List<TElement>();");
+        sb.AppendLine("\t\t\t\tforeach (var item in source) list.Add(item);");
+        sb.AppendLine("\t\t\t\treturn list;");
+        sb.AppendLine("\t\t\t}");
         sb.AppendLine("\t\t}");
         sb.AppendLine();
 

@@ -1,7 +1,3 @@
-using System.CodeDom.Compiler;
-using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
-
 namespace Soenneker.Gen.Adapt.Tests.Types;
 
 public class ComplexDestDto

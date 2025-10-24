@@ -1,5 +1,3 @@
-using Soenneker.Documents.Audit;
-using Soenneker.Dtos.IdNamePair;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 
 namespace Soenneker.Gen.Adapt.Tests;

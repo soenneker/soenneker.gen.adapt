@@ -1,9 +1,7 @@
 using AutoMapper;
 using BenchmarkDotNet.Attributes;
 using Facet.Extensions;
-using Mapster;
 using Microsoft.Extensions.Logging.Abstractions;
-using Riok.Mapperly.Abstractions;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 
 namespace Soenneker.Gen.Adapt.Tests.Benchmarks;
@@ -14,7 +12,7 @@ public class SimpleMappingBenchmark
 {
     private BasicSource _basicSource;
     private IMapper _autoMapper;
-    private TypeAdapterConfig _mapsterConfig;
+    private Mapster.TypeAdapterConfig _mapsterConfig;
     private TestMapper _mapperly;
 
     [GlobalSetup]
@@ -35,7 +33,7 @@ public class SimpleMappingBenchmark
         _autoMapper = config.CreateMapper();
 
         // Setup Mapster
-        _mapsterConfig = new TypeAdapterConfig();
+        _mapsterConfig = new Mapster.TypeAdapterConfig();
         _mapsterConfig.NewConfig<BasicSource, BasicDest>();
 
         // Setup Mapperly
@@ -48,17 +46,17 @@ public class SimpleMappingBenchmark
         return _basicSource.Adapt<BasicDest>();
     }
 
-    [Benchmark]
-    public BasicDest AutoMapper()
-    {
-        return _autoMapper.Map<BasicDest>(_basicSource);
-    }
+    //[Benchmark]
+    //public BasicDest AutoMapper()
+    //{
+    //    return _autoMapper.Map<BasicDest>(_basicSource);
+    //}
 
-    [Benchmark]
-    public BasicDest MapsterBenchmark()
-    {
-        return TypeAdapter.Adapt<BasicDest>(_basicSource, _mapsterConfig);
-    }
+    //[Benchmark]
+    //public BasicDest MapsterBenchmark()
+    //{
+    //    return Mapster.TypeAdapter.Adapt<BasicDest>(_basicSource, _mapsterConfig);
+    //}
 
     [Benchmark]
     public BasicDest Mapperly()
@@ -66,11 +64,11 @@ public class SimpleMappingBenchmark
         return _mapperly.MapToBasicDest(_basicSource);
     }
 
-    [Benchmark]
-    public BasicFacetDest Facet()
-    {
-        return _basicSource.ToFacet<BasicFacetDest>();
-    }
+    //[Benchmark]
+    //public BasicFacetDest Facet()
+    //{
+    //    return _basicSource.ToFacet<BasicFacetDest>();
+    //}
 }
 
 // Mapperly mapper class

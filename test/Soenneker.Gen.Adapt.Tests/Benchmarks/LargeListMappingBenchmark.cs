@@ -1,9 +1,6 @@
 using AutoMapper;
 using BenchmarkDotNet.Attributes;
-using Facet.Extensions;
-using Mapster;
 using Microsoft.Extensions.Logging.Abstractions;
-using Riok.Mapperly.Abstractions;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +13,7 @@ public class LargeListMappingBenchmark
 {
     private List<BasicSource> _basicList;
     private IMapper _autoMapper;
-    private TypeAdapterConfig _mapsterConfig;
+    private Mapster.TypeAdapterConfig _mapsterConfig;
     private LargeListTestMapper _mapperly;
 
     [GlobalSetup]
@@ -39,7 +36,7 @@ public class LargeListMappingBenchmark
         _autoMapper = config.CreateMapper();
 
         // Setup Mapster
-        _mapsterConfig = new TypeAdapterConfig();
+        _mapsterConfig = new Mapster.TypeAdapterConfig();
         _mapsterConfig.NewConfig<BasicSource, BasicDest>();
 
         // Setup Mapperly
@@ -52,30 +49,24 @@ public class LargeListMappingBenchmark
         return _basicList.Adapt<List<BasicDest>>();
     }
 
-    [Benchmark]
-    public List<BasicDest> AutoMapper()
-    {
-        return _autoMapper.Map<List<BasicDest>>(_basicList);
-    }
+    //[Benchmark]
+    //public List<BasicDest> AutoMapper()
+    //{
+    //    return _autoMapper.Map<List<BasicDest>>(_basicList);
+    //}
 
-    [Benchmark]
-    public List<BasicDest> MapsterBenchmark()
-    {
-        return TypeAdapter.Adapt<List<BasicDest>>(_basicList, _mapsterConfig);
-    }
+    //[Benchmark]
+    //public List<BasicDest> MapsterBenchmark()
+    //{
+    //    return Mapster.TypeAdapter.Adapt<List<BasicDest>>(_basicList, _mapsterConfig);
+    //}
 
     [Benchmark]
     public List<BasicDest> Mapperly()
     {
         return _mapperly.MapToBasicDestList(_basicList);
     }
-
-    [Benchmark]
-    public List<BasicFacetDest> Facet()
-    {
-        return _basicList.Select(x => x.ToFacet<BasicFacetDest>()).ToList();
-    }
-
+    
 }
 
 // Mapperly mapper class
@@ -85,3 +76,4 @@ public partial class LargeListTestMapper
     public partial BasicDest MapToBasicDest(BasicSource source);
     public partial List<BasicDest> MapToBasicDestList(List<BasicSource> source);
 }
+

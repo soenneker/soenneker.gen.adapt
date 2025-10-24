@@ -22,6 +22,7 @@ internal static class MapperFile
         sb.AppendLine("#nullable enable");
         sb.AppendLine("using System;");
         sb.AppendLine("using System.Collections.Generic;");
+        sb.AppendLine("using System.Runtime.InteropServices;");
         sb.AppendLine("using System.Runtime.CompilerServices;");
         sb.AppendLine("using System.Diagnostics.CodeAnalysis;");
         sb.AppendLine("using System.CodeDom.Compiler;");
@@ -49,7 +50,10 @@ internal static class MapperFile
                 sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
                 sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
                 sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
-                sb.Append("\t\tprivate static ").Append(dFq).Append(" Map_").Append(srcSan).Append("_To_").Append(dstSan).Append('(').Append(srcFq).AppendLine(" source)");
+                bool _srcIsStruct = source.TypeKind == TypeKind.Struct;
+                sb.Append("\t\tprivate static ").Append(dFq).Append(" Map_").Append(srcSan).Append("_To_").Append(dstSan).Append('(');
+                if (_srcIsStruct) sb.Append("in ");
+                sb.Append(srcFq).AppendLine(" source)");
                 sb.AppendLine("\t\t{");
                 EmitMappingBody(sb, source, d, enums, names, "\t\t\t");
                 sb.AppendLine("\t\t}");
@@ -63,7 +67,12 @@ internal static class MapperFile
             sb.Append("\t\tpublic static ").Append(dFq).Append(" Adapt(this ").Append(srcFq).AppendLine(" source)");
             sb.AppendLine("\t\t{");
             if (isReferencedByOthers)
-                sb.Append("\t\t\treturn Map_").Append(srcSan).Append("_To_").Append(dstSan).AppendLine("(source);");
+            {
+                if (source.TypeKind == TypeKind.Struct)
+                    sb.Append("\t\t\treturn Map_").Append(srcSan).Append("_To_").Append(dstSan).AppendLine("(in source);");
+                else
+                    sb.Append("\t\t\treturn Map_").Append(srcSan).Append("_To_").Append(dstSan).AppendLine("(source);");
+            }
             else
                 EmitMappingBody(sb, source, d, enums, names, "\t\t\t");
             sb.AppendLine("\t\t}");
@@ -127,7 +136,10 @@ internal static class MapperFile
                 INamedTypeSymbol? d = destinations[i];
                 string dSan = names.Sanitized(d);
                 sb.Append("\t\t\t\tcase _MapId_").Append(srcSan).Append('.').Append(dSan).AppendLine(":");
-                sb.Append("\t\t\t\t\treturn (TDest)(object)Map_").Append(srcSan).Append("_To_").Append(dSan).AppendLine("(source);");
+                if (source.TypeKind == TypeKind.Struct)
+                    sb.Append("\t\t\t\t\treturn (TDest)(object)Map_").Append(srcSan).Append("_To_").Append(dSan).AppendLine("(in source);");
+                else
+                    sb.Append("\t\t\t\t\treturn (TDest)(object)Map_").Append(srcSan).Append("_To_").Append(dSan).AppendLine("(source);");
             }
             sb.AppendLine("\t\t\t\tdefault:");
             sb.AppendLine("\t\t\t\t\tthrow new NotSupportedException($\"Unsupported Adapt target type: {typeof(TDest).FullName}\");");
@@ -172,7 +184,10 @@ internal static class MapperFile
         sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
-        sb.Append("\t\tprivate static ").Append(dstFq).Append(" Map_").Append(srcSan).Append("_To_").Append(dstSan).Append('(').Append(srcFq).AppendLine(" source)");
+        bool _srcIsStruct2 = source.TypeKind == TypeKind.Struct;
+        sb.Append("\t\tprivate static ").Append(dstFq).Append(" Map_").Append(srcSan).Append("_To_").Append(dstSan).Append('(');
+        if (_srcIsStruct2) sb.Append("in ");
+        sb.Append(srcFq).AppendLine(" source)");
         sb.AppendLine("\t\t{");
         
         EmitMappingBody(sb, source, dest, enums, names, "\t\t\t");
@@ -371,8 +386,11 @@ internal static class MapperFile
                     }
                     else
                     {
-                        // Build list (pre-sized when Count is available), then assign to dest
-                        bool srcHasCount = Types.IsIReadOnlyCollection(sp.Type, out _) || Types.IsICollection(sp.Type, out _) || srcIsArray;
+                        // Build list using the most efficient traversal available
+                        bool srcIsListProp = Types.IsList(sp.Type, out _);
+                        bool srcIsROListProp = Types.IsIReadOnlyList(sp.Type, out _);
+                        bool srcIsIListProp = Types.IsIList(sp.Type, out _);
+                        bool srcHasCount = srcIsArray || srcIsListProp || srcIsROListProp || srcIsIListProp || Types.IsIReadOnlyCollection(sp.Type, out _) || Types.IsICollection(sp.Type, out _);
                         if (srcHasCount)
                         {
                             if (srcIsArray)
@@ -388,6 +406,22 @@ internal static class MapperFile
                         if (srcIsArray)
                         {
                             sb.Append(indent).AppendLine("\tfor (int i = 0; i < (" + ("source." + sp.Name) + ").Length; i++)");
+                            string? assn = Assignment.TryBuild("source." + sp.Name + "[i]", sElem!, dElem!, enums) ?? ("source." + sp.Name + "[i]");
+                            sb.Append(indent).Append("\t\tlist_").Append(dp.Name).Append(".Add(").Append(assn).AppendLine(");");
+                        }
+                        else if (srcIsListProp)
+                        {
+                            sb.Append(indent).Append("\tvar span_").Append(dp.Name).Append(" = global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(source.").Append(sp.Name).AppendLine(");");
+                            sb.Append(indent).AppendLine("\tfor (int i = 0; i < span_" + dp.Name + ".Length; i++)");
+                            sb.Append(indent).AppendLine("\t{");
+                            sb.Append(indent).Append("\t\tref readonly var s = ref span_").Append(dp.Name).AppendLine("[i];");
+                            string? assn = Assignment.TryBuild("s", sElem!, dElem!, enums) ?? "s";
+                            sb.Append(indent).Append("\t\tlist_").Append(dp.Name).Append(".Add(").Append(assn).AppendLine(");");
+                            sb.Append(indent).AppendLine("\t}");
+                        }
+                        else if (srcIsROListProp || srcIsIListProp)
+                        {
+                            sb.Append(indent).AppendLine("\tfor (int i = 0; i < count_" + dp.Name + "; i++)");
                             string? assn = Assignment.TryBuild("source." + sp.Name + "[i]", sElem!, dElem!, enums) ?? ("source." + sp.Name + "[i]");
                             sb.Append(indent).Append("\t\tlist_").Append(dp.Name).Append(".Add(").Append(assn).AppendLine(");");
                         }
@@ -466,8 +500,16 @@ internal static class MapperFile
                 sb.Append(indent).AppendLine("{");
                 string srcSanLocal = names.Sanitized(srcNamed);
                 string dstSanLocal = names.Sanitized(dstNamed);
-                sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = Map_").Append(srcSanLocal).Append("_To_").Append(dstSanLocal).Append("(")
-                  .Append("source.").Append(sp.Name).AppendLine(");");
+                if (srcNamed.TypeKind == TypeKind.Struct)
+                {
+                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = Map_").Append(srcSanLocal).Append("_To_").Append(dstSanLocal).Append("(")
+                      .Append("in source.").Append(sp.Name).AppendLine(");");
+                }
+                else
+                {
+                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = Map_").Append(srcSanLocal).Append("_To_").Append(dstSanLocal).Append("(")
+                      .Append("source.").Append(sp.Name).AppendLine(");");
+                }
                 sb.Append(indent).AppendLine("}");
                 continue;
             }
@@ -588,8 +630,57 @@ internal static class MapperFile
     {
         string dstFq = names.FullyQualified(dest);
         
-        // If source is a concrete list, use Count, capacity pre-sizing, and indexer for best perf
-        if (Types.IsAnyList(source, out _))
+        bool srcIsList = Types.IsList(source, out _);
+        bool srcIsArray = Types.IsArray(source, out _);
+        bool srcIsROList = Types.IsIReadOnlyList(source, out _);
+        bool srcIsIList = Types.IsIList(source, out _);
+
+        if (srcIsList)
+        {
+            sb.Append(indent).Append("if (source is null || source.Count == 0)").AppendLine();
+            sb.Append(indent).Append("\treturn new ").Append(dstFq).AppendLine("();");
+            sb.AppendLine();
+            sb.Append(indent).Append("var src = global::System.Runtime.InteropServices.CollectionsMarshal.AsSpan(source);").AppendLine();
+            sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("(src.Length);");
+            sb.AppendLine();
+            sb.Append(indent).Append("for (int i = 0; i < src.Length; i++)").AppendLine();
+            sb.Append(indent).AppendLine("{");
+            sb.Append(indent).Append("\tref readonly var s = ref src[i];").AppendLine();
+            if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
+            {
+                sb.Append(indent).Append("\ttarget.Add(s);").AppendLine();
+            }
+            else
+            {
+                string itemExpr = GetConversionExpression("s", sElem, dElem, names);
+                sb.Append(indent).Append("\ttarget.Add(").Append(itemExpr).AppendLine(");");
+            }
+            sb.Append(indent).AppendLine("}");
+            sb.Append(indent).AppendLine("return target;");
+        }
+        else if (srcIsArray)
+        {
+            sb.Append(indent).Append("if (source is null || source.Length == 0)").AppendLine();
+            sb.Append(indent).Append("\treturn new ").Append(dstFq).AppendLine("();");
+            sb.AppendLine();
+            sb.Append(indent).Append("int n = source.Length;").AppendLine();
+            sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("(n);");
+            sb.AppendLine();
+            sb.Append(indent).Append("for (int i = 0; i < n; i++)").AppendLine();
+            sb.Append(indent).AppendLine("{");
+            if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
+            {
+                sb.Append(indent).Append("\ttarget.Add(source[i]);").AppendLine();
+            }
+            else
+            {
+                string itemExpr = GetConversionExpression("source[i]", sElem, dElem, names);
+                sb.Append(indent).Append("\ttarget.Add(").Append(itemExpr).AppendLine(");");
+            }
+            sb.Append(indent).AppendLine("}");
+            sb.Append(indent).AppendLine("return target;");
+        }
+        else if (srcIsROList || srcIsIList)
         {
             sb.Append(indent).Append("if (source is null || source.Count == 0)").AppendLine();
             sb.Append(indent).Append("\treturn new ").Append(dstFq).AppendLine("();");
@@ -597,23 +688,18 @@ internal static class MapperFile
             sb.Append(indent).Append("int count = source.Count;").AppendLine();
             sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("(count);");
             sb.AppendLine();
-
+            sb.Append(indent).Append("for (int i = 0; i < count; i++)").AppendLine();
+            sb.Append(indent).AppendLine("{");
             if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
             {
-                sb.Append(indent).Append("for (int i = 0; i < count; i++)").AppendLine();
-                sb.Append(indent).AppendLine("{");
                 sb.Append(indent).Append("\ttarget.Add(source[i]);").AppendLine();
-                sb.Append(indent).AppendLine("}");
             }
             else
             {
-                sb.Append(indent).Append("for (int i = 0; i < count; i++)").AppendLine();
-                sb.Append(indent).AppendLine("{");
                 string itemExpr = GetConversionExpression("source[i]", sElem, dElem, names);
                 sb.Append(indent).Append("\ttarget.Add(").Append(itemExpr).AppendLine(");");
-                sb.Append(indent).AppendLine("}");
             }
-
+            sb.Append(indent).AppendLine("}");
             sb.Append(indent).AppendLine("return target;");
         }
         else
@@ -680,6 +766,8 @@ internal static class MapperFile
         {
             string fromSan = names.Sanitized(fromNamed);
             string toSan = names.Sanitized(toNamed);
+            if (fromNamed.TypeKind == TypeKind.Struct)
+                return "Map_" + fromSan + "_To_" + toSan + "(in " + expr + ")";
             return "Map_" + fromSan + "_To_" + toSan + "(" + expr + ")";
         }
         

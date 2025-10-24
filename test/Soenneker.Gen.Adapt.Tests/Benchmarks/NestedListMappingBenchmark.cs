@@ -1,9 +1,6 @@
 using AutoMapper;
 using BenchmarkDotNet.Attributes;
-using Facet.Extensions;
-using Mapster;
 using Microsoft.Extensions.Logging.Abstractions;
-using Riok.Mapperly.Abstractions;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +13,7 @@ public class NestedListMappingBenchmark
 {
     private List<NestedSource> _nestedList;
     private IMapper _autoMapper;
-    private TypeAdapterConfig _mapsterConfig;
+    private Mapster.TypeAdapterConfig _mapsterConfig;
     private NestedListTestMapper _mapperly;
 
     [GlobalSetup]
@@ -44,7 +41,7 @@ public class NestedListMappingBenchmark
         _autoMapper = config.CreateMapper();
 
         // Setup Mapster
-        _mapsterConfig = new TypeAdapterConfig();
+        _mapsterConfig = new Mapster.TypeAdapterConfig();
         _mapsterConfig.NewConfig<BasicSource, BasicDest>();
         _mapsterConfig.NewConfig<NestedSource, NestedDest>();
 
@@ -67,7 +64,7 @@ public class NestedListMappingBenchmark
     [Benchmark]
     public List<NestedDest> MapsterBenchmark()
     {
-        return TypeAdapter.Adapt<List<NestedDest>>(_nestedList, _mapsterConfig);
+        return Mapster.TypeAdapter.Adapt<List<NestedDest>>(_nestedList, _mapsterConfig);
     }
 
     [Benchmark]
@@ -75,13 +72,6 @@ public class NestedListMappingBenchmark
     {
         return _mapperly.MapToNestedDestList(_nestedList);
     }
-
-    [Benchmark]
-    public List<NestedFacetDest> Facet()
-    {
-        return _nestedList.Select(x => x.ToFacet<NestedFacetDest>()).ToList();
-    }
-
 }
 
 // Mapperly mapper class

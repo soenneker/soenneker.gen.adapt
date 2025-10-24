@@ -1,8 +1,6 @@
 using AutoMapper;
 using BenchmarkDotNet.Attributes;
-using Mapster;
 using Microsoft.Extensions.Logging.Abstractions;
-using Riok.Mapperly.Abstractions;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 using System.Collections.Generic;
 using Facet.Extensions;
@@ -15,7 +13,7 @@ public class ComplexListMappingBenchmark
 {
     private ComplexListSource _complexListSource;
     private IMapper _autoMapper;
-    private TypeAdapterConfig _mapsterConfig;
+    private Mapster.TypeAdapterConfig _mapsterConfig;
     private ComplexListTestMapper _mapperly;
 
     [GlobalSetup]
@@ -54,7 +52,7 @@ public class ComplexListMappingBenchmark
         _autoMapper = config.CreateMapper();
 
         // Setup Mapster
-        _mapsterConfig = new TypeAdapterConfig();
+        _mapsterConfig = new Mapster.TypeAdapterConfig();
         _mapsterConfig.NewConfig<BasicSource, BasicDest>();
         _mapsterConfig.NewConfig<NestedSource, NestedDest>();
         _mapsterConfig.NewConfig<ComplexListSource, ComplexListDest>();
@@ -78,7 +76,7 @@ public class ComplexListMappingBenchmark
     [Benchmark]
     public ComplexListDest MapsterBenchmark()
     {
-        return TypeAdapter.Adapt<ComplexListDest>(_complexListSource, _mapsterConfig);
+        return Mapster.TypeAdapter.Adapt<ComplexListDest>(_complexListSource, _mapsterConfig);
     }
 
     [Benchmark]
@@ -92,8 +90,6 @@ public class ComplexListMappingBenchmark
     {
         return _complexListSource.ToFacet<ComplexListFacetDest>();
     }
-
-
 }
 
 // Mapperly mapper class
