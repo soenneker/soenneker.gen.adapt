@@ -79,6 +79,78 @@ internal static class SimpleObjectAdapter
                 }
             }
 
+            // Special handling for Array-to-Array adaptations
+            if (Types.IsArray(src, out ITypeSymbol? srcArrayElement) && Types.IsArray(dst, out ITypeSymbol? dstArrayElement))
+            {
+                // Allow Array<T1> to Array<T2> if element types are compatible
+                if (Assignment.CanAssign(srcArrayElement, dstArrayElement, enums))
+                {
+                    // Add to the map for later processing
+                    if (!map.TryGetValue(src, out List<INamedTypeSymbol>? destList))
+                    {
+                        destList = new List<INamedTypeSymbol>(8);
+                        map[src] = destList;
+                    }
+
+                    // Only add if not already present to avoid duplicates
+                    if (!destList.Contains(dst))
+                    {
+                        destList.Add(dst);
+                        AddNestedPairs(map, src, dst, enums);
+                    }
+
+                    continue;
+                }
+            }
+
+            // Special handling for Array-to-Collection adaptations
+            if (Types.IsArray(src, out ITypeSymbol? srcArrayToCollectionElement) && Types.IsAnyList(dst, out ITypeSymbol? dstListFromArrayElement))
+            {
+                // Allow Array<T1> to List<T2> if element types are compatible
+                if (Assignment.CanAssign(srcArrayToCollectionElement, dstListFromArrayElement, enums))
+                {
+                    // Add to the map for later processing
+                    if (!map.TryGetValue(src, out List<INamedTypeSymbol>? destList))
+                    {
+                        destList = new List<INamedTypeSymbol>(8);
+                        map[src] = destList;
+                    }
+
+                    // Only add if not already present to avoid duplicates
+                    if (!destList.Contains(dst))
+                    {
+                        destList.Add(dst);
+                        AddNestedPairs(map, src, dst, enums);
+                    }
+
+                    continue;
+                }
+            }
+
+            // Special handling for Collection-to-Array adaptations
+            if (Types.IsAnyList(src, out ITypeSymbol? srcListToArrayElement) && Types.IsArray(dst, out ITypeSymbol? dstArrayFromListElement))
+            {
+                // Allow List<T1> to Array<T2> if element types are compatible
+                if (Assignment.CanAssign(srcListToArrayElement, dstArrayFromListElement, enums))
+                {
+                    // Add to the map for later processing
+                    if (!map.TryGetValue(src, out List<INamedTypeSymbol>? destList))
+                    {
+                        destList = new List<INamedTypeSymbol>(8);
+                        map[src] = destList;
+                    }
+
+                    // Only add if not already present to avoid duplicates
+                    if (!destList.Contains(dst))
+                    {
+                        destList.Add(dst);
+                        AddNestedPairs(map, src, dst, enums);
+                    }
+
+                    continue;
+                }
+            }
+
             // Validate that mapping is possible for simple objects
             if (!HasParameterlessCtor(dst))
             {
@@ -150,6 +222,18 @@ internal static class SimpleObjectAdapter
 
             if (Types.IsAnyDictionary(s.Type, out ITypeSymbol? sKey, out _) && Types.IsAnyDictionary(d.Type, out ITypeSymbol? dKey, out _) &&
                 SymbolEqualityComparer.Default.Equals(sKey, dKey))
+                return true;
+
+            // Check for array-to-array mappings
+            if (Types.IsArray(s.Type, out _) && Types.IsArray(d.Type, out _))
+                return true;
+
+            // Check for array-to-collection mappings
+            if (Types.IsArray(s.Type, out _) && Types.IsAnyList(d.Type, out _))
+                return true;
+
+            // Check for collection-to-array mappings
+            if (Types.IsAnyList(s.Type, out _) && Types.IsArray(d.Type, out _))
                 return true;
 
             if (Assignment.CanAssign(s.Type, d.Type, enums))
