@@ -21,60 +21,68 @@ internal static class CollectionEmitter
         if (srcIsList)
         {
             sb.Append(indent).Append("var src = CollectionsMarshal.AsSpan(source);").AppendLine();
-            sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("(src.Length);");
+            sb.Append(indent).Append("int n = src.Length;").AppendLine();
             sb.AppendLine();
-            sb.Append(indent).Append("for (int i = 0; i < src.Length; i++)").AppendLine();
-            sb.Append(indent).AppendLine("{");
-            sb.Append(indent).Append("\tref readonly var s = ref src[i];").AppendLine();
+            sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("(n);");
+            sb.AppendLine();
             if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
             {
-                sb.Append(indent).Append("\ttarget.Add(s);").AppendLine();
+                sb.Append(indent).Append("CollectionsMarshal.SetCount(target, n);").AppendLine();
+                sb.Append(indent).Append("src.CopyTo(CollectionsMarshal.AsSpan(target));").AppendLine();
             }
             else
             {
+                sb.Append(indent).Append("for (int i = 0; i < n; i++)").AppendLine();
+                sb.Append(indent).AppendLine("{");
+                sb.Append(indent).Append("\tref readonly var s = ref src[i];").AppendLine();
                 string itemExpr = GetConversionExpression("s", sElem, dElem, names);
                 sb.Append(indent).Append("\ttarget.Add(").Append(itemExpr).AppendLine(");");
+                sb.Append(indent).AppendLine("}");
             }
-
-            sb.Append(indent).AppendLine("}");
         }
         else if (srcIsArray)
         {
             sb.Append(indent).Append("int n = source.Length;").AppendLine();
+            sb.AppendLine();
             sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("(n);");
             sb.AppendLine();
-            sb.Append(indent).Append("for (int i = 0; i < n; i++)").AppendLine();
-            sb.Append(indent).AppendLine("{");
             if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
             {
-                sb.Append(indent).Append("\ttarget.Add(source[i]);").AppendLine();
+                sb.Append(indent).Append("CollectionsMarshal.SetCount(target, n);").AppendLine();
+                sb.Append(indent).Append("source.AsSpan().CopyTo(CollectionsMarshal.AsSpan(target));").AppendLine();
             }
             else
             {
+                sb.Append(indent).Append("for (int i = 0; i < n; i++)").AppendLine();
+                sb.Append(indent).AppendLine("{");
                 string itemExpr = GetConversionExpression("source[i]", sElem, dElem, names);
                 sb.Append(indent).Append("\ttarget.Add(").Append(itemExpr).AppendLine(");");
+                sb.Append(indent).AppendLine("}");
             }
-
-            sb.Append(indent).AppendLine("}");
         }
         else if (srcIsRoList || srcIsIList)
         {
             sb.Append(indent).Append("int count = source.Count;").AppendLine();
+            sb.AppendLine();
             sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("(count);");
             sb.AppendLine();
-            sb.Append(indent).Append("for (int i = 0; i < count; i++)").AppendLine();
-            sb.Append(indent).AppendLine("{");
             if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
             {
-                sb.Append(indent).Append("\ttarget.Add(source[i]);").AppendLine();
+                sb.Append(indent).Append("CollectionsMarshal.SetCount(target, count);").AppendLine();
+                sb.Append(indent).Append("var targetSpan = CollectionsMarshal.AsSpan(target);").AppendLine();
+                sb.Append(indent).Append("for (int i = 0; i < count; i++)").AppendLine();
+                sb.Append(indent).AppendLine("{");
+                sb.Append(indent).Append("\ttargetSpan[i] = source[i];").AppendLine();
+                sb.Append(indent).AppendLine("}");
             }
             else
             {
+                sb.Append(indent).Append("for (int i = 0; i < count; i++)").AppendLine();
+                sb.Append(indent).AppendLine("{");
                 string itemExpr = GetConversionExpression("source[i]", sElem, dElem, names);
                 sb.Append(indent).Append("\ttarget.Add(").Append(itemExpr).AppendLine(");");
+                sb.Append(indent).AppendLine("}");
             }
-
-            sb.Append(indent).AppendLine("}");
         }
         else
         {

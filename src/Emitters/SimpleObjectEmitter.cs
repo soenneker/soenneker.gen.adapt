@@ -118,21 +118,24 @@ internal static class SimpleObjectEmitter
                 if (Types.IsList(sp.Type, out _))
                 {
                     sb.Append(indent).Append("\tvar src = CollectionsMarshal.AsSpan(source.").Append(sp.Name).AppendLine(");");
-                    sb.Append(indent).Append("\tvar targetList = new ").Append(Types.ShortName(dp.Type)).AppendLine("(src.Length);");
+                    sb.Append(indent).Append("\tint n = src.Length;").AppendLine();
                     sb.AppendLine();
-                    sb.Append(indent).Append("\tfor (int i = 0; i < src.Length; i++)").AppendLine();
-                    sb.Append(indent).AppendLine("\t{");
-                    sb.Append(indent).Append("\t\tref readonly var s = ref src[i];").AppendLine();
+                    sb.Append(indent).Append("\tvar targetList = new ").Append(Types.ShortName(dp.Type)).AppendLine("(n);");
+                    sb.AppendLine();
                     if (SymbolEqualityComparer.Default.Equals(srcElement, dstElement))
                     {
-                        sb.Append(indent).Append("\t\ttargetList.Add(s);").AppendLine();
+                        sb.Append(indent).Append("\tCollectionsMarshal.SetCount(targetList, n);").AppendLine();
+                        sb.Append(indent).Append("\tsrc.CopyTo(CollectionsMarshal.AsSpan(targetList));").AppendLine();
                     }
                     else
                     {
+                        sb.Append(indent).Append("\tfor (int i = 0; i < n; i++)").AppendLine();
+                        sb.Append(indent).AppendLine("\t{");
+                        sb.Append(indent).Append("\t\tref readonly var s = ref src[i];").AppendLine();
                         string itemExpr = GetConversionExpression("s", srcElement, dstElement, names);
                         sb.Append(indent).Append("\t\ttargetList.Add(").Append(itemExpr).AppendLine(");");
+                        sb.Append(indent).AppendLine("\t}");
                     }
-                    sb.Append(indent).AppendLine("\t}");
                     sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = targetList;").AppendLine();
                 }
                 else if (Types.IsArray(sp.Type, out _))
@@ -161,20 +164,22 @@ internal static class SimpleObjectEmitter
                     {
                         // Array to List mapping
                         sb.Append(indent).Append("\tint n = source.").Append(sp.Name).AppendLine(".Length;");
+                        sb.AppendLine();
                         sb.Append(indent).Append("\tvar targetList = new ").Append(Types.ShortName(dp.Type)).AppendLine("(n);");
                         sb.AppendLine();
-                        sb.Append(indent).Append("\tfor (int i = 0; i < n; i++)").AppendLine();
-                        sb.Append(indent).AppendLine("\t{");
                         if (SymbolEqualityComparer.Default.Equals(srcElement, dstElement))
                         {
-                            sb.Append(indent).Append("\t\ttargetList.Add(source.").Append(sp.Name).AppendLine("[i]);");
+                            sb.Append(indent).Append("\tCollectionsMarshal.SetCount(targetList, n);").AppendLine();
+                            sb.Append(indent).Append("\tsource.").Append(sp.Name).Append(".AsSpan().CopyTo(CollectionsMarshal.AsSpan(targetList));").AppendLine();
                         }
                         else
                         {
+                            sb.Append(indent).Append("\tfor (int i = 0; i < n; i++)").AppendLine();
+                            sb.Append(indent).AppendLine("\t{");
                             string itemExpr = GetConversionExpression("source." + sp.Name + "[i]", srcElement, dstElement, names);
                             sb.Append(indent).Append("\t\ttargetList.Add(").Append(itemExpr).AppendLine(");");
+                            sb.Append(indent).AppendLine("\t}");
                         }
-                        sb.Append(indent).AppendLine("\t}");
                         sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = targetList;").AppendLine();
                     }
                 }

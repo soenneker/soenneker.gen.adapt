@@ -13,7 +13,7 @@ public class BenchmarkRunner : BenchmarkTest
     {
     }
 
-//[LocalFact]
+   // [LocalFact]
     public async ValueTask ComplexListMappingBenchmark()
     {
         Summary summary = BenchmarkDotNet.Running.BenchmarkRunner.Run<ComplexListMappingBenchmark>(DefaultConf);
@@ -21,7 +21,7 @@ public class BenchmarkRunner : BenchmarkTest
         await summary.OutputSummaryToLog(OutputHelper, CancellationToken);
     }
 
-  //  [LocalFact]
+    //[LocalFact]
     public async ValueTask LargeListMappingBenchmark()
     {
         Summary summary = BenchmarkDotNet.Running.BenchmarkRunner.Run<LargeListMappingBenchmark>(DefaultConf);
@@ -45,7 +45,7 @@ public class BenchmarkRunner : BenchmarkTest
         await summary.OutputSummaryToLog(OutputHelper, CancellationToken);
     }
 
-  //  [LocalFact]
+   // [LocalFact]
     public async ValueTask NestedListMappingBenchmark()
     {
         Summary summary = BenchmarkDotNet.Running.BenchmarkRunner.Run<NestedListMappingBenchmark>(DefaultConf);
