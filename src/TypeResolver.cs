@@ -29,14 +29,13 @@ internal static class TypeResolver
                 SyntaxNode declaratorSyntax = syntaxReference.GetSyntax();
                 
                 // Check if it's a VariableDeclaratorSyntax with an initializer
-                if (declaratorSyntax is VariableDeclaratorSyntax declarator && declarator.Initializer?.Value != null)
+                if (declaratorSyntax is VariableDeclaratorSyntax { Initializer.Value: not null } declarator)
                 {
                     // Check if the initializer is an Adapt call
-                    if (declarator.Initializer.Value is InvocationExpressionSyntax invocation &&
-                        invocation.Expression is MemberAccessExpressionSyntax memberAccess &&
-                        memberAccess.Name is GenericNameSyntax genericName &&
-                        genericName.Identifier.Text == "Adapt" &&
-                        genericName.TypeArgumentList.Arguments.Count > 0)
+                    if (declarator.Initializer.Value is InvocationExpressionSyntax { Expression: MemberAccessExpressionSyntax { Name: GenericNameSyntax
+                        {
+                            Identifier.Text: "Adapt", TypeArgumentList.Arguments.Count: > 0
+                        } genericName } })
                     {
                         // Get the generic type argument - this is what the variable's type will be
                         TypeSyntax destTypeSyntax = genericName.TypeArgumentList.Arguments[0];
@@ -63,20 +62,16 @@ internal static class TypeResolver
                 foreach (VariableDeclaratorSyntax? declarator in declarators)
                 {
                     // Check if this declarator comes before our identifier in the source
-                    if (declarator.SpanStart < identifier.SpanStart && declarator.Initializer?.Value != null)
-                    {
-                        // Check if the initializer is an Adapt call
-                        if (declarator.Initializer.Value is InvocationExpressionSyntax invocation &&
-                            invocation.Expression is MemberAccessExpressionSyntax memberAccess &&
-                            memberAccess.Name is GenericNameSyntax genericName &&
-                            genericName.Identifier.Text == "Adapt" &&
-                            genericName.TypeArgumentList.Arguments.Count > 0)
+                    if (declarator.SpanStart < identifier.SpanStart && declarator.Initializer?.Value is InvocationExpressionSyntax { Expression: MemberAccessExpressionSyntax { Name: GenericNameSyntax
                         {
-                            // Get the generic type argument - this is what the variable's type will be
-                            TypeSyntax destTypeSyntax = genericName.TypeArgumentList.Arguments[0];
-                            ITypeSymbol? destTypeSymbol = model.GetTypeInfo(destTypeSyntax).Type;
-                            return destTypeSymbol as INamedTypeSymbol;
-                        }
+                            Identifier.Text: "Adapt", TypeArgumentList.Arguments.Count: > 0
+                        } genericName } })
+                        // Check if the initializer is an Adapt call
+                    {
+                        // Get the generic type argument - this is what the variable's type will be
+                        TypeSyntax destTypeSyntax = genericName.TypeArgumentList.Arguments[0];
+                        ITypeSymbol? destTypeSymbol = model.GetTypeInfo(destTypeSyntax).Type;
+                        return destTypeSymbol as INamedTypeSymbol;
                     }
                 }
             }

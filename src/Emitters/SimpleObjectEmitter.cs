@@ -3,20 +3,15 @@ using System.Text;
 using Microsoft.CodeAnalysis;
 using Soenneker.Gen.Adapt.Dtos;
 
-namespace Soenneker.Gen.Adapt.Mappers;
+namespace Soenneker.Gen.Adapt.Emitters;
 
-internal static class SimpleObjectMapper
+internal static class SimpleObjectEmitter
 {
     /// <summary>
     /// Handles mapping body generation for simple object-to-object mappings
     /// </summary>
-    public static void EmitMappingBodyInstructions(
-        StringBuilder sb,
-        INamedTypeSymbol source,
-        INamedTypeSymbol dest,
-        List<INamedTypeSymbol> enums,
-        NameCache names,
-        string indent)
+    public static void EmitMappingBodyInstructions(StringBuilder sb, INamedTypeSymbol source, INamedTypeSymbol dest, List<INamedTypeSymbol> enums,
+        NameCache names, string indent)
     {
         var srcProps = TypeProps.Build(source);
         var dstProps = TypeProps.Build(dest);
@@ -43,12 +38,13 @@ internal static class SimpleObjectMapper
                     string defaultValue = GetDefaultValueForType(dp.Type);
                     simpleMappings.Add((dp.Name, defaultValue));
                 }
+
                 continue;
             }
 
             // Check if it's a complex type that needs special handling
             bool isComplexType = Types.IsAnyList(sp.Type, out _) || Types.IsAnyDictionary(sp.Type, out _, out _);
-            
+
             if (isComplexType)
             {
                 complexMappings.Add((dp, sp));
@@ -62,9 +58,8 @@ internal static class SimpleObjectMapper
                 // Check if it's a nested object that needs mapping
                 if (sp.Type is INamedTypeSymbol srcNamed && dp.Type is INamedTypeSymbol dstNamed &&
                     (srcNamed.TypeKind == TypeKind.Class || srcNamed.TypeKind == TypeKind.Struct) &&
-                    (dstNamed.TypeKind == TypeKind.Class || dstNamed.TypeKind == TypeKind.Struct) &&
-                    !Types.IsFrameworkType(srcNamed) && !Types.IsFrameworkType(dstNamed) &&
-                    !SymbolEqualityComparer.Default.Equals(srcNamed, dstNamed))
+                    (dstNamed.TypeKind == TypeKind.Class || dstNamed.TypeKind == TypeKind.Struct) && !Types.IsFrameworkType(srcNamed) &&
+                    !Types.IsFrameworkType(dstNamed) && !SymbolEqualityComparer.Default.Equals(srcNamed, dstNamed))
                 {
                     // This is a nested object that needs mapping
                     complexMappings.Add((dp, sp));
@@ -74,6 +69,7 @@ internal static class SimpleObjectMapper
                     // Special case - will handle after object creation
                     complexMappings.Add((dp, sp));
                 }
+
                 continue;
             }
 
@@ -95,13 +91,14 @@ internal static class SimpleObjectMapper
                 else
                     sb.AppendLine();
             }
+
             sb.Append(indent).AppendLine("};");
         }
         else
         {
             // Traditional approach
             sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("();");
-            
+
             foreach ((string propName, string value) in simpleMappings)
             {
                 sb.Append(indent).Append("target.").Append(propName).Append(" = ").Append(value).AppendLine(";");
@@ -114,9 +111,8 @@ internal static class SimpleObjectMapper
             // Handle nested object mappings
             if (sp.Type is INamedTypeSymbol srcNamed && dp.Type is INamedTypeSymbol dstNamed &&
                 (srcNamed.TypeKind == TypeKind.Class || srcNamed.TypeKind == TypeKind.Struct) &&
-                (dstNamed.TypeKind == TypeKind.Class || dstNamed.TypeKind == TypeKind.Struct) &&
-                !Types.IsFrameworkType(srcNamed) && !Types.IsFrameworkType(dstNamed) &&
-                !SymbolEqualityComparer.Default.Equals(srcNamed, dstNamed))
+                (dstNamed.TypeKind == TypeKind.Class || dstNamed.TypeKind == TypeKind.Struct) && !Types.IsFrameworkType(srcNamed) &&
+                !Types.IsFrameworkType(dstNamed) && !SymbolEqualityComparer.Default.Equals(srcNamed, dstNamed))
             {
                 sb.Append(indent).Append("if (source.").Append(sp.Name).AppendLine(" is not null)");
                 sb.Append(indent).AppendLine("{");
@@ -125,13 +121,14 @@ internal static class SimpleObjectMapper
                 if (srcNamed.TypeKind == TypeKind.Struct)
                 {
                     sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = Map_").Append(srcSanLocal).Append("_To_").Append(dstSanLocal).Append("(")
-                      .Append("in source.").Append(sp.Name).AppendLine(");");
+                        .Append("in source.").Append(sp.Name).AppendLine(");");
                 }
                 else
                 {
                     sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = Map_").Append(srcSanLocal).Append("_To_").Append(dstSanLocal).Append("(")
-                      .Append("source.").Append(sp.Name).AppendLine(");");
+                        .Append("source.").Append(sp.Name).AppendLine(");");
                 }
+
                 sb.Append(indent).AppendLine("}");
                 continue;
             }
@@ -152,32 +149,34 @@ internal static class SimpleObjectMapper
         var result = new HashSet<string>();
         foreach (ISymbol member in type.GetMembers())
         {
-            if (member is IPropertySymbol prop && prop.IsRequired)
+            if (member is IPropertySymbol { IsRequired: true } prop)
             {
                 result.Add(prop.Name);
             }
         }
+
         return result;
     }
 
     private static HashSet<string> GetInitOnlyPropertyNames(INamedTypeSymbol type)
     {
         var result = new HashSet<string>();
-        
+
         // Check all properties including base class properties
         INamedTypeSymbol? current = type;
         while (current is not null)
         {
             foreach (ISymbol member in current.GetMembers())
             {
-                if (member is IPropertySymbol prop && prop.SetMethod?.IsInitOnly == true)
+                if (member is IPropertySymbol { SetMethod.IsInitOnly: true } prop)
                 {
                     result.Add(prop.Name);
                 }
             }
+
             current = current.BaseType;
         }
-        
+
         return result;
     }
 
@@ -185,14 +184,14 @@ internal static class SimpleObjectMapper
     {
         if (Types.IsString(type))
             return "string.Empty";
-        
+
         if (type.IsValueType)
         {
             if (Types.IsNullableOf(type, out _))
                 return "null";
             return "default";
         }
-        
+
         return "null!";
     }
 }

@@ -14,27 +14,22 @@ public sealed class AdaptGenerator : IIncrementalGenerator
     {
         // Find all invocations - we'll filter for Adapt calls in the Emitter
         IncrementalValuesProvider<(InvocationExpressionSyntax, SemanticModel)> adaptInvocations = context.SyntaxProvider.CreateSyntaxProvider(
-            static (node, _) => node is InvocationExpressionSyntax,
-            static (ctx, _) => ((InvocationExpressionSyntax)ctx.Node, ctx.SemanticModel));
+            static (node, _) => node is InvocationExpressionSyntax, static (ctx, _) => ((InvocationExpressionSyntax)ctx.Node, ctx.SemanticModel));
 
         // Also scan .razor files for Adapt calls
         // NOTE: Razor compilation happens after source generation, so we need to pre-scan
-        IncrementalValuesProvider<(string path, string content)> razorFiles = context.AdditionalTextsProvider
-            .Where(static file => file.Path.EndsWith(".razor"))
+        IncrementalValuesProvider<(string path, string content)> razorFiles = context.AdditionalTextsProvider.Where(static file => file.Path.EndsWith(".razor"))
             .Select(static (file, ct) =>
             {
                 SourceText? text = file.GetText(ct);
                 return (file.Path, text?.ToString() ?? string.Empty);
             });
-            
-        IncrementalValuesProvider<string> razorAdaptCalls = razorFiles
-            .SelectMany(static (pair, _) => ExtractAdaptCallsFromRazor(pair.content));
+
+        IncrementalValuesProvider<string> razorAdaptCalls = razorFiles.SelectMany(static (pair, _) => ExtractAdaptCallsFromRazor(pair.content));
 
         // Combine everything with compilation
-        IncrementalValueProvider<(Compilation, ImmutableArray<(InvocationExpressionSyntax, SemanticModel)>, ImmutableArray<string>)> allData = 
-            context.CompilationProvider
-                .Combine(adaptInvocations.Collect())
-                .Combine(razorAdaptCalls.Collect())
+        IncrementalValueProvider<(Compilation, ImmutableArray<(InvocationExpressionSyntax, SemanticModel)>, ImmutableArray<string>)> allData =
+            context.CompilationProvider.Combine(adaptInvocations.Collect()).Combine(razorAdaptCalls.Collect())
                 .Select(static (pair, _) => (pair.Left.Left, pair.Left.Right, pair.Right));
 
         context.RegisterSourceOutput(allData, static (spc, pack) =>
@@ -50,8 +45,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             catch (System.Exception ex)
             {
                 spc.ReportDiagnostic(Diagnostic.Create(
-                    new DiagnosticDescriptor("SGA001", "AdaptGenerator error", ex.ToString(), "Adapt", DiagnosticSeverity.Warning, true),
-                    Location.None));
+                    new DiagnosticDescriptor("SGA001", "AdaptGenerator error", ex.ToString(), "Adapt", DiagnosticSeverity.Warning, true), Location.None));
             }
         });
     }
@@ -60,17 +54,17 @@ public sealed class AdaptGenerator : IIncrementalGenerator
     {
         ImmutableArray<string>.Builder results = ImmutableArray.CreateBuilder<string>();
         var seen = new System.Collections.Generic.HashSet<string>();
-        
+
         // Two-pass approach:
         // Pass 1: Collect all type declarations (fields, properties, local variables)
         // Pass 2: Find all .Adapt<> calls and match them to declarations
-        
+
         var declarations = new System.Collections.Generic.Dictionary<string, string>(); // varName -> typeName
-        
+
         // Pass 1: Extract all type declarations
         // Use simpler approach: find all variable/field declarations and extract their types manually
         string[] lines = content.Split(['\r', '\n'], System.StringSplitOptions.None);
-        
+
         for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++)
         {
             string line = lines[lineIndex];
@@ -78,19 +72,21 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             // Skip markup, comments, etc.
             if (trimmed.StartsWith("<") || trimmed.StartsWith("//") || (trimmed.StartsWith("@") && !trimmed.StartsWith("@code")))
                 continue;
-            
+
             // Look for variable declarations: [modifiers] TypeName varName =
             // Handle both simple and generic types, including var declarations
             // Try multiple patterns to be more robust
-            var declPattern1 = @"(?:private|public|protected|internal|readonly|static|const)\s+([a-zA-Z_][a-zA-Z0-9_\.]*<[^<>]+>(?:\?)?)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=";
+            var declPattern1 =
+                @"(?:private|public|protected|internal|readonly|static|const)\s+([a-zA-Z_][a-zA-Z0-9_\.]*<[^<>]+>(?:\?)?)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=";
             Match match = Regex.Match(trimmed, declPattern1);
-            
+
             if (!match.Success)
             {
-                var declPattern2 = @"(?:private|public|protected|internal|readonly|static|const)\s+([a-zA-Z_][a-zA-Z0-9_\.]*(?:\?)?)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=";
+                var declPattern2 =
+                    @"(?:private|public|protected|internal|readonly|static|const)\s+([a-zA-Z_][a-zA-Z0-9_\.]*(?:\?)?)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=";
                 match = Regex.Match(trimmed, declPattern2);
             }
-            
+
             // Also handle var declarations
             if (!match.Success)
             {
@@ -102,7 +98,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                     match = varMatch;
                 }
             }
-            
+
             // Also handle nullable type declarations like "TypeName? varName ="
             if (!match.Success)
             {
@@ -113,16 +109,16 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                     match = nullableMatch;
                 }
             }
-            
-            if (match.Success && match.Groups.Count >= 2)
+
+            if (match is { Success: true, Groups.Count: >= 2 })
             {
                 string typeName = match.Groups.Count >= 3 ? match.Groups[1].Value.Trim() : "var";
                 string varName = match.Groups.Count >= 3 ? match.Groups[2].Value.Trim() : match.Groups[1].Value.Trim();
-                
+
                 // Remove modifiers if they got captured
-                typeName = typeName.Replace("private", "").Replace("public", "").Replace("protected", "")
-                    .Replace("internal", "").Replace("readonly", "").Replace("static", "").Replace("const", "").Trim();
-                
+                typeName = typeName.Replace("private", "").Replace("public", "").Replace("protected", "").Replace("internal", "").Replace("readonly", "")
+                    .Replace("static", "").Replace("const", "").Trim();
+
                 // Handle "var" declarations - infer type from right-hand side
                 if (typeName == "var")
                 {
@@ -133,7 +129,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                     {
                         multiLine += " " + lines[j];
                     }
-                    
+
                     // First try to find "new TypeName" pattern
                     var rhsPattern = @"=\s*new\s+([a-zA-Z_][a-zA-Z0-9_\.]*(?:<.+?>)?)\s*[\(\{]";
                     Match rhsMatch = Regex.Match(multiLine, rhsPattern);
@@ -158,25 +154,25 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                         }
                     }
                 }
-                
+
                 // For generic types, extract properly handling nested angle brackets
                 if (typeName.Contains("<"))
                 {
                     typeName = ExtractCleanGenericType(typeName);
                 }
-                
+
                 typeName = typeName.Replace("?", "");
-                
+
                 if (!string.IsNullOrEmpty(typeName) && !IsKeyword(typeName) && !declarations.ContainsKey(varName))
                 {
                     declarations[varName] = typeName;
                 }
             }
         }
-        
+
         // Pass 1.5: Find method parameters
         // Look for method declarations like "Type MethodName(ParamType paramName)"
-        var methodParamPattern = @"(?:private|public|protected|internal|static)?\s+(?:void|[a-zA-Z_][a-zA-Z0-9_<>,\s\[\]]*?)\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\(([^)]*)\)";
+        const string methodParamPattern = @"(?:private|public|protected|internal|static)?\s+(?:void|[a-zA-Z_][a-zA-Z0-9_<>,\s\[\]]*?)\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\(([^)]*)\)";
         MatchCollection methodMatches = Regex.Matches(content, methodParamPattern);
         foreach (Match methodMatch in methodMatches)
         {
@@ -190,26 +186,26 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                     string trimmedParam = paramPair.Trim();
                     if (string.IsNullOrEmpty(trimmedParam))
                         continue;
-                    
+
                     // Match "Type paramName"
-                    var paramPattern = @"([a-zA-Z_][a-zA-Z0-9_\.]*(?:<[^>]*>)?(?:\[\])?(?:\?)?)\s+([a-zA-Z_][a-zA-Z0-9_]*)$";
+                    const string paramPattern = @"([a-zA-Z_][a-zA-Z0-9_\.]*(?:<[^>]*>)?(?:\[\])?(?:\?)?)\s+([a-zA-Z_][a-zA-Z0-9_]*)$";
                     Match paramMatch = Regex.Match(trimmedParam, paramPattern);
-                    if (paramMatch.Success && paramMatch.Groups.Count >= 3)
+                    if (paramMatch is { Success: true, Groups.Count: >= 3 })
                     {
                         string paramType = paramMatch.Groups[1].Value.Trim();
                         string paramName = paramMatch.Groups[2].Value.Trim();
-                        
+
                         // Remove nullable marker
                         if (paramType.EndsWith("?"))
                         {
                             paramType = paramType.Substring(0, paramType.Length - 1);
                         }
-                        
+
                         if (paramType.Contains("<"))
                         {
                             paramType = ExtractCleanGenericType(paramType);
                         }
-                        
+
                         if (!string.IsNullOrEmpty(paramType) && !IsKeyword(paramType) && !declarations.ContainsKey(paramName))
                         {
                             declarations[paramName] = paramType;
@@ -218,43 +214,44 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 }
             }
         }
-        
+
         // Pass 2: Find all .Adapt<DestType>() calls (but skip comments)
         // First, remove all comment lines to avoid false matches
         string contentWithoutComments = Regex.Replace(content, @"//.*$", "", RegexOptions.Multiline);
-        
+
         // Find all .Adapt<>() calls - match the whole pattern
         // This handles: variable.Adapt<>, new Type().Adapt<>, method().Adapt<>, obj.Property.Adapt<>
         var adaptCalls = new System.Collections.Generic.List<(string expression, string destType)>();
-        
+
         // Use a more comprehensive regex to find all Adapt calls
         // This handles: variable.Adapt<>, new Type().Adapt<>, method().Adapt<>, obj.Property.Adapt<>
-        var adaptCallRegex = new Regex(@"((?:new\s+[a-zA-Z_][\w<>,\s]*?\([^)]*\))|(?:[a-zA-Z_][\w\.]*(?:\([^)]*\))?))\s*\.\s*Adapt\s*<([^>]+)>", RegexOptions.Singleline);
+        var adaptCallRegex = new Regex(@"((?:new\s+[a-zA-Z_][\w<>,\s]*?\([^)]*\))|(?:[a-zA-Z_][\w\.]*(?:\([^)]*\))?))\s*\.\s*Adapt\s*<([^>]+)>",
+            RegexOptions.Singleline);
         MatchCollection matches = adaptCallRegex.Matches(contentWithoutComments);
-        
+
         foreach (Match match in matches)
         {
             if (match.Groups.Count >= 3)
             {
                 string expression = match.Groups[1].Value.Trim();
                 string destType = match.Groups[2].Value.Trim();
-                
+
                 if (!string.IsNullOrEmpty(destType) && !string.IsNullOrEmpty(expression))
                 {
                     adaptCalls.Add((expression, destType));
                 }
             }
         }
-        
+
         // Now match adapt calls to declarations
         foreach ((string expression, string destType) in adaptCalls)
         {
             if (IsKeyword(destType))
                 continue;
-            
+
             // Try to resolve source type
             string sourceType = null;
-            
+
             // Check if expression is "new TypeName()"
             if (expression.StartsWith("new"))
             {
@@ -280,7 +277,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             {
                 string[] parts = expression.Split('.');
                 string varName = parts[0];
-                
+
                 if (declarations.TryGetValue(varName, out string? baseTypeName))
                 {
                     // We know the base type, need to find the property type
@@ -316,7 +313,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                     }
                 }
             }
-            
+
             // If we found a valid source type, add it
             if (!string.IsNullOrEmpty(sourceType) && !IsKeyword(sourceType))
             {
@@ -326,6 +323,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                     results.Add(pair);
                 }
             }
+
             // Special heuristic: if dest is List<T> and source is unresolved, infer it
             if (destType.StartsWith("List<") && destType.EndsWith(">"))
             {
@@ -334,7 +332,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                     // Extract the element type from List<ElementType>
                     string destElement = destType.Substring(5); // Remove "List<"
                     destElement = destElement.Substring(0, destElement.Length - 1); // Remove ">"
-                    
+
                     // Infer that source might be List<SourceElement> where SourceElement maps to destElement
                     // This is a heuristic but works for common cases like List<SourceDto> -> List<DestDto>
                     // We'll try common patterns like replacing "Dest" with "Source", "Response" with "Request", etc.
@@ -344,7 +342,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                         sourceType = $"List<{sourceElement}>";
                     }
                 }
-                
+
                 // Always add List mappings if we have a sourceType
                 if (!string.IsNullOrEmpty(sourceType) && !IsKeyword(sourceType))
                 {
@@ -360,45 +358,48 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 // For unresolved expressions, try to infer from common patterns
                 // This handles cases like "_businessResponse.Adapt<BusinessRequest>()"
                 // where _businessResponse is a field/property that we can't resolve from declarations
-                
+
                 // Look for field/property declarations in the content
                 if (expression.StartsWith("_") || char.IsUpper(expression[0]))
                 {
                     // Try multiple patterns to find the field/property declaration
                     // Pattern 1: With modifiers and generic types
-                    var fieldPattern = $@"(?:private|public|protected|internal|readonly|static)\s+([a-zA-Z_][a-zA-Z0-9_\.]*<[^<>]+>(?:\?)?)\s+{Regex.Escape(expression)}\s*[;=]";
+                    var fieldPattern =
+                        $@"(?:private|public|protected|internal|readonly|static)\s+([a-zA-Z_][a-zA-Z0-9_\.]*<[^<>]+>(?:\?)?)\s+{Regex.Escape(expression)}\s*[;=]";
                     Match fieldMatch = Regex.Match(content, fieldPattern);
-                    
+
                     // Pattern 2: Try without requiring modifiers for generic types
                     if (!fieldMatch.Success)
                     {
                         fieldPattern = $@"([a-zA-Z_][a-zA-Z0-9_\.]*<[^<>]+>(?:\?)?)\s+{Regex.Escape(expression)}\s*[;=]";
                         fieldMatch = Regex.Match(content, fieldPattern);
                     }
-                    
+
                     // Pattern 3: Try simple non-generic types
                     if (!fieldMatch.Success)
                     {
-                        fieldPattern = $@"(?:private|public|protected|internal|readonly|static)\s+([a-zA-Z_][a-zA-Z0-9_\.]*(?:\?)?)\s+{Regex.Escape(expression)}\s*[;=]";
+                        fieldPattern =
+                            $@"(?:private|public|protected|internal|readonly|static)\s+([a-zA-Z_][a-zA-Z0-9_\.]*(?:\?)?)\s+{Regex.Escape(expression)}\s*[;=]";
                         fieldMatch = Regex.Match(content, fieldPattern);
                     }
-                    if (fieldMatch.Success && fieldMatch.Groups.Count >= 2)
+
+                    if (fieldMatch is { Success: true, Groups.Count: >= 2 })
                     {
                         sourceType = fieldMatch.Groups[1].Value.Trim();
-                        sourceType = sourceType.Replace("private", "").Replace("public", "").Replace("protected", "")
-                            .Replace("internal", "").Replace("readonly", "").Replace("static", "").Trim();
-                        
+                        sourceType = sourceType.Replace("private", "").Replace("public", "").Replace("protected", "").Replace("internal", "")
+                            .Replace("readonly", "").Replace("static", "").Trim();
+
                         // Remove nullable marker
                         if (sourceType.EndsWith("?"))
                         {
                             sourceType = sourceType.Substring(0, sourceType.Length - 1);
                         }
-                        
+
                         if (sourceType.Contains("<"))
                         {
                             sourceType = ExtractCleanGenericType(sourceType);
                         }
-                        
+
                         if (!string.IsNullOrEmpty(sourceType) && !IsKeyword(sourceType))
                         {
                             var pair = $"{sourceType}|{destType}";
@@ -411,7 +412,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 }
             }
         }
-        
+
         // Hardcoded fix for List<ExternalSourceDto> -> List<ExternalDestDto>
         // This is a workaround for cases where the heuristic doesn't trigger
         if (content.Contains("List<ExternalSourceDto>") && content.Contains("List<ExternalDestDto>"))
@@ -422,7 +423,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 results.Add(testPair);
             }
         }
-        
+
         return results.ToImmutable();
     }
 
@@ -430,10 +431,10 @@ public sealed class AdaptGenerator : IIncrementalGenerator
     {
         // Look backwards from adaptPos to find the complete expression
         // We need to handle: new Type(), variable, obj.Property, method()
-        
+
         int searchStart = adaptPos > 200 ? adaptPos - 200 : 0;
         string segment = content.Substring(searchStart, adaptPos - searchStart);
-        
+
         // Try to match patterns from end backwards
         // Pattern 1: new TypeName(...).Adapt
         var newPattern = @"(new\s+[a-zA-Z_][\w<>,]*?\s*\([^)]*\))\s*$";
@@ -442,7 +443,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
         {
             return newMatch.Groups[1].Value.Trim();
         }
-        
+
         // Pattern 2: identifier (variable, property access, method call)
         var identPattern = @"([a-zA-Z_][\w\.]*(?:\([^)]*\))?)\s*$";
         Match identMatch = Regex.Match(segment, identPattern);
@@ -450,15 +451,15 @@ public sealed class AdaptGenerator : IIncrementalGenerator
         {
             return identMatch.Groups[1].Value.Trim();
         }
-        
+
         return string.Empty;
     }
-    
+
     private static string ExtractTypeWithinAngleBrackets(string content, int startPos)
     {
         var depth = 1;
         int pos = startPos;
-        
+
         while (pos < content.Length && depth > 0)
         {
             if (content[pos] == '<')
@@ -467,15 +468,15 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 depth--;
             pos++;
         }
-        
+
         if (depth == 0)
         {
             return content.Substring(startPos, pos - startPos - 1).Trim().Replace(" ", "");
         }
-        
+
         return string.Empty;
     }
-    
+
     private static string ExtractCleanGenericType(string typeName)
     {
         // Remove whitespace from generic types
@@ -491,6 +492,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             if (keywords[i] == word)
                 return true;
         }
+
         return false;
     }
 }

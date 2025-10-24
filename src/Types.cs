@@ -8,7 +8,7 @@ internal static class Types
     public static bool IsList(ITypeSymbol t, out ITypeSymbol? elem)
     {
         elem = null;
-        if (t is INamedTypeSymbol nt && nt.Name == "List" && nt.TypeArguments.Length == 1)
+        if (t is INamedTypeSymbol { Name: "List", TypeArguments.Length: 1 } nt)
         {
             elem = nt.TypeArguments[0];
             return true;
@@ -19,7 +19,7 @@ internal static class Types
     public static bool IsIReadOnlyList(ITypeSymbol t, out ITypeSymbol? elem)
     {
         elem = null;
-        if (t is INamedTypeSymbol nt && nt.Name == "IReadOnlyList" && nt.TypeArguments.Length == 1)
+        if (t is INamedTypeSymbol { Name: "IReadOnlyList", TypeArguments.Length: 1 } nt)
         {
             elem = nt.TypeArguments[0];
             return true;
@@ -30,7 +30,7 @@ internal static class Types
     public static bool IsIReadOnlyCollection(ITypeSymbol t, out ITypeSymbol? elem)
     {
         elem = null;
-        if (t is INamedTypeSymbol nt && nt.Name == "IReadOnlyCollection" && nt.TypeArguments.Length == 1)
+        if (t is INamedTypeSymbol { Name: "IReadOnlyCollection", TypeArguments.Length: 1 } nt)
         {
             elem = nt.TypeArguments[0];
             return true;
@@ -41,14 +41,14 @@ internal static class Types
     public static bool IsIEnumerable(ITypeSymbol t, out ITypeSymbol? elem)
     {
         elem = null;
-        if (t is INamedTypeSymbol nt && nt.Name == "IEnumerable" && nt.TypeArguments.Length == 1)
+        if (t is INamedTypeSymbol { Name: "IEnumerable", TypeArguments.Length: 1 } nt)
         {
             elem = nt.TypeArguments[0];
             return true;
         }
         
         // Also check for IEnumerable<T> with generic arity
-        if (t is INamedTypeSymbol nt2 && nt2.Name == "IEnumerable`1" && nt2.TypeArguments.Length == 1)
+        if (t is INamedTypeSymbol { Name: "IEnumerable`1", TypeArguments.Length: 1 } nt2)
         {
             elem = nt2.TypeArguments[0];
             return true;
@@ -71,7 +71,7 @@ internal static class Types
     public static bool IsIList(ITypeSymbol t, out ITypeSymbol? elem)
     {
         elem = null;
-        if (t is INamedTypeSymbol nt && nt.Name == "IList" && nt.TypeArguments.Length == 1)
+        if (t is INamedTypeSymbol { Name: "IList", TypeArguments.Length: 1 } nt)
         {
             elem = nt.TypeArguments[0];
             return true;
@@ -82,7 +82,7 @@ internal static class Types
     public static bool IsICollection(ITypeSymbol t, out ITypeSymbol? elem)
     {
         elem = null;
-        if (t is INamedTypeSymbol nt && nt.Name == "ICollection" && nt.TypeArguments.Length == 1)
+        if (t is INamedTypeSymbol { Name: "ICollection", TypeArguments.Length: 1 } nt)
         {
             elem = nt.TypeArguments[0];
             return true;
@@ -93,7 +93,7 @@ internal static class Types
     public static bool IsHashSet(ITypeSymbol t, out ITypeSymbol? elem)
     {
         elem = null;
-        if (t is INamedTypeSymbol nt && nt.Name == "HashSet" && nt.TypeArguments.Length == 1)
+        if (t is INamedTypeSymbol { Name: "HashSet", TypeArguments.Length: 1 } nt)
         {
             elem = nt.TypeArguments[0];
             return true;
@@ -104,7 +104,7 @@ internal static class Types
     public static bool IsISet(ITypeSymbol t, out ITypeSymbol? elem)
     {
         elem = null;
-        if (t is INamedTypeSymbol nt && nt.Name == "ISet" && nt.TypeArguments.Length == 1)
+        if (t is INamedTypeSymbol { Name: "ISet", TypeArguments.Length: 1 } nt)
         {
             elem = nt.TypeArguments[0];
             return true;
@@ -128,7 +128,7 @@ internal static class Types
     {
         key = null;
         value = null;
-        if (t is INamedTypeSymbol nt && nt.Name == "Dictionary" && nt.TypeArguments.Length == 2)
+        if (t is INamedTypeSymbol { Name: "Dictionary", TypeArguments.Length: 2 } nt)
         {
             key = nt.TypeArguments[0];
             value = nt.TypeArguments[1];
@@ -141,7 +141,7 @@ internal static class Types
     {
         key = null;
         value = null;
-        if (t is INamedTypeSymbol nt && nt.Name == "IDictionary" && nt.TypeArguments.Length == 2)
+        if (t is INamedTypeSymbol { Name: "IDictionary", TypeArguments.Length: 2 } nt)
         {
             key = nt.TypeArguments[0];
             value = nt.TypeArguments[1];
@@ -154,7 +154,7 @@ internal static class Types
     {
         key = null;
         value = null;
-        if (t is INamedTypeSymbol nt && nt.Name == "IReadOnlyDictionary" && nt.TypeArguments.Length == 2)
+        if (t is INamedTypeSymbol { Name: "IReadOnlyDictionary", TypeArguments.Length: 2 } nt)
         {
             key = nt.TypeArguments[0];
             value = nt.TypeArguments[1];
@@ -258,7 +258,7 @@ internal static class Types
     public static bool IsNullableOf(ITypeSymbol t, out ITypeSymbol? inner)
     {
         inner = null;
-        if (t is INamedTypeSymbol nt && nt.OriginalDefinition.SpecialType == SpecialType.System_Nullable_T && nt.TypeArguments.Length == 1)
+        if (t is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T, TypeArguments.Length: 1 } nt)
         {
             inner = nt.TypeArguments[0];
             return true;
@@ -272,7 +272,7 @@ internal static class Types
     {
         var list = new List<string>(8);
         foreach (ISymbol? m in e.GetMembers())
-            if (m is IFieldSymbol f && f.HasConstantValue)
+            if (m is IFieldSymbol { HasConstantValue: true } f)
                 list.Add(f.Name);
         return list;
     }
@@ -281,10 +281,7 @@ internal static class Types
     {
         foreach (ISymbol? m in t.GetMembers())
         {
-            if (m is IPropertySymbol p &&
-                p.Name == "Value" &&
-                p.Type.SpecialType == SpecialType.System_Int32 &&
-                p.GetMethod is not null)
+            if (m is IPropertySymbol { Name: "Value", Type.SpecialType: SpecialType.System_Int32, GetMethod: not null })
                 return true;
         }
         return false;
@@ -294,10 +291,7 @@ internal static class Types
     {
         foreach (ISymbol? m in t.GetMembers())
         {
-            if (m is IMethodSymbol me &&
-                me.IsStatic &&
-                me.Name == "From" &&
-                me.Parameters.Length == 1 &&
+            if (m is IMethodSymbol { IsStatic: true, Name: "From", Parameters.Length: 1 } me &&
                 me.Parameters[0].Type.SpecialType == SpecialType.System_Int32 &&
                 SymbolEqualityComparer.Default.Equals(me.ReturnType, t))
                 return true;

@@ -71,11 +71,11 @@ internal static class Emitter
         EmitEnumParsers(context, enumList, nameCache, targetNamespace);
 
         // Build mapping graph from discovered type pairs using the simple object adapter
-        var typePairList = typePairs.Select(tp => (tp.Source, tp.Destination, tp.Location)).ToList();
+        List<(INamedTypeSymbol Source, INamedTypeSymbol Destination, Location Location)> typePairList = typePairs.Select(tp => (tp.Source, tp.Destination, tp.Location)).ToList();
         Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map = SimpleObjectAdapter.BuildMappingGraphFromPairs(typePairList, enumList, context);
 
         // Compute which source->dest pairs are referenced by other mappings (nested usage)
-        var referencedPairs = CollectionAdapter.BuildReferencedPairs(map, enumList);
+        Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> referencedPairs = CollectionAdapter.BuildReferencedPairs(map, enumList);
 
         // Emit source mappers
         EmitSourceMappers(context, map, enumList, nameCache, targetNamespace, referencedPairs);
@@ -133,7 +133,7 @@ internal static class Emitter
                 adaptMethodCount++;
 
                 // Get destination type from generic argument first (this is always available)
-                if (memberAccess.Name is GenericNameSyntax gn && gn.TypeArgumentList.Arguments.Count > 0)
+                if (memberAccess.Name is GenericNameSyntax { TypeArgumentList.Arguments.Count: > 0 } gn)
                 {
                     TypeSyntax destTypeSyntax = gn.TypeArgumentList.Arguments[0];
                     ITypeSymbol? destTypeSymbol = model.GetTypeInfo(destTypeSyntax).Type;
@@ -170,7 +170,7 @@ internal static class Emitter
                 sourceType = expressionType as INamedTypeSymbol;
 
                 // Filter out error types - these appear when the compiler can't resolve a type
-                if (sourceType != null && sourceType.TypeKind == TypeKind.Error)
+                if (sourceType is { TypeKind: TypeKind.Error })
                 {
                     failedToResolveSourceError++;
                     sourceType = null;
@@ -182,7 +182,7 @@ internal static class Emitter
             }
 
             // Also filter out error types for destination
-            if (destType != null && destType.TypeKind == TypeKind.Error)
+            if (destType is { TypeKind: TypeKind.Error })
             {
                 destType = null;
             }
@@ -272,13 +272,13 @@ internal static class Emitter
         // We trace x back to its assignment and see it's B, so we add B -> C mapping
         foreach ((InvocationExpressionSyntax invocation, SemanticModel model, INamedTypeSymbol destType) in deferredCalls)
         {
-            if (invocation.Expression is MemberAccessExpressionSyntax memberAccess && memberAccess.Expression is IdentifierNameSyntax identifier)
+            if (invocation.Expression is MemberAccessExpressionSyntax { Expression: IdentifierNameSyntax identifier })
             {
                 // Find the source type by tracing the identifier back to its definition
                 INamedTypeSymbol? sourceType = TypeResolver.TraceIdentifierToAdaptCall(identifier, model);
 
                 // Filter out error types
-                if (sourceType != null && sourceType.TypeKind == TypeKind.Error)
+                if (sourceType is { TypeKind: TypeKind.Error })
                 {
                     sourceType = null;
                 }
@@ -356,8 +356,11 @@ internal static class Emitter
         Add(context, "Adapt.Collections.g.cs", sb);
     }
 
-    private static void Add(SourceProductionContext ctx, string fileName, StringBuilder sb) =>
-        ctx.AddSource(fileName, SourceText.From(sb.ToString(), Encoding.UTF8));
+    private static void Add(SourceProductionContext ctx, string fileName, StringBuilder sb)
+    {
+        string content = sb.ToString().Replace("\r\n", "\n");
+        ctx.AddSource(fileName, SourceText.From(content, Encoding.UTF8));
+    }
 
     private static string GetTargetNamespace(Compilation compilation)
     {

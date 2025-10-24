@@ -1,5 +1,4 @@
 ﻿using Microsoft.CodeAnalysis;
-using Soenneker.Gen.Adapt.Mappers;
 using System.Collections.Generic;
 using System.Text;
 
@@ -180,25 +179,25 @@ internal static class MappingEmitter
         if (Types.IsAnyDictionary(source, out ITypeSymbol? srcKey, out ITypeSymbol? srcValue) &&
             Types.IsAnyDictionary(dest, out ITypeSymbol? dstKey, out ITypeSymbol? dstValue))
         {
-            CollectionMapper.EmitDictionaryMappingInstructions(sb, source, dest, srcKey!, srcValue!, dstKey!, dstValue!, names, indent);
+            CollectionEmitter.EmitDictionaryMappingInstructions(sb, source, dest, srcKey!, srcValue!, dstKey!, dstValue!, names, indent);
             return;
         }
 
         if (Types.IsAnyList(source, out ITypeSymbol? srcElem) && Types.IsAnyList(dest, out ITypeSymbol? dstElem))
         {
-            CollectionMapper.EmitListMappingInstructions(sb, source, dest, srcElem!, dstElem!, names, indent);
+            CollectionEmitter.EmitListMappingInstructions(sb, source, dest, srcElem!, dstElem!, names, indent);
             return;
         }
 
         // Handle IEnumerable<T> to List<T> adaptations
         if (Types.IsIEnumerable(source, out ITypeSymbol? srcElement) && Types.IsAnyList(dest, out ITypeSymbol? dstElement))
         {
-            CollectionMapper.EmitListMappingInstructions(sb, source, dest, srcElement!, dstElement!, names, indent);
+            CollectionEmitter.EmitListMappingInstructions(sb, source, dest, srcElement!, dstElement!, names, indent);
             return;
         }
 
         // Delegate to simple object mapper for regular object-to-object mappings
-        SimpleObjectMapper.EmitMappingBodyInstructions(sb, source, dest, enums, names, indent);
+        SimpleObjectEmitter.EmitMappingBodyInstructions(sb, source, dest, enums, names, indent);
     }
 
     // All mapping logic has been moved to separate files:

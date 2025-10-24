@@ -122,9 +122,9 @@ internal static class Assignment
         for (var i = 0; i < s.Length; i++)
         {
             char ch = s[i];
-            if ((ch >= 'a' && ch <= 'z') ||
-                (ch >= 'A' && ch <= 'Z') ||
-                (ch >= '0' && ch <= '9'))
+            if (ch is >= 'a' and <= 'z' ||
+                ch is >= 'A' and <= 'Z' ||
+                ch is >= '0' and <= '9')
                 sb.Append(ch);
             else
                 sb.Append('_');

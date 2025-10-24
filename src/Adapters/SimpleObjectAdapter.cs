@@ -11,13 +11,12 @@ internal static class SimpleObjectAdapter
     /// Handles simple object-to-object adaptations (non-collection, non-dictionary types)
     /// </summary>
     public static Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> BuildMappingGraphFromPairs(
-        List<(INamedTypeSymbol Source, INamedTypeSymbol Destination, Location Location)> typePairs,
-        List<INamedTypeSymbol> enums,
+        List<(INamedTypeSymbol Source, INamedTypeSymbol Destination, Location Location)> typePairs, List<INamedTypeSymbol> enums,
         SourceProductionContext context)
     {
         var map = new Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>>(SymbolEqualityComparer.Default);
 
-        foreach (var (src, dst, location) in typePairs)
+        foreach ((INamedTypeSymbol src, INamedTypeSymbol dst, Location location) in typePairs)
         {
             // Special handling for collection-to-collection adaptations
             if (Types.IsIEnumerable(src, out ITypeSymbol? srcElement) && Types.IsAnyList(dst, out ITypeSymbol? dstElement))
@@ -31,24 +30,26 @@ internal static class SimpleObjectAdapter
                         destList = new List<INamedTypeSymbol>(8);
                         map[src] = destList;
                     }
+
                     // Only add if not already present to avoid duplicates
                     if (!destList.Contains(dst))
                     {
                         destList.Add(dst);
                         AddNestedPairs(map, src, dst, enums);
                     }
+
                     continue;
                 }
             }
-            
+
             // Special handling for Dictionary-to-Dictionary adaptations
-            if (Types.IsAnyDictionary(src, out ITypeSymbol? srcKey, out ITypeSymbol? srcValue) && 
+            if (Types.IsAnyDictionary(src, out ITypeSymbol? srcKey, out ITypeSymbol? srcValue) &&
                 Types.IsAnyDictionary(dst, out ITypeSymbol? dstKey, out ITypeSymbol? dstValue))
             {
                 // Allow Dictionary<K1,V1> to Dictionary<K2,V2> if keys are same and values are compatible
                 bool keysMatch = SymbolEqualityComparer.Default.Equals(srcKey, dstKey);
                 bool valuesCompatible = Assignment.CanAssign(srcValue!, dstValue!, enums);
-                
+
                 if (keysMatch && valuesCompatible)
                 {
                     // Add to the map for later processing
@@ -57,12 +58,14 @@ internal static class SimpleObjectAdapter
                         destList = new List<INamedTypeSymbol>(8);
                         map[src] = destList;
                     }
+
                     // Only add if not already present to avoid duplicates
                     if (!destList.Contains(dst))
                     {
                         destList.Add(dst);
                         AddNestedPairs(map, src, dst, enums);
                     }
+
                     continue;
                 }
                 else
@@ -71,8 +74,7 @@ internal static class SimpleObjectAdapter
                     context.ReportDiagnostic(Diagnostic.Create(
                         new DiagnosticDescriptor("SGA_DICT_SKIP", "Dictionary Adaptation Skipped",
                             $"Skipping Dictionary adaptation '{src.ToDisplayString()}' -> '{dst.ToDisplayString()}': keysMatch={keysMatch}, valuesCompatible={valuesCompatible}, srcKey={srcKey?.ToDisplayString()}, dstKey={dstKey?.ToDisplayString()}, srcValue={srcValue?.ToDisplayString()}, dstValue={dstValue?.ToDisplayString()}",
-                            "Adapt", DiagnosticSeverity.Info, true),
-                        location));
+                            "Adapt", DiagnosticSeverity.Info, true), location));
                     continue;
                 }
             }
@@ -82,11 +84,9 @@ internal static class SimpleObjectAdapter
             {
                 // Report diagnostic for missing parameterless constructor
                 context.ReportDiagnostic(Diagnostic.Create(
-                    new DiagnosticDescriptor("SGA002", "No parameterless constructor available", 
-                        "Cannot create Adapt method for '{0}' to '{1}': destination type does not have a public parameterless constructor", 
-                        "Adapt", DiagnosticSeverity.Error, true),
-                    location,
-                    src.ToDisplayString(), dst.ToDisplayString()));
+                    new DiagnosticDescriptor("SGA002", "No parameterless constructor available",
+                        "Cannot create Adapt method for '{0}' to '{1}': destination type does not have a public parameterless constructor", "Adapt",
+                        DiagnosticSeverity.Error, true), location, src.ToDisplayString(), dst.ToDisplayString()));
                 continue;
             }
 
@@ -97,11 +97,9 @@ internal static class SimpleObjectAdapter
             {
                 // Report diagnostic for no mappable properties
                 context.ReportDiagnostic(Diagnostic.Create(
-                    new DiagnosticDescriptor("SGA003", "No mappable properties found", 
-                        "Cannot create Adapt method for '{0}' to '{1}': no mappable properties found between source and destination types", 
-                        "Adapt", DiagnosticSeverity.Error, true),
-                    location,
-                    src.ToDisplayString(), dst.ToDisplayString()));
+                    new DiagnosticDescriptor("SGA003", "No mappable properties found",
+                        "Cannot create Adapt method for '{0}' to '{1}': no mappable properties found between source and destination types", "Adapt",
+                        DiagnosticSeverity.Error, true), location, src.ToDisplayString(), dst.ToDisplayString()));
                 continue;
             }
 
@@ -150,21 +148,18 @@ internal static class SimpleObjectAdapter
             if (Types.IsAnyList(s.Type, out _) && Types.IsAnyList(d.Type, out _))
                 return true;
 
-            if (Types.IsAnyDictionary(s.Type, out ITypeSymbol? sKey, out _) && 
-                Types.IsAnyDictionary(d.Type, out ITypeSymbol? dKey, out _) &&
+            if (Types.IsAnyDictionary(s.Type, out ITypeSymbol? sKey, out _) && Types.IsAnyDictionary(d.Type, out ITypeSymbol? dKey, out _) &&
                 SymbolEqualityComparer.Default.Equals(sKey, dKey))
                 return true;
 
             if (Assignment.CanAssign(s.Type, d.Type, enums))
                 return true;
         }
+
         return false;
     }
 
-    private static void AddNestedPairs(
-        Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map,
-        INamedTypeSymbol src,
-        INamedTypeSymbol dst,
+    private static void AddNestedPairs(Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map, INamedTypeSymbol src, INamedTypeSymbol dst,
         List<INamedTypeSymbol> enums)
     {
         // Walk properties to ensure nested user-defined type pairs are present
@@ -180,8 +175,7 @@ internal static class SimpleObjectAdapter
             // Nested object
             if (sp.Type is INamedTypeSymbol sNamed && dp.Type is INamedTypeSymbol dNamed &&
                 (sNamed.TypeKind == TypeKind.Class || sNamed.TypeKind == TypeKind.Struct) &&
-                (dNamed.TypeKind == TypeKind.Class || dNamed.TypeKind == TypeKind.Struct) &&
-                !Types.IsFrameworkType(sNamed) && !Types.IsFrameworkType(dNamed) &&
+                (dNamed.TypeKind == TypeKind.Class || dNamed.TypeKind == TypeKind.Struct) && !Types.IsFrameworkType(sNamed) && !Types.IsFrameworkType(dNamed) &&
                 !SymbolEqualityComparer.Default.Equals(sNamed, dNamed))
             {
                 if (!map.TryGetValue(sNamed, out List<INamedTypeSymbol>? list))
@@ -189,6 +183,7 @@ internal static class SimpleObjectAdapter
                     list = new List<INamedTypeSymbol>(4);
                     map[sNamed] = list;
                 }
+
                 if (!list.Contains(dNamed, SymbolEqualityComparer.Default))
                 {
                     list.Add(dNamed);
@@ -198,14 +193,15 @@ internal static class SimpleObjectAdapter
             // Nested collection element types
             if (Types.IsAnyList(sp.Type, out ITypeSymbol? sElem) && Types.IsAnyList(dp.Type, out ITypeSymbol? dElem))
             {
-                if (sElem is INamedTypeSymbol sElemNamed && dElem is INamedTypeSymbol dElemNamed &&
-                    !Types.IsFrameworkType(sElemNamed) && !Types.IsFrameworkType(dElemNamed))
+                if (sElem is INamedTypeSymbol sElemNamed && dElem is INamedTypeSymbol dElemNamed && !Types.IsFrameworkType(sElemNamed) &&
+                    !Types.IsFrameworkType(dElemNamed))
                 {
                     if (!map.TryGetValue(sElemNamed, out List<INamedTypeSymbol>? list))
                     {
                         list = new List<INamedTypeSymbol>(4);
                         map[sElemNamed] = list;
                     }
+
                     if (!list.Contains(dElemNamed, SymbolEqualityComparer.Default))
                     {
                         list.Add(dElemNamed);
@@ -216,16 +212,15 @@ internal static class SimpleObjectAdapter
             if (Types.IsAnyDictionary(sp.Type, out ITypeSymbol? sKey, out ITypeSymbol? sVal) &&
                 Types.IsAnyDictionary(dp.Type, out ITypeSymbol? dKey, out ITypeSymbol? dVal))
             {
-                if (sVal is INamedTypeSymbol sValNamed && dVal is INamedTypeSymbol dValNamed &&
-                    SymbolEqualityComparer.Default.Equals(sKey, dKey) &&
-                    Assignment.CanAssign(sVal, dVal, enums) &&
-                    !Types.IsFrameworkType(sValNamed) && !Types.IsFrameworkType(dValNamed))
+                if (sVal is INamedTypeSymbol sValNamed && dVal is INamedTypeSymbol dValNamed && SymbolEqualityComparer.Default.Equals(sKey, dKey) &&
+                    Assignment.CanAssign(sVal, dVal, enums) && !Types.IsFrameworkType(sValNamed) && !Types.IsFrameworkType(dValNamed))
                 {
                     if (!map.TryGetValue(sValNamed, out List<INamedTypeSymbol>? list))
                     {
                         list = new List<INamedTypeSymbol>(4);
                         map[sValNamed] = list;
                     }
+
                     if (!list.Contains(dValNamed, SymbolEqualityComparer.Default))
                     {
                         list.Add(dValNamed);

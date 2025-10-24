@@ -9,13 +9,12 @@ internal static class CollectionAdapter
     /// <summary>
     /// Handles collection-to-collection adaptations and builds referenced pairs for nested collections
     /// </summary>
-    public static Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> BuildReferencedPairs(
-        Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map,
+    public static Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> BuildReferencedPairs(Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map,
         List<INamedTypeSymbol> enums)
     {
         var referenced = new Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>(SymbolEqualityComparer.Default);
 
-        foreach (var kv in map)
+        foreach (KeyValuePair<INamedTypeSymbol, List<INamedTypeSymbol>> kv in map)
         {
             INamedTypeSymbol src = kv.Key;
             List<INamedTypeSymbol> dests = kv.Value;
@@ -36,46 +35,46 @@ internal static class CollectionAdapter
                     // Nested object mapping
                     if (sp.Type is INamedTypeSymbol sNamed && dp.Type is INamedTypeSymbol dNamed &&
                         (sNamed.TypeKind == TypeKind.Class || sNamed.TypeKind == TypeKind.Struct) &&
-                        (dNamed.TypeKind == TypeKind.Class || dNamed.TypeKind == TypeKind.Struct) &&
-                        !Types.IsFrameworkType(sNamed) && !Types.IsFrameworkType(dNamed) &&
-                        !SymbolEqualityComparer.Default.Equals(sNamed, dNamed))
+                        (dNamed.TypeKind == TypeKind.Class || dNamed.TypeKind == TypeKind.Struct) && !Types.IsFrameworkType(sNamed) &&
+                        !Types.IsFrameworkType(dNamed) && !SymbolEqualityComparer.Default.Equals(sNamed, dNamed))
                     {
-                        if (!referenced.TryGetValue(sNamed, out var set))
+                        if (!referenced.TryGetValue(sNamed, out HashSet<INamedTypeSymbol>? set))
                         {
                             set = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
                             referenced[sNamed] = set;
                         }
+
                         set.Add(dNamed);
                     }
 
                     // Nested lists
                     if (Types.IsAnyList(sp.Type, out ITypeSymbol? sElem) && Types.IsAnyList(dp.Type, out ITypeSymbol? dElem))
                     {
-                        if (sElem is INamedTypeSymbol sElemNamed && dElem is INamedTypeSymbol dElemNamed &&
-                            !Types.IsFrameworkType(sElemNamed) && !Types.IsFrameworkType(dElemNamed))
+                        if (sElem is INamedTypeSymbol sElemNamed && dElem is INamedTypeSymbol dElemNamed && !Types.IsFrameworkType(sElemNamed) &&
+                            !Types.IsFrameworkType(dElemNamed))
                         {
-                            if (!referenced.TryGetValue(sElemNamed, out var set))
+                            if (!referenced.TryGetValue(sElemNamed, out HashSet<INamedTypeSymbol>? set))
                             {
                                 set = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
                                 referenced[sElemNamed] = set;
                             }
+
                             set.Add(dElemNamed);
                         }
                     }
 
                     // Nested dictionaries (value types)
-                    if (Types.IsAnyDictionary(sp.Type, out _, out ITypeSymbol? sVal) &&
-                        Types.IsAnyDictionary(dp.Type, out _, out ITypeSymbol? dVal))
+                    if (Types.IsAnyDictionary(sp.Type, out _, out ITypeSymbol? sVal) && Types.IsAnyDictionary(dp.Type, out _, out ITypeSymbol? dVal))
                     {
-                        if (sVal is INamedTypeSymbol sValNamed && dVal is INamedTypeSymbol dValNamed &&
-                            Assignment.CanAssign(sVal, dVal, enums) &&
+                        if (sVal is INamedTypeSymbol sValNamed && dVal is INamedTypeSymbol dValNamed && Assignment.CanAssign(sVal, dVal, enums) &&
                             !Types.IsFrameworkType(sValNamed) && !Types.IsFrameworkType(dValNamed))
                         {
-                            if (!referenced.TryGetValue(sValNamed, out var set))
+                            if (!referenced.TryGetValue(sValNamed, out HashSet<INamedTypeSymbol>? set))
                             {
                                 set = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
                                 referenced[sValNamed] = set;
                             }
+
                             set.Add(dValNamed);
                         }
                     }
@@ -100,15 +99,15 @@ internal static class CollectionAdapter
                 if (member is IPropertySymbol prop)
                 {
                     ITypeSymbol propType = prop.Type;
-                    
+
                     // Check if the property type is an enum
-                    if (propType is INamedTypeSymbol namedType && namedType.TypeKind == TypeKind.Enum)
+                    if (propType is INamedTypeSymbol { TypeKind: TypeKind.Enum } namedType)
                     {
                         enums.Add(namedType);
                     }
-                    
+
                     // Check for nullable enum
-                    if (Types.IsNullableOf(propType, out ITypeSymbol? inner) && inner is INamedTypeSymbol innerNamed && innerNamed.TypeKind == TypeKind.Enum)
+                    if (Types.IsNullableOf(propType, out ITypeSymbol? inner) && inner is INamedTypeSymbol { TypeKind: TypeKind.Enum } innerNamed)
                     {
                         enums.Add(innerNamed);
                     }
