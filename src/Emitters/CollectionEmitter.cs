@@ -11,7 +11,7 @@ internal static class CollectionEmitter
     public static void EmitListMappingInstructions(StringBuilder sb, INamedTypeSymbol source, INamedTypeSymbol dest, ITypeSymbol sElem, ITypeSymbol dElem,
         NameCache names, string indent)
     {
-        string dstFq = names.FullyQualified(dest);
+        string dstFq = names.ShortName(dest);
 
         bool srcIsList = Types.IsList(source, out _);
         bool srcIsArray = Types.IsArray(source, out _);
@@ -106,16 +106,16 @@ internal static class CollectionEmitter
     public static void EmitDictionaryMappingInstructions(StringBuilder sb, INamedTypeSymbol source, INamedTypeSymbol dest, ITypeSymbol sKey, ITypeSymbol sValue,
         ITypeSymbol dKey, ITypeSymbol dValue, NameCache names, string indent)
     {
-        string dstFq = names.FullyQualified(dest);
+        string dstFq = names.ShortName(dest);
 
         bool srcIsConcreteDict = Types.IsDictionary(source, out _, out _);
         bool srcIsIdict = Types.IsIDictionary(source, out _, out _);
         bool srcIsRoDict = Types.IsIReadOnlyDictionary(source, out _, out _);
         bool dstIsConcreteDict = Types.IsDictionary(dest, out _, out _);
 
-        string sKeyFq = Types.Fq(sKey);
-        string sValFq = Types.Fq(sValue);
-        var dictOfSrc = $"global::System.Collections.Generic.Dictionary<{sKeyFq}, {sValFq}>";
+        string sKeyFq = Types.ShortName(sKey);
+        string sValFq = Types.ShortName(sValue);
+        var dictOfSrc = $"Dictionary<{sKeyFq}, {sValFq}>";
 
         // When keys/values are identical and destination is a concrete Dictionary, we can do an optimized fast copy.
         if (dstIsConcreteDict && SymbolEqualityComparer.Default.Equals(sKey, dKey) && SymbolEqualityComparer.Default.Equals(sValue, dValue))
@@ -129,7 +129,7 @@ internal static class CollectionEmitter
                 sb.Append(indent).Append("foreach (var kv in source)").AppendLine();
                 sb.Append(indent).AppendLine("{");
                 sb.Append(indent)
-                    .Append("\tref var cell = ref global::System.Runtime.InteropServices.CollectionsMarshal.GetValueRefOrAddDefault(target, kv.Key, out _);")
+                    .Append("\tref var cell = ref CollectionsMarshal.GetValueRefOrAddDefault(target, kv.Key, out _);")
                     .AppendLine();
                 sb.Append(indent).Append("\tcell = kv.Value;").AppendLine();
                 sb.Append(indent).AppendLine("}");
@@ -147,7 +147,7 @@ internal static class CollectionEmitter
                 sb.Append(indent).AppendLine("\t{");
                 sb.Append(indent)
                     .Append(
-                        "\t\tref var cell = ref global::System.Runtime.InteropServices.CollectionsMarshal.GetValueRefOrAddDefault(__dictTarget, kv.Key, out _);")
+                        "\t\tref var cell = ref CollectionsMarshal.GetValueRefOrAddDefault(__dictTarget, kv.Key, out _);")
                     .AppendLine();
                 sb.Append(indent).Append("\t\tcell = kv.Value;").AppendLine();
                 sb.Append(indent).AppendLine("\t}");
@@ -161,7 +161,7 @@ internal static class CollectionEmitter
                 sb.Append(indent).AppendLine("{");
                 sb.Append(indent)
                     .Append(
-                        "\tref var cell = ref global::System.Runtime.InteropServices.CollectionsMarshal.GetValueRefOrAddDefault(__idictFallback, kv.Key, out _);")
+                        "\tref var cell = ref CollectionsMarshal.GetValueRefOrAddDefault(__idictFallback, kv.Key, out _);")
                     .AppendLine();
                 sb.Append(indent).Append("\tcell = kv.Value;").AppendLine();
                 sb.Append(indent).AppendLine("}");
@@ -177,7 +177,7 @@ internal static class CollectionEmitter
                 sb.Append(indent).AppendLine("{");
                 sb.Append(indent)
                     .Append(
-                        "\tref var cell = ref global::System.Runtime.InteropServices.CollectionsMarshal.GetValueRefOrAddDefault(__unknownTarget, kv.Key, out _);")
+                        "\tref var cell = ref CollectionsMarshal.GetValueRefOrAddDefault(__unknownTarget, kv.Key, out _);")
                     .AppendLine();
                 sb.Append(indent).Append("\tcell = kv.Value;").AppendLine();
                 sb.Append(indent).AppendLine("}");
@@ -203,12 +203,12 @@ internal static class CollectionEmitter
         {
             sb.Append(indent).Append("\tvar __k = ").Append(keyExpr2).AppendLine(";");
             sb.Append(indent)
-                .Append("\tref var cell = ref global::System.Runtime.InteropServices.CollectionsMarshal.GetValueRefOrAddDefault(__result, __k, out _);")
+                .Append("\tref var cell = ref CollectionsMarshal.GetValueRefOrAddDefault(__result, __k, out _);")
                 .AppendLine();
         }
         else
         {
-            sb.Append(indent).Append("\tref var cell = ref global::System.Runtime.InteropServices.CollectionsMarshal.GetValueRefOrAddDefault(__result, ")
+            sb.Append(indent).Append("\tref var cell = ref CollectionsMarshal.GetValueRefOrAddDefault(__result, ")
                 .Append(keyExpr2).Append(", out _);").AppendLine();
         }
 

@@ -268,6 +268,20 @@ internal static class Types
 
     public static string Fq(ITypeSymbol t) => t.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
+    public static string ShortName(ITypeSymbol t)
+    {
+        string fq = t.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        
+        // Convert fully qualified names to short names for types covered by using statements
+        // Handle nested generic types by replacing all occurrences
+        fq = fq.Replace("global::System.Collections.Generic.", string.Empty);
+        fq = fq.Replace("global::System.Collections.Concurrent.", string.Empty);
+        fq = fq.Replace("global::System.Collections.Immutable.", string.Empty);
+        fq = fq.Replace("global::System.Collections.ObjectModel.", string.Empty);
+        
+        return fq;
+    }
+
     public static List<string> GetEnumMemberNames(INamedTypeSymbol e)
     {
         var list = new List<string>(8);

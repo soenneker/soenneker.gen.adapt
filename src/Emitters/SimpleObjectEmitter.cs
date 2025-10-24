@@ -15,7 +15,7 @@ internal static class SimpleObjectEmitter
     {
         var srcProps = TypeProps.Build(source);
         var dstProps = TypeProps.Build(dest);
-        string dstFq = names.FullyQualified(dest);
+        string dstFq = names.ShortName(dest);
 
         // Find required properties and init-only properties
         HashSet<string> requiredPropertyNames = GetRequiredPropertyNames(dest);

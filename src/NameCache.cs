@@ -41,6 +41,21 @@ internal sealed class NameCache
         return v;
     }
 
+    public string ShortName(ISymbol s)
+    {
+        string fq = FullyQualified(s);
+        
+        // Convert fully qualified names to short names for types covered by using statements
+        // Handle nested generic types by replacing all occurrences
+        fq = fq.Replace("global::System.Collections.Generic.", string.Empty);
+        fq = fq.Replace("global::System.Collections.Concurrent.", string.Empty);
+        fq = fq.Replace("global::System.Collections.Immutable.", string.Empty);
+        fq = fq.Replace("global::System.Collections.ObjectModel.", string.Empty);
+        fq = fq.Replace("global::System.Runtime.InteropServices.", string.Empty);
+        
+        return fq;
+    }
+
     private static string Sanitize(string s)
     {
         var sb = new StringBuilder(s.Length);
