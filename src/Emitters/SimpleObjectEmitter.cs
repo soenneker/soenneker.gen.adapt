@@ -76,34 +76,21 @@ internal static class SimpleObjectEmitter
             simpleMappings.Add((dp.Name, rhs));
         }
 
-        // Emit object creation
-        if (hasRequiredProps || hasInitOnlyProps)
+        // Emit object creation - always use object initializer syntax for consistency
+        // This ensures proper handling of required members, init-only properties, and regular properties
+        sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine();
+        sb.Append(indent).AppendLine("{");
+        for (var i = 0; i < simpleMappings.Count; i++)
         {
-            // Use object initializer syntax for required or init-only properties
-            sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine();
-            sb.Append(indent).AppendLine("{");
-            for (var i = 0; i < simpleMappings.Count; i++)
-            {
-                (string propName, string value) = simpleMappings[i];
-                sb.Append(indent).Append("\t").Append(propName).Append(" = ").Append(value);
-                if (i < simpleMappings.Count - 1)
-                    sb.AppendLine(",");
-                else
-                    sb.AppendLine();
-            }
-
-            sb.Append(indent).AppendLine("};");
+            (string propName, string value) = simpleMappings[i];
+            sb.Append(indent).Append("\t").Append(propName).Append(" = ").Append(value);
+            if (i < simpleMappings.Count - 1)
+                sb.AppendLine(",");
+            else
+                sb.AppendLine();
         }
-        else
-        {
-            // Traditional approach
-            sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("();");
 
-            foreach ((string propName, string value) in simpleMappings)
-            {
-                sb.Append(indent).Append("target.").Append(propName).Append(" = ").Append(value).AppendLine(";");
-            }
-        }
+        sb.Append(indent).AppendLine("};");
 
         // Handle complex mappings (lists, dictionaries, special cases)
         foreach ((Prop dp, Prop sp) in complexMappings)
