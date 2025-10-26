@@ -17,9 +17,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\src\Soenneker.Gen.Adapt.csproj" OutputItemType="Analyzer"
-                          ReferenceOutputAssembly="false" />
-        <ProjectReference Include="..\..\test\Soenneker.Gen.Adapt.Tests.Types\Soenneker.Gen.Adapt.Tests.Types.csproj" />
+        <ProjectReference Include="..\..\Soenneker.Gen.Adapt.Tests.Types\Soenneker.Gen.Adapt.Tests.Types.csproj" />
+        <ProjectReference Include="..\..\..\src\Soenneker.Gen.Adapt.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     </ItemGroup>
 
 </Project>
