@@ -6,3 +6,4 @@ public class RequiredMemberDest
     public required string Name { get; set; }
     public int Count { get; set; }
 }
+

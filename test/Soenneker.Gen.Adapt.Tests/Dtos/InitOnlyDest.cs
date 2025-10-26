@@ -6,3 +6,4 @@ public class InitOnlyDest
     public string Name { get; init; }
     public int Count { get; set; }
 }
+

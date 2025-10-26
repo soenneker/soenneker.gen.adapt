@@ -24,7 +24,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{47FB874E-6
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Soenneker.Gen.Adapt.Tests.Types", "test\Soenneker.Gen.Adapt.Tests.Types\Soenneker.Gen.Adapt.Tests.Types.csproj", "{B1ABCB96-BD9F-4321-8F72-00476ADCB7AD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Soenneker.Gen.Adapt.Tests.Blazor", "test\Soenneker.Gen.Adapt.Tests.Blazor\Soenneker.Gen.Adapt.Tests.Blazor.Client\Soenneker.Gen.Adapt.Tests.Blazor.csproj", "{EDFB5C82-6644-455B-8D86-FC0EACE4655B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Soenneker.Gen.Adapt.Tests.Blazor", "test\Soenneker.Gen.Adapt.Tests.Blazor\Soenneker.Gen.Adapt.Tests.Blazor.csproj", "{EDFB5C82-6644-455B-8D86-FC0EACE4655B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Soenneker.Gen.Adapt.Tests.NuGet", "test\Soenneker.Gen.Adapt.Tests.NuGet\Soenneker.Gen.Adapt.Tests.NuGet.csproj", "{23268B3A-EB38-44DE-8D28-AE7C576E6EBB}"
 EndProject
