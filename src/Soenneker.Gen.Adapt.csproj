@@ -16,7 +16,7 @@
 
     <PropertyGroup>
         <Description>Frictionless object mapping</Description>
-        <Version Condition="'$(BUILD_VERSION)' == ''">3.0.0</Version>
+        <Version Condition="'$(BUILD_VERSION)' == ''">4.0.0</Version>
         <Version Condition="'$(BUILD_VERSION)' != ''">$(BUILD_VERSION)</Version>
         <AssemblyName>Soenneker.Gen.Adapt</AssemblyName>
         <PackageId>Soenneker.Gen.Adapt</PackageId>
