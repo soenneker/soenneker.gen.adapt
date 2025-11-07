@@ -1,0 +1,20 @@
+@page "/parameters-with-sync-method"
+
+<div class="ledger-entries" ></div>
+
+@code {
+
+    [Parameter]
+    public ComplexSourceDto Source { get; set; } = null;
+
+    protected override void OnInitialized()
+    {
+        var test = TestMethod().Adapt<ComplexDestDto>();
+    }
+
+    public ComplexSourceDto TestMethod()
+    {
+        return Source;
+    }
+
+}

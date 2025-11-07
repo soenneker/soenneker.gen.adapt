@@ -1,0 +1,15 @@
+@page "/parameters"
+
+<div class="ledger-entries" ></div>
+
+@code {
+
+    [Parameter]
+    public ComplexSourceDto Source { get; set; } = null;
+
+    protected override void OnInitialized()
+    {
+        var test = Source.Adapt<ComplexDestDto>();
+    }
+
+}

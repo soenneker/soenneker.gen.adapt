@@ -1,0 +1,22 @@
+@page "/parameters-with-async-method"
+
+<div class="ledger-entries"></div>
+
+@code {
+
+    [Parameter]
+    public ComplexSourceDto Source { get; set; } = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var test = (await TestMethod()).Adapt<ComplexDestDto>();
+    }
+
+    public async Task<ComplexSourceDto> TestMethod()
+    {
+        return Source;
+    }
+
+}
+
+

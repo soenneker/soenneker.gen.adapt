@@ -1,5 +1,4 @@
 using Microsoft.CodeAnalysis;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Soenneker.Gen.Adapt.Emitters;

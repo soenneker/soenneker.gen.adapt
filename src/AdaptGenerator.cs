@@ -170,6 +170,35 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             }
         }
 
+        // Pass 1a: Extract auto-property declarations (including component parameters)
+        const string propertyPattern =
+            @"(?:\[.*?\]\s*)*(?:(?:private|public|protected|internal|static|virtual|override|sealed|partial|readonly|new|required|unsafe)\s+)+([a-zA-Z_][a-zA-Z0-9_<>,\.\[\]]*(?:\?)?)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\{\s*get\s*;\s*(?:set|init)\s*;\s*\}";
+        MatchCollection propertyMatches = Regex.Matches(content, propertyPattern, RegexOptions.Singleline);
+        foreach (Match propertyMatch in propertyMatches)
+        {
+            if (propertyMatch.Groups.Count >= 3)
+            {
+                string typeName = propertyMatch.Groups[1].Value.Trim();
+                string propertyName = propertyMatch.Groups[2].Value.Trim();
+
+                typeName = typeName.Replace("private", "").Replace("public", "").Replace("protected", "").Replace("internal", "").Replace("static", "")
+                    .Replace("virtual", "").Replace("override", "").Replace("sealed", "").Replace("partial", "").Replace("readonly", "").Replace("new", "")
+                    .Replace("required", "").Replace("unsafe", "").Trim();
+
+                if (typeName.Contains("<"))
+                {
+                    typeName = ExtractCleanGenericType(typeName);
+                }
+
+                typeName = typeName.Replace("?", "");
+
+                if (!string.IsNullOrEmpty(typeName) && !IsKeyword(typeName) && !declarations.ContainsKey(propertyName))
+                {
+                    declarations[propertyName] = typeName;
+                }
+            }
+        }
+
         // Pass 1.5: Find method parameters
         // Look for method declarations like "Type MethodName(ParamType paramName)"
         const string methodParamPattern = @"(?:private|public|protected|internal|static)?\s+(?:void|[a-zA-Z_][a-zA-Z0-9_<>,\s\[\]]*?)\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\(([^)]*)\)";
