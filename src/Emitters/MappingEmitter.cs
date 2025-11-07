@@ -34,9 +34,9 @@ internal static class MappingEmitter
             bool sourceIsIEnum = Types.IsIEnumerable(source, out _);
             bool _srcIsStruct = source.TypeKind == TypeKind.Struct;
 
-            sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+            sb.AppendLine($"\t\t[GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
             sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
-            sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]");
+            sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
             if (sourceIsList || sourceIsDict || sourceIsIEnum)
             {
                 // Private non-generic method: Adapt(source) for collection mapping rename
@@ -62,9 +62,9 @@ internal static class MappingEmitter
             sb.AppendLine();
 
             // Generic overload (for explicit .Adapt<TDest>() calls) with Unsafe.As
-            sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+            sb.AppendLine($"\t\t[GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
             sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
-            sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]");
+            sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.Append("\t\tpublic static TDest Adapt<TDest>(this ").Append(srcFq).AppendLine(" source)");
             sb.AppendLine("\t\t{");
             if (sourceIsList || sourceIsDict || sourceIsIEnum)
@@ -94,9 +94,9 @@ internal static class MappingEmitter
                 EmitMappingMethod(sb, source, destinations[i], enums, names);
 
             // Generic overload using typeof-dispatch and Unsafe.As
-            sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+            sb.AppendLine($"\t\t[GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
             sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
-            sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]");
+            sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.Append("\t\tpublic static TDest Adapt<TDest>(this ").Append(srcFq).AppendLine(" source)");
             sb.AppendLine("\t\t{");
             for (var i = 0; i < destinations.Count; i++)
@@ -153,9 +153,9 @@ internal static class MappingEmitter
         string srcSan = names.Sanitized(source);
         string dstSan = names.Sanitized(dest);
 
-        sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine($"\t\t[GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
-        sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]");
+        sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
         bool _srcIsStruct2 = source.TypeKind == TypeKind.Struct;
         sb.Append("\t\tprivate static ").Append(dstFq).Append(" Map_").Append(srcSan).Append("_To_").Append(dstSan).Append('(');
         if (_srcIsStruct2)

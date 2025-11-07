@@ -19,9 +19,6 @@ internal static class SimpleObjectEmitter
 
         // Find required properties and init-only properties
         HashSet<string> requiredPropertyNames = GetRequiredPropertyNames(dest);
-        HashSet<string> initOnlyPropertyNames = GetInitOnlyPropertyNames(dest);
-        bool hasRequiredProps = requiredPropertyNames.Count > 0;
-        bool hasInitOnlyProps = initOnlyPropertyNames.Count > 0;
 
         // Build list of property mappings
         var simpleMappings = new List<(string propName, string value)>();

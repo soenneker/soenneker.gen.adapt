@@ -10,7 +10,7 @@ internal static class ImmutableCollectionsEmitter
     public static void EmitImmutableCollections(StringBuilder sb)
     {
         // ImmutableArray<T>
-        sb.AppendLine("\t\t[System.CodeDom.Compiler.GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine($"\t\t[System.CodeDom.Compiler.GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static ImmutableArray<TElement> Adapt<TElement>(this ImmutableArray<TElement> source)");
@@ -21,7 +21,7 @@ internal static class ImmutableCollectionsEmitter
         sb.AppendLine();
 
         // ImmutableList<T>
-        sb.AppendLine("\t\t[System.CodeDom.Compiler.GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine($"\t\t[System.CodeDom.Compiler.GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static ImmutableList<TElement> Adapt<TElement>(this ImmutableList<TElement> source)");
@@ -32,7 +32,7 @@ internal static class ImmutableCollectionsEmitter
         sb.AppendLine();
 
         // ImmutableHashSet<T>
-        sb.AppendLine("\t\t[System.CodeDom.Compiler.GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine($"\t\t[System.CodeDom.Compiler.GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static ImmutableHashSet<TElement> Adapt<TElement>(this ImmutableHashSet<TElement> source)");
@@ -43,7 +43,7 @@ internal static class ImmutableCollectionsEmitter
         sb.AppendLine();
 
         // ImmutableSortedSet<T>
-        sb.AppendLine("\t\t[System.CodeDom.Compiler.GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine($"\t\t[System.CodeDom.Compiler.GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static ImmutableSortedSet<TElement> Adapt<TElement>(this ImmutableSortedSet<TElement> source)");
@@ -54,7 +54,7 @@ internal static class ImmutableCollectionsEmitter
         sb.AppendLine();
 
         // ImmutableQueue<T>
-        sb.AppendLine("\t\t[System.CodeDom.Compiler.GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine($"\t\t[System.CodeDom.Compiler.GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static ImmutableQueue<TElement> Adapt<TElement>(this ImmutableQueue<TElement> source)");
@@ -65,7 +65,7 @@ internal static class ImmutableCollectionsEmitter
         sb.AppendLine();
 
         // ImmutableStack<T>
-        sb.AppendLine("\t\t[System.CodeDom.Compiler.GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine($"\t\t[System.CodeDom.Compiler.GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static ImmutableStack<TElement> Adapt<TElement>(this ImmutableStack<TElement> source)");

@@ -30,7 +30,7 @@ internal static class CollectionsEmitter
         ImmutableCollectionsEmitter.EmitImmutableCollections(sb);
 
         // Generic cross-shape adapter for any IEnumerable<TSrc> to destination collection TDest
-        sb.AppendLine("\t\t[System.CodeDom.Compiler.GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine($"\t\t[System.CodeDom.Compiler.GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static TDest Adapt<TDest, TSrc>(this IEnumerable<TSrc> source)");

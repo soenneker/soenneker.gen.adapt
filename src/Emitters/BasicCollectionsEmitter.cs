@@ -10,7 +10,7 @@ internal static class BasicCollectionsEmitter
     public static void EmitBasicCollections(StringBuilder sb)
     {
         // List<T> -> clone
-        sb.AppendLine("\t\t[System.CodeDom.Compiler.GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine($"\t\t[System.CodeDom.Compiler.GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static List<TElement> Adapt<TElement>(this List<TElement> source)");
@@ -25,7 +25,7 @@ internal static class BasicCollectionsEmitter
         sb.AppendLine();
 
         // IEnumerable<T> -> materialize (stable behavior)
-        sb.AppendLine("\t\t[System.CodeDom.Compiler.GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine($"\t\t[System.CodeDom.Compiler.GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static IEnumerable<TElement> Adapt<TElement>(this IEnumerable<TElement> source)");
@@ -56,7 +56,7 @@ internal static class BasicCollectionsEmitter
         sb.AppendLine();
 
         // Array<T>
-        sb.AppendLine("\t\t[System.CodeDom.Compiler.GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine($"\t\t[System.CodeDom.Compiler.GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static TElement[] Adapt<TElement>(this TElement[] source)");
@@ -69,7 +69,7 @@ internal static class BasicCollectionsEmitter
         sb.AppendLine();
 
         // IList<T>
-        sb.AppendLine("\t\t[System.CodeDom.Compiler.GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine($"\t\t[System.CodeDom.Compiler.GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static IList<TElement> Adapt<TElement>(this IList<TElement> source)");
@@ -82,7 +82,7 @@ internal static class BasicCollectionsEmitter
         sb.AppendLine();
 
         // ICollection<T>
-        sb.AppendLine("\t\t[System.CodeDom.Compiler.GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine($"\t\t[System.CodeDom.Compiler.GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static ICollection<TElement> Adapt<TElement>(this ICollection<TElement> source)");
@@ -95,7 +95,7 @@ internal static class BasicCollectionsEmitter
         sb.AppendLine();
 
         // IReadOnlyList<T>
-        sb.AppendLine("\t\t[System.CodeDom.Compiler.GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine($"\t\t[System.CodeDom.Compiler.GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static IReadOnlyList<TElement> Adapt<TElement>(this IReadOnlyList<TElement> source)");
@@ -108,7 +108,7 @@ internal static class BasicCollectionsEmitter
         sb.AppendLine();
 
         // IReadOnlyCollection<T>
-        sb.AppendLine("\t\t[System.CodeDom.Compiler.GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine($"\t\t[System.CodeDom.Compiler.GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static IReadOnlyCollection<TElement> Adapt<TElement>(this IReadOnlyCollection<TElement> source)");

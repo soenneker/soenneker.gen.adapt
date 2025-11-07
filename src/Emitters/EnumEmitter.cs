@@ -26,7 +26,7 @@ internal static class EnumEmitter
             // gather enum member names (fields with constant value)
             List<string> members = Types.GetEnumMemberNames(e);
 
-            sb.AppendLine("\t\t[GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+            sb.AppendLine($"\t\t[GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
             sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
             sb.Append("\t\tinternal static ").Append(fq).Append(" Parse_").Append(sanitized).AppendLine("(string value)");
             sb.AppendLine("\t\t{");

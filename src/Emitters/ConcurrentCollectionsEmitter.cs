@@ -10,7 +10,7 @@ internal static class ConcurrentCollectionsEmitter
     public static void EmitConcurrentCollections(StringBuilder sb)
     {
         // ConcurrentBag<T>
-        sb.AppendLine("\t\t[System.CodeDom.Compiler.GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine($"\t\t[System.CodeDom.Compiler.GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static ConcurrentBag<TElement> Adapt<TElement>(this ConcurrentBag<TElement> source)");
@@ -21,7 +21,7 @@ internal static class ConcurrentCollectionsEmitter
         sb.AppendLine();
 
         // ConcurrentQueue<T>
-        sb.AppendLine("\t\t[System.CodeDom.Compiler.GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine($"\t\t[System.CodeDom.Compiler.GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static ConcurrentQueue<TElement> Adapt<TElement>(this ConcurrentQueue<TElement> source)");
@@ -32,7 +32,7 @@ internal static class ConcurrentCollectionsEmitter
         sb.AppendLine();
 
         // ConcurrentStack<T>
-        sb.AppendLine("\t\t[System.CodeDom.Compiler.GeneratedCode(\"Soenneker.Gen.Adapt\", \"3.0.0\")] ");
+        sb.AppendLine($"\t\t[System.CodeDom.Compiler.GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
         sb.AppendLine("\t\tpublic static ConcurrentStack<TElement> Adapt<TElement>(this ConcurrentStack<TElement> source)");
