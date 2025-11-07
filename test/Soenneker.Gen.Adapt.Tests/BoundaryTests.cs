@@ -92,7 +92,7 @@ public sealed class BoundaryTests : UnitTest
     public void Adapt_DateTimeWithTicks_ShouldPreserve()
     {
         // Arrange
-        var ticks = 637915644251234567L;
+        const long ticks = 637915644251234567L;
         var source = new DateTimeSource 
         { 
             CreatedAt = new DateTime(ticks),
@@ -309,13 +309,13 @@ public sealed class BoundaryTests : UnitTest
         // Arrange
         var sources = new List<BasicSource>
         {
-            new BasicSource { Id = "test", Name = "min", Count = int.MinValue },
-            new BasicSource { Id = "test", Name = "min+1", Count = int.MinValue + 1 },
-            new BasicSource { Id = "test", Name = "neg1", Count = -1 },
-            new BasicSource { Id = "test", Name = "zero", Count = 0 },
-            new BasicSource { Id = "test", Name = "pos1", Count = 1 },
-            new BasicSource { Id = "test", Name = "max-1", Count = int.MaxValue - 1 },
-            new BasicSource { Id = "test", Name = "max", Count = int.MaxValue }
+            new() { Id = "test", Name = "min", Count = int.MinValue },
+            new() { Id = "test", Name = "min+1", Count = int.MinValue + 1 },
+            new() { Id = "test", Name = "neg1", Count = -1 },
+            new() { Id = "test", Name = "zero", Count = 0 },
+            new() { Id = "test", Name = "pos1", Count = 1 },
+            new() { Id = "test", Name = "max-1", Count = int.MaxValue - 1 },
+            new() { Id = "test", Name = "max", Count = int.MaxValue }
         };
 
         // Act

@@ -8,7 +8,7 @@
 <button class="btn btn-primary" @onclick="TestNullablePattern">Test Nullable Pattern</button>
 
 @code {
-    private ExternalSourceDto? _nullableSource = new ExternalSourceDto { Id = "nullable-test" };
+    private ExternalSourceDto? _nullableSource = new() { Id = "nullable-test" };
     private ExternalSourceDto? _nullSource = null;
 
     private void TestNullablePattern()

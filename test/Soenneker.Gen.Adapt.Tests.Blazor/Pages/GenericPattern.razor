@@ -10,9 +10,9 @@
 @code {
     private List<ExternalSourceDto> _sourceList =
     [
-        new ExternalSourceDto { Id = "generic-1" },
+        new() { Id = "generic-1" },
 
-        new ExternalSourceDto { Id = "generic-2" }
+        new() { Id = "generic-2" }
     ];
 
     private void TestGenericPattern()
@@ -26,8 +26,8 @@
         // Pattern: Adapt calls with Dictionary<TKey, TValue>
         var sourceDict = new Dictionary<string, ExternalSourceDto>
         {
-            ["key1"] = new ExternalSourceDto { Id = "dict-1" },
-            ["key2"] = new ExternalSourceDto { Id = "dict-2" }
+            ["key1"] = new() { Id = "dict-1" },
+            ["key2"] = new() { Id = "dict-2" }
         };
         var adaptedDict = sourceDict.Adapt<Dictionary<string, ExternalDestDto>>();
     }

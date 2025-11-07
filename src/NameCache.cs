@@ -8,6 +8,7 @@ internal sealed class NameCache
 {
     private readonly Dictionary<ISymbol, string> _fq;
     private readonly Dictionary<ISymbol, string> _san;
+    private HashSet<string>? _namespaceSink;
 
     public NameCache(int capacity)
     {
@@ -21,6 +22,11 @@ internal sealed class NameCache
             _fq[symbol] = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         if (!_san.ContainsKey(symbol))
             _san[symbol] = Sanitize(_fq[symbol]);
+    }
+
+    public void SetNamespaceSink(HashSet<string>? sink)
+    {
+        _namespaceSink = sink;
     }
 
     public string FullyQualified(ISymbol s)
@@ -44,16 +50,7 @@ internal sealed class NameCache
     public string ShortName(ISymbol s)
     {
         string fq = FullyQualified(s);
-        
-        // Convert fully qualified names to short names for types covered by using statements
-        // Handle nested generic types by replacing all occurrences
-        fq = fq.Replace("global::System.Collections.Generic.", string.Empty);
-        fq = fq.Replace("global::System.Collections.Concurrent.", string.Empty);
-        fq = fq.Replace("global::System.Collections.Immutable.", string.Empty);
-        fq = fq.Replace("global::System.Collections.ObjectModel.", string.Empty);
-        fq = fq.Replace("global::System.Runtime.InteropServices.", string.Empty);
-        
-        return fq;
+        return NamespaceHelper.ToShortName(fq, _namespaceSink);
     }
 
     private static string Sanitize(string s)

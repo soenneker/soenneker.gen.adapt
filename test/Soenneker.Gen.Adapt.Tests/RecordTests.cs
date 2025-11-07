@@ -33,6 +33,27 @@ public sealed class RecordTests : UnitTest
     }
 
     [Fact]
+    public void Adapt_Class_To_Record_ShouldMapProperties()
+    {
+        // Arrange
+        var source = new PersonClass
+        {
+            FirstName = "Jane",
+            LastName = "Doe",
+            Age = 28
+        };
+
+        // Act
+        var result = source.Adapt<PersonRecord>();
+
+        // Assert
+        result.Should().NotBeNull();
+        result.FirstName.Should().Be("Jane");
+        result.LastName.Should().Be("Doe");
+        result.Age.Should().Be(28);
+    }
+
+    [Fact]
     public void Adapt_Record_EmptyStrings_ShouldMap()
     {
         // Arrange

@@ -9,7 +9,7 @@ internal static class MappingEmitter
     public static void EmitSourceMapperAndDispatcher(StringBuilder sb, INamedTypeSymbol source, List<INamedTypeSymbol> destinations,
         List<INamedTypeSymbol> enums, NameCache names, string targetNamespace, Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>? referencedPairs = null)
     {
-        string srcFq = names.ShortName(source);
+        string srcFq = Types.Fq(source);
         string srcSan = names.Sanitized(source);
 
         sb.AppendLine("using System;");
@@ -28,7 +28,7 @@ internal static class MappingEmitter
         {
             // Single destination: for collection sources emit Adapt(source); for object sources emit Map_* for nested calls
             INamedTypeSymbol d = destinations[0];
-            string dFq = names.ShortName(d);
+            string dFq = Types.Fq(d);
             bool sourceIsList = Types.IsAnyList(source, out _);
             bool sourceIsDict = Types.IsAnyDictionary(source, out _, out _);
             bool sourceIsIEnum = Types.IsIEnumerable(source, out _);
@@ -50,7 +50,7 @@ internal static class MappingEmitter
                 // Private Map_* for object mapping to support nested calls
                 string srcSanLocal0 = names.Sanitized(source);
                 string dstSanLocal0 = names.Sanitized(d);
-                sb.Append("\t\tprivate static ").Append(dFq).Append(" Map_").Append(srcSanLocal0).Append("_To_").Append(dstSanLocal0).Append('(');
+                sb.Append("\t\tinternal static ").Append(dFq).Append(" Map_").Append(srcSanLocal0).Append("_To_").Append(dstSanLocal0).Append('(');
                 if (_srcIsStruct)
                     sb.Append("in ");
                 sb.Append(srcFq).AppendLine(" source)");
@@ -102,7 +102,7 @@ internal static class MappingEmitter
             for (var i = 0; i < destinations.Count; i++)
             {
                 INamedTypeSymbol? d = destinations[i];
-                string dFq = names.ShortName(d);
+                string dFq = Types.Fq(d);
                 string dSan = names.Sanitized(d);
                 sb.Append("\t\t\tif (typeof(TDest) == typeof(").Append(dFq).AppendLine("))");
                 sb.AppendLine("\t\t\t{");
@@ -145,11 +145,19 @@ internal static class MappingEmitter
         var srcProps = TypeProps.Build(source);
         var dstProps = TypeProps.Build(dest);
 
-        if (dstProps.Settable.Count == 0)
+        bool sourceIsList = Types.IsAnyList(source, out _);
+        bool destIsList = Types.IsAnyList(dest, out _);
+        bool sourceIsDict = Types.IsAnyDictionary(source, out _, out _);
+        bool destIsDict = Types.IsAnyDictionary(dest, out _, out _);
+        bool sourceIsArray = Types.IsArray(source, out _);
+        bool destIsArray = Types.IsArray(dest, out _);
+        bool sourceIsEnumerable = Types.IsIEnumerable(source, out _);
+
+        if (dstProps.Settable.Count == 0 && !sourceIsList && !destIsList && !sourceIsDict && !destIsDict && !sourceIsArray && !destIsArray && !sourceIsEnumerable)
             return;
 
-        string srcFq = names.ShortName(source);
-        string dstFq = names.ShortName(dest);
+        string srcFq = Types.Fq(source);
+        string dstFq = Types.Fq(dest);
         string srcSan = names.Sanitized(source);
         string dstSan = names.Sanitized(dest);
 
@@ -157,7 +165,7 @@ internal static class MappingEmitter
         sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
         sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
         bool _srcIsStruct2 = source.TypeKind == TypeKind.Struct;
-        sb.Append("\t\tprivate static ").Append(dstFq).Append(" Map_").Append(srcSan).Append("_To_").Append(dstSan).Append('(');
+        sb.Append("\t\tinternal static ").Append(dstFq).Append(" Map_").Append(srcSan).Append("_To_").Append(dstSan).Append('(');
         if (_srcIsStruct2)
             sb.Append("in ");
         sb.Append(srcFq).AppendLine(" source)");

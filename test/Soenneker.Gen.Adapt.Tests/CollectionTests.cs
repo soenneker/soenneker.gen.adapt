@@ -1,6 +1,7 @@
 using Soenneker.Tests.Unit;
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 using Xunit;
@@ -52,9 +53,9 @@ public sealed class CollectionTests : UnitTest
         {
             Items =
             [
-                new() { Id = "1", Name = "First", Count = 10 },
+                new BasicSource { Id = "1", Name = "First", Count = 10 },
 
-                new() { Id = "2", Name = "Second", Count = 20 }
+                new BasicSource { Id = "2", Name = "Second", Count = 20 }
             ]
         };
 
@@ -166,6 +167,22 @@ public sealed class CollectionTests : UnitTest
         result.Should().BeEquivalentTo([1.5m, 2.75m, 3.99m]);
     }
 
+
+    [Fact]
+    public void Adapt_List_To_Collection()
+    {
+        // Arrange
+        var source = new List<decimal> { 1.5m, 2.75m, 3.99m };
+
+        // Act
+        var result = source.Adapt<Collection<decimal>>();
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Should().BeEquivalentTo([1.5m, 2.75m, 3.99m]);
+    }
+
+
     [Fact]
     public void Adapt_List_Long_ShouldCopy()
     {
@@ -227,7 +244,7 @@ public sealed class CollectionTests : UnitTest
                 "b",
                 "c"
             ],
-            Items = [new() { Id = "1", Name = "First", Count = 10 }]
+            Items = [new BasicSource { Id = "1", Name = "First", Count = 10 }]
         };
 
         // Act

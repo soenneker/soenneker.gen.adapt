@@ -8,7 +8,7 @@
 <button class="btn btn-primary" @onclick="TestAsyncPattern">Test Async Pattern</button>
 
 @code {
-    private ExternalSourceDto _asyncSource = new ExternalSourceDto { Id = "async-test" };
+    private ExternalSourceDto _asyncSource = new() { Id = "async-test" };
 
     private async Task TestAsyncPattern()
     {

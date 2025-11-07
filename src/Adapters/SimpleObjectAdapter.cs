@@ -165,7 +165,7 @@ internal static class SimpleObjectAdapter
             var srcProps = TypeProps.Build(src);
             var dstProps = TypeProps.Build(dst);
 
-            if (!HasAnyMappableProperty(srcProps, dstProps, enums))
+            if (!HasAnyMappableProperty(src, dst, srcProps, dstProps, enums))
             {
                 // Report diagnostic for no mappable properties
                 context.ReportDiagnostic(Diagnostic.Create(
@@ -209,8 +209,26 @@ internal static class SimpleObjectAdapter
     /// <summary>
     /// Checks mapping feasibility using same rules as emission.
     /// </summary>
-    private static bool HasAnyMappableProperty(TypeProps src, TypeProps dst, List<INamedTypeSymbol> enums)
+    private static bool HasAnyMappableProperty(INamedTypeSymbol srcType, INamedTypeSymbol dstType, TypeProps src, TypeProps dst,
+        List<INamedTypeSymbol> enums)
     {
+        if (Types.IsAnyList(srcType, out _) && Types.IsAnyList(dstType, out _))
+            return true;
+
+        if (Types.IsAnyDictionary(srcType, out ITypeSymbol? srcKey, out ITypeSymbol? srcVal) &&
+            Types.IsAnyDictionary(dstType, out ITypeSymbol? dstKey, out ITypeSymbol? dstVal) &&
+            SymbolEqualityComparer.Default.Equals(srcKey, dstKey) && Assignment.CanAssign(srcVal!, dstVal!, enums))
+            return true;
+
+        if (Types.IsArray(srcType, out _) && Types.IsArray(dstType, out _))
+            return true;
+
+        if (Types.IsArray(srcType, out _) && Types.IsAnyList(dstType, out _))
+            return true;
+
+        if (Types.IsAnyList(srcType, out _) && Types.IsArray(dstType, out _))
+            return true;
+
         for (var i = 0; i < dst.Settable.Count; i++)
         {
             Prop d = dst.Settable[i];

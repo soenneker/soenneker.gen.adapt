@@ -1,0 +1,34 @@
+@page "/ledger-entries-other"
+@using Soenneker.Gen.Adapt.Tests.Types.Banking
+
+<div class="ledger-entries"></div>
+
+@code {
+    private readonly LedgerEntriesResponse _response = new()
+    {
+        Entries =
+        [
+            new LedgerEntryResponse
+            {
+                AccountId = "acct-123",
+                SellerId = "seller-abc",
+                SellerName = "First Seller",
+                Amount = 42.5m,
+                NetAmount = 40.0m,
+                Notes = "Sample entry",
+                CreatedUtc = System.DateTime.UtcNow
+            }
+        ]
+    };
+
+    private List<LedgerEntryDto>? _entries;
+
+    protected override void OnInitialized()
+    {
+        var variable = _response.Entries;
+
+        _entries = variable.Adapt<List<LedgerEntryDto>>();
+    }
+}
+
+

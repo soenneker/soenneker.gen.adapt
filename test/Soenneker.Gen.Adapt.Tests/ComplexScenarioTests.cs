@@ -35,11 +35,11 @@ public sealed class ComplexScenarioTests : UnitTest
             ],
             Items =
             [
-                new() { Id = "a", Name = "First", Count = 10 },
+                new BasicSource { Id = "a", Name = "First", Count = 10 },
 
-                new() { Id = "b", Name = "Second", Count = 20 },
+                new BasicSource { Id = "b", Name = "Second", Count = 20 },
 
-                new() { Id = "c", Name = "Third", Count = 30 }
+                new BasicSource { Id = "c", Name = "Third", Count = 30 }
             ]
         };
 
@@ -130,19 +130,19 @@ public sealed class ComplexScenarioTests : UnitTest
         {
             NestedItems =
             [
-                new()
+                new NestedSource
                 {
                     Name = "First",
                     Child = new BasicSource { Id = "1", Name = "C1", Count = 1 }
                 },
 
-                new()
+                new NestedSource
                 {
                     Name = "Second",
                     Child = new BasicSource { Id = "2", Name = "C2", Count = 2 }
                 },
 
-                new()
+                new NestedSource
                 {
                     Name = "Third",
                     Child = new BasicSource { Id = "3", Name = "C3", Count = 3 }

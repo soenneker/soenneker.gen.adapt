@@ -10,11 +10,11 @@
 @code {
     private List<ExternalSourceDto> _sourceList =
     [
-        new ExternalSourceDto { Id = "lambda-1" },
+        new() { Id = "lambda-1" },
 
-        new ExternalSourceDto { Id = "lambda-2" },
+        new() { Id = "lambda-2" },
 
-        new ExternalSourceDto { Id = "lambda-3" }
+        new() { Id = "lambda-3" }
     ];
 
     private void TestLambdaPattern()

@@ -22,7 +22,9 @@ internal static class Emitter
         true);
 
     private static readonly DiagnosticDescriptor _typeResolutionFailed = new("SGA004", "Type resolution failed",
-        "Cannot create Adapt method: failed to resolve source type '{0}' or destination type '{1}'", "Adapt", DiagnosticSeverity.Error, true);
+        "Failed to resolve source type '{0}' when mapping to '{1}'", "Adapt", DiagnosticSeverity.Warning, true);
+    private static readonly DiagnosticDescriptor _razorDebugInfo = new("SGA_DBG", "Razor pair",
+        "Razor pair '{0}' -> '{1}'", "Adapt", DiagnosticSeverity.Warning, true);
 
 
     /// <summary>
@@ -89,7 +91,7 @@ internal static class Emitter
         List<(InvocationExpressionSyntax invocation, SemanticModel model, INamedTypeSymbol destType)> deferredCalls, SourceProductionContext context)
     {
         // Process Razor-extracted Adapt calls
-        ProcessRazorCalls(razorCalls, compilation, typePairs, allTypes);
+        ProcessRazorCalls(context, razorCalls, compilation, typePairs, allTypes);
 
         var adaptMethodCount = 0;
         var failedToResolveSource = 0;
@@ -192,6 +194,24 @@ internal static class Emitter
                 typePairs.Add(new TypePair(sourceType, destType, invocation.GetLocation()));
                 allTypes.Add(sourceType);
                 allTypes.Add(destType);
+
+                if (Types.IsAnyList(sourceType, out ITypeSymbol? srcElem) && Types.IsAnyList(destType, out ITypeSymbol? dstElem))
+                {
+                    if (srcElem is INamedTypeSymbol srcElemNamed && dstElem is INamedTypeSymbol dstElemNamed)
+                    {
+                        if (!SymbolEqualityComparer.Default.Equals(srcElemNamed, dstElemNamed))
+                        {
+                            bool exists = typePairs.Any(tp => SymbolEqualityComparer.Default.Equals(tp.Source, srcElemNamed) &&
+                                                             SymbolEqualityComparer.Default.Equals(tp.Destination, dstElemNamed));
+                            if (!exists)
+                            {
+                                typePairs.Add(new TypePair(srcElemNamed, dstElemNamed, invocation.GetLocation()));
+                                allTypes.Add(srcElemNamed);
+                                allTypes.Add(dstElemNamed);
+                            }
+                        }
+                    }
+                }
             }
             else if (sourceType is null && destType is not null)
             {
@@ -212,8 +232,8 @@ internal static class Emitter
         }
     }
 
-    private static void ProcessRazorCalls(ImmutableArray<string> razorCalls, Compilation compilation, List<TypePair> typePairs,
-        HashSet<INamedTypeSymbol> allTypes)
+    private static void ProcessRazorCalls(SourceProductionContext context, ImmutableArray<string> razorCalls, Compilation compilation,
+        List<TypePair> typePairs, HashSet<INamedTypeSymbol> allTypes)
     {
         var razorResolved = 0;
         var razorFailed = 0;
@@ -236,6 +256,25 @@ internal static class Emitter
                         typePairs.Add(new TypePair(sourceType, destType, Location.None));
                         allTypes.Add(sourceType);
                         allTypes.Add(destType);
+
+                        if (Types.IsAnyList(sourceType, out ITypeSymbol? srcElem) && Types.IsAnyList(destType, out ITypeSymbol? dstElem))
+                        {
+                            if (srcElem is INamedTypeSymbol srcElemNamed && dstElem is INamedTypeSymbol dstElemNamed)
+                            {
+                                if (!SymbolEqualityComparer.Default.Equals(srcElemNamed, dstElemNamed))
+                                {
+                                    bool exists = typePairs.Any(tp => SymbolEqualityComparer.Default.Equals(tp.Source, srcElemNamed) &&
+                                                                     SymbolEqualityComparer.Default.Equals(tp.Destination, dstElemNamed));
+                                    if (!exists)
+                                    {
+                                        typePairs.Add(new TypePair(srcElemNamed, dstElemNamed, Location.None));
+                                        allTypes.Add(srcElemNamed);
+                                        allTypes.Add(dstElemNamed);
+                                    }
+                                }
+                            }
+                        }
+
                         razorResolved++;
                     }
                     else

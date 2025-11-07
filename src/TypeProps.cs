@@ -32,6 +32,9 @@ internal sealed class TypeProps
                 if (p.DeclaredAccessibility != Accessibility.Public)
                     continue;
 
+                if (p.IsIndexer)
+                    continue;
+
                 if (p.GetMethod is not null && !readable.ContainsKey(p.Name))
                     readable[p.Name] = new Prop(p.Name, p.Type);
 

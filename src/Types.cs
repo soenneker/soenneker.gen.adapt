@@ -114,14 +114,40 @@ internal static class Types
 
     public static bool IsAnyList(ITypeSymbol t, out ITypeSymbol? elem)
     {
-        return IsList(t, out elem) || 
-               IsIReadOnlyList(t, out elem) || 
-               IsIReadOnlyCollection(t, out elem) ||
-               IsArray(t, out elem) ||
-               IsIList(t, out elem) ||
-               IsICollection(t, out elem) ||
-               IsHashSet(t, out elem) ||
-               IsISet(t, out elem);
+        if (IsList(t, out elem) ||
+            IsIReadOnlyList(t, out elem) ||
+            IsIReadOnlyCollection(t, out elem) ||
+            IsArray(t, out elem) ||
+            IsIList(t, out elem) ||
+            IsICollection(t, out elem) ||
+            IsHashSet(t, out elem) ||
+            IsISet(t, out elem))
+        {
+            return true;
+        }
+
+        if (t is INamedTypeSymbol named)
+        {
+            foreach (INamedTypeSymbol iface in named.AllInterfaces)
+            {
+                if (iface is { TypeArguments.Length: 1 })
+                {
+                    string ifaceName = iface.Name;
+                    if (ifaceName is "IList" or "ICollection" or "IReadOnlyList" or "IReadOnlyCollection" or "ISet")
+                    {
+                        ITypeSymbol candidate = iface.TypeArguments[0];
+                        if (candidate is INamedTypeSymbol { Name: "KeyValuePair", TypeArguments.Length: 2 })
+                            continue; // Avoid treating dictionaries as lists
+
+                        elem = candidate;
+                        return true;
+                    }
+                }
+            }
+        }
+
+        elem = null;
+        return false;
     }
 
     public static bool IsDictionary(ITypeSymbol t, out ITypeSymbol? key, out ITypeSymbol? value)
@@ -271,15 +297,13 @@ internal static class Types
     public static string ShortName(ITypeSymbol t)
     {
         string fq = t.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-        
-        // Convert fully qualified names to short names for types covered by using statements
-        // Handle nested generic types by replacing all occurrences
-        fq = fq.Replace("global::System.Collections.Generic.", string.Empty);
-        fq = fq.Replace("global::System.Collections.Concurrent.", string.Empty);
-        fq = fq.Replace("global::System.Collections.Immutable.", string.Empty);
-        fq = fq.Replace("global::System.Collections.ObjectModel.", string.Empty);
-        
-        return fq;
+        return NamespaceHelper.ToShortName(fq, null);
+    }
+
+    public static string ShortName(ITypeSymbol t, HashSet<string> requiredNamespaces)
+    {
+        string fq = t.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
+        return NamespaceHelper.ToShortName(fq, requiredNamespaces);
     }
 
     public static List<string> GetEnumMemberNames(INamedTypeSymbol e)

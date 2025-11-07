@@ -238,6 +238,28 @@ public sealed class AdaptGenerator : IIncrementalGenerator
 
                 if (!string.IsNullOrEmpty(destType) && !string.IsNullOrEmpty(expression))
                 {
+                    int searchCount = System.Math.Min(contentWithoutComments.Length - match.Index, match.Length + 64);
+                    int adaptPos = searchCount > 0
+                        ? contentWithoutComments.IndexOf(".Adapt", match.Index, searchCount)
+                        : -1;
+                    if (adaptPos < 0)
+                    {
+                        adaptPos = contentWithoutComments.IndexOf(".Adapt", match.Index);
+                    }
+
+                    if (adaptPos >= 0)
+                    {
+                        int anglePos = contentWithoutComments.IndexOf('<', adaptPos);
+                        if (anglePos >= 0)
+                        {
+                            string extracted = ExtractTypeWithinAngleBrackets(contentWithoutComments, anglePos + 1);
+                            if (!string.IsNullOrEmpty(extracted))
+                            {
+                                destType = extracted;
+                            }
+                        }
+                    }
+
                     adaptCalls.Add((expression, destType));
                 }
             }
@@ -294,6 +316,24 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                         {
                             sourceType = propMatch.Groups[1].Value.Trim().Replace(" ", "");
                         }
+                        else
+                        {
+                            sourceType = baseTypeName + "." + propertyName;
+                        }
+                    }
+                    else if (parts.Length > 2)
+                    {
+                        var pathBuilder = new System.Text.StringBuilder(baseTypeName.Length + expression.Length);
+                        pathBuilder.Append(baseTypeName);
+
+                        for (int i = 1; i < parts.Length - 1; i++)
+                        {
+                            pathBuilder.Append(".");
+                            pathBuilder.Append(parts[i]);
+                        }
+                        pathBuilder.Append(".");
+                        pathBuilder.Append(parts[parts.Length - 1]);
+                        sourceType = pathBuilder.ToString();
                     }
                 }
             }

@@ -82,61 +82,107 @@ internal static class TypeResolver
 
     public static INamedTypeSymbol? FindTypeByName(Compilation compilation, string typeName)
     {
+        INamedTypeSymbol? direct = FindDirectType(compilation, typeName);
+        if (direct is not null)
+            return direct;
+
+        if (typeName.Contains('.'))
+            return ResolvePropertyPathType(compilation, typeName);
+
+        return null;
+    }
+
+    private static INamedTypeSymbol? FindDirectType(Compilation compilation, string typeName)
+    {
         // Handle generic types like "List<int>" or "Dictionary<string, int>"
-        if (typeName.Contains("<"))
+        if (typeName.Contains('<'))
         {
-            // Extract base type name
             int anglePos = typeName.IndexOf('<');
             string baseTypeName = typeName.Substring(0, anglePos);
-            
-            // Find the base type first
-            INamedTypeSymbol? baseType = FindTypeByName(compilation, baseTypeName);
+
+            INamedTypeSymbol? baseType = FindDirectType(compilation, baseTypeName);
             if (baseType == null || !baseType.IsGenericType)
                 return null;
-            
-            // Extract type arguments
-            string typeArgsStr = typeName.Substring(anglePos + 1, typeName.Length - anglePos - 2); // Remove < and >
+
+            string typeArgsStr = typeName.Substring(anglePos + 1, typeName.Length - anglePos - 2);
             List<string> typeArgNames = ParseGenericTypeArguments(typeArgsStr);
-            
-            // Resolve each type argument
-            var typeArgs = new List<ITypeSymbol>();
+
+            var typeArgs = new List<ITypeSymbol>(typeArgNames.Count);
             foreach (string typeArgName in typeArgNames)
             {
                 INamedTypeSymbol? typeArg = FindTypeByName(compilation, typeArgName.Trim());
                 if (typeArg == null)
-                    return null; // Can't resolve one of the type arguments
+                    return null;
                 typeArgs.Add(typeArg);
             }
-            
-            // Construct the generic type
+
             if (typeArgs.Count != baseType.TypeParameters.Length)
                 return null;
-            
+
             return baseType.Construct(typeArgs.ToArray());
         }
-        
-        // Try to find the type in the compilation
-        // Handle both simple names and fully qualified names
+
         INamedTypeSymbol? type = compilation.GetTypeByMetadataName(typeName);
         if (type != null)
             return type;
-        
-        // Try common framework types with standard namespaces
+
         if (TryGetFrameworkType(compilation, typeName, out INamedTypeSymbol? frameworkType))
             return frameworkType;
-        
-        // If not found, try searching through all types in all assemblies
-        IEnumerable<INamedTypeSymbol> allTypes = compilation.GlobalNamespace.GetNamespaceMembers()
-            .SelectMany(ns => GetAllTypes(ns))
-            .Concat(GetAllTypes(compilation.GlobalNamespace));
-        
-        foreach (INamedTypeSymbol t in allTypes)
+
+        foreach (INamedTypeSymbol t in GetAllTypes(compilation))
         {
-            if (t.Name == typeName || t.ToDisplayString() == typeName)
+            if (t.Name == typeName)
+                return t;
+
+            string display = t.ToDisplayString();
+            if (display == typeName || t.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat) == typeName)
                 return t;
         }
-        
+
         return null;
+    }
+
+    private static INamedTypeSymbol? ResolvePropertyPathType(Compilation compilation, string typeName)
+    {
+        string[] segments = typeName.Split(new[] { '.' }, System.StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Length < 2)
+            return null;
+
+        INamedTypeSymbol? currentType = FindDirectType(compilation, segments[0]);
+        if (currentType is null)
+            return null;
+
+        ITypeSymbol current = currentType;
+
+        for (int i = 1; i < segments.Length; i++)
+        {
+            string memberName = segments[i];
+            ITypeSymbol? next = null;
+
+            if (current is INamedTypeSymbol named)
+            {
+                foreach (ISymbol member in named.GetMembers(memberName))
+                {
+                    if (member is IPropertySymbol property)
+                    {
+                        next = property.Type;
+                        break;
+                    }
+                    if (member is IFieldSymbol field)
+                    {
+                        next = field.Type;
+                        break;
+                    }
+                }
+            }
+
+            if (next is null)
+                return null;
+
+            current = next;
+        }
+
+        return current as INamedTypeSymbol;
     }
     
     private static bool TryGetFrameworkType(Compilation compilation, string typeName, out INamedTypeSymbol? result)
@@ -214,6 +260,24 @@ internal static class TypeResolver
         {
             foreach (INamedTypeSymbol type in GetAllTypes(childNs))
                 yield return type;
+        }
+    }
+
+    private static IEnumerable<INamedTypeSymbol> GetAllTypes(Compilation compilation)
+    {
+        if (compilation.Assembly is { } assembly)
+        {
+            foreach (INamedTypeSymbol type in GetAllTypes(assembly.GlobalNamespace))
+                yield return type;
+        }
+
+        foreach (MetadataReference reference in compilation.References)
+        {
+            if (compilation.GetAssemblyOrModuleSymbol(reference) is IAssemblySymbol referencedAssembly)
+            {
+                foreach (INamedTypeSymbol type in GetAllTypes(referencedAssembly.GlobalNamespace))
+                    yield return type;
+            }
         }
     }
     

@@ -10,10 +10,10 @@
 @code {
     private class Result
     {
-        public ExternalSourceDto Value { get; set; } = new ExternalSourceDto { Id = "prop-test" };
+        public ExternalSourceDto Value { get; set; } = new() { Id = "prop-test" };
     }
 
-    private Result _result = new Result();
+    private Result _result = new();
 
     private void TestPropertyPattern()
     {

@@ -376,9 +376,9 @@ public sealed class EncodingTests : UnitTest
         // Arrange
         var sources = new List<BasicSource>
         {
-            new BasicSource { Id = "   ", Name = "\t\t\t", Count = 1 },
-            new BasicSource { Id = "\n\n\n", Name = "\r\r\r", Count = 2 },
-            new BasicSource { Id = " \t\n\r ", Name = "\v\f", Count = 3 }
+            new() { Id = "   ", Name = "\t\t\t", Count = 1 },
+            new() { Id = "\n\n\n", Name = "\r\r\r", Count = 2 },
+            new() { Id = " \t\n\r ", Name = "\v\f", Count = 3 }
         };
 
         // Act

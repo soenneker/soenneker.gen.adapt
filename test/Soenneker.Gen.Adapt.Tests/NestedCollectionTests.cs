@@ -18,9 +18,9 @@ public sealed class NestedCollectionTests : UnitTest
         // Arrange
         var source = new List<List<int>>
         {
-            new List<int> { 1, 2, 3 },
-            new List<int> { 4, 5, 6 },
-            new List<int> { 7, 8, 9 }
+            new() { 1, 2, 3 },
+            new() { 4, 5, 6 },
+            new() { 7, 8, 9 }
         };
 
         // Act
@@ -42,8 +42,8 @@ public sealed class NestedCollectionTests : UnitTest
         // Arrange
         var source = new List<List<string>>
         {
-            new List<string> { "a", "b" },
-            new List<string> { "c", "d" },
+            new() { "a", "b" },
+            new() { "c", "d" },
         };
 
         // Act
@@ -62,8 +62,8 @@ public sealed class NestedCollectionTests : UnitTest
         // Arrange
         var source = new List<Dictionary<string, int>>
         {
-            new Dictionary<string, int> { { "a", 1 }, { "b", 2 } },
-            new Dictionary<string, int> { { "c", 3 }, { "d", 4 } }
+            new() { { "a", 1 }, { "b", 2 } },
+            new() { { "c", 3 }, { "d", 4 } }
         };
 
         // Act
@@ -114,13 +114,13 @@ public sealed class NestedCollectionTests : UnitTest
         {
             NestedItems =
             [
-                new()
+                new NestedSource
                 {
                     Name = "Nested1",
                     Child = new BasicSource { Id = "1", Name = "Child1", Count = 10 }
                 },
 
-                new()
+                new NestedSource
                 {
                     Name = "Nested2",
                     Child = new BasicSource { Id = "2", Name = "Child2", Count = 20 }
@@ -161,9 +161,9 @@ public sealed class NestedCollectionTests : UnitTest
         // Arrange
         var source = new List<List<int>>
         {
-            new List<int>(),
-            new List<int> { 1, 2 },
-            new List<int>()
+            new(),
+            new() { 1, 2 },
+            new()
         };
 
         // Act
@@ -202,9 +202,9 @@ public sealed class NestedCollectionTests : UnitTest
         // Arrange
         var source = new List<List<int>>
         {
-            new List<int> { 1 },
-            new List<int> { 2, 3, 4, 5 },
-            new List<int> { 6, 7 }
+            new() { 1 },
+            new() { 2, 3, 4, 5 },
+            new() { 6, 7 }
         };
 
         // Act
@@ -223,12 +223,12 @@ public sealed class NestedCollectionTests : UnitTest
         // Arrange
         var source = new List<List<List<int>>>
         {
-            new List<List<int>>
+            new()
             {
                 new List<int> { 1, 2 },
                 new List<int> { 3, 4 }
             },
-            new List<List<int>>
+            new()
             {
                 new List<int> { 5, 6 }
             }
@@ -252,7 +252,7 @@ public sealed class NestedCollectionTests : UnitTest
         // Arrange
         var source = new List<Dictionary<string, List<int>>>
         {
-            new Dictionary<string, List<int>>
+            new()
             {
                 { "key1", [
                         1,
@@ -261,7 +261,7 @@ public sealed class NestedCollectionTests : UnitTest
                     ]
                 }
             },
-            new Dictionary<string, List<int>>
+            new()
             {
                 { "key2", [
                         4,

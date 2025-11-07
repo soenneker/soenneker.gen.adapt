@@ -80,19 +80,19 @@ public sealed class NestedObjectTests : UnitTest
         {
             NestedItems =
             [
-                new()
+                new NestedSource
                 {
                     Name = "Parent1",
                     Child = new BasicSource { Id = "c1", Name = "Child1", Count = 1 }
                 },
 
-                new()
+                new NestedSource
                 {
                     Name = "Parent2",
                     Child = new BasicSource { Id = "c2", Name = "Child2", Count = 2 }
                 },
 
-                new()
+                new NestedSource
                 {
                     Name = "Parent3",
                     Child = new BasicSource { Id = "c3", Name = "Child3", Count = 3 }

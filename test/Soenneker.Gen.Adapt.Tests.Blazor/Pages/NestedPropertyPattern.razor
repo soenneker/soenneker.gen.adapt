@@ -10,11 +10,11 @@
 @code {
     private class ContainerObject
     {
-        public ExternalSourceDto NestedSource { get; set; } = new ExternalSourceDto { Id = "nested-123" };
-        public ExternalProjectDto NestedProject { get; set; } = new ExternalProjectDto { Id = "nested-project" };
+        public ExternalSourceDto NestedSource { get; set; } = new() { Id = "nested-123" };
+        public ExternalProjectDto NestedProject { get; set; } = new() { Id = "nested-project" };
     }
 
-    private ContainerObject _container = new ContainerObject();
+    private ContainerObject _container = new();
 
     private void TestNestedPropertyPattern()
     {

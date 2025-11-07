@@ -8,7 +8,7 @@
 <button class="btn btn-primary" @onclick="TestFieldPattern">Test Field Pattern</button>
 
 @code {
-    private ExternalSourceDto _sourceDto = new ExternalSourceDto { Id = "test-123" };
+    private ExternalSourceDto _sourceDto = new() { Id = "test-123" };
 
     private void TestFieldPattern()
     {
