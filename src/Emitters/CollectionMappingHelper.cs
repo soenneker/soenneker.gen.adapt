@@ -2,9 +2,9 @@ using Microsoft.CodeAnalysis;
 
 namespace Soenneker.Gen.Adapt.Emitters;
 
-internal static partial class CollectionEmitter
+internal static class CollectionMappingHelper
 {
-    private static string GetConversionExpression(string expr, ITypeSymbol fromType, ITypeSymbol toType, NameCache names)
+    internal static string GetConversionExpression(string expr, ITypeSymbol fromType, ITypeSymbol toType, NameCache names)
     {
         if (SymbolEqualityComparer.Default.Equals(fromType, toType))
             return expr;

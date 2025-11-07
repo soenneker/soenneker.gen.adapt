@@ -32,7 +32,7 @@ internal static class MappingEmitter
             bool sourceIsList = Types.IsAnyList(source, out _);
             bool sourceIsDict = Types.IsAnyDictionary(source, out _, out _);
             bool sourceIsIEnum = Types.IsIEnumerable(source, out _);
-            bool _srcIsStruct = source.TypeKind == TypeKind.Struct;
+            bool srcIsStruct = source.TypeKind == TypeKind.Struct;
 
             sb.AppendLine($"\t\t[GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
             sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
@@ -41,7 +41,7 @@ internal static class MappingEmitter
             {
                 // Private non-generic method: Adapt(source) for collection mapping rename
                 sb.Append("\t\tprivate static ").Append(dFq).Append(" Adapt(");
-                if (_srcIsStruct)
+                if (srcIsStruct)
                     sb.Append("in ");
                 sb.Append(srcFq).AppendLine(" source)");
             }
@@ -51,7 +51,7 @@ internal static class MappingEmitter
                 string srcSanLocal0 = names.Sanitized(source);
                 string dstSanLocal0 = names.Sanitized(d);
                 sb.Append("\t\tinternal static ").Append(dFq).Append(" Map_").Append(srcSanLocal0).Append("_To_").Append(dstSanLocal0).Append('(');
-                if (_srcIsStruct)
+                if (srcIsStruct)
                     sb.Append("in ");
                 sb.Append(srcFq).AppendLine(" source)");
             }
@@ -75,7 +75,7 @@ internal static class MappingEmitter
             {
                 string srcSanLocal1 = names.Sanitized(source);
                 string dstSanLocal1 = names.Sanitized(d);
-                if (_srcIsStruct)
+                if (srcIsStruct)
                     sb.Append("\t\t\tvar r = Map_").Append(srcSanLocal1).Append("_To_").Append(dstSanLocal1).AppendLine("(in source);");
                 else
                     sb.Append("\t\t\tvar r = Map_").Append(srcSanLocal1).Append("_To_").Append(dstSanLocal1).AppendLine("(source);");
@@ -184,20 +184,20 @@ internal static class MappingEmitter
         if (Types.IsAnyDictionary(source, out ITypeSymbol? srcKey, out ITypeSymbol? srcValue) &&
             Types.IsAnyDictionary(dest, out ITypeSymbol? dstKey, out ITypeSymbol? dstValue))
         {
-            CollectionEmitter.EmitDictionaryMappingInstructions(sb, source, dest, srcKey!, srcValue!, dstKey!, dstValue!, names, indent);
+            DictionaryEmitter.EmitDictionaryMappingInstructions(sb, source, dest, srcKey!, srcValue!, dstKey!, dstValue!, names, indent);
             return;
         }
 
         if (Types.IsAnyList(source, out ITypeSymbol? srcElem) && Types.IsAnyList(dest, out ITypeSymbol? dstElem))
         {
-            CollectionEmitter.EmitListMappingInstructions(sb, source, dest, srcElem!, dstElem!, names, indent);
+            ListEmitter.EmitListMappingInstructions(sb, source, dest, srcElem!, dstElem!, names, indent);
             return;
         }
 
         // Handle IEnumerable<T> to List<T> adaptations
         if (Types.IsIEnumerable(source, out ITypeSymbol? srcElement) && Types.IsAnyList(dest, out ITypeSymbol? dstElement))
         {
-            CollectionEmitter.EmitListMappingInstructions(sb, source, dest, srcElement!, dstElement!, names, indent);
+            ListEmitter.EmitListMappingInstructions(sb, source, dest, srcElement!, dstElement!, names, indent);
             return;
         }
 
@@ -205,7 +205,8 @@ internal static class MappingEmitter
         SimpleObjectEmitter.EmitMappingBodyInstructions(sb, source, dest, enums, names, indent);
     }
 
-    // All mapping logic has been moved to separate files:
-    // - SimpleObjectMapper.cs: Simple object-to-object mapping
-    // - CollectionMapper.cs: Collection and dictionary mapping
+    // All mapping logic has been moved to dedicated emitters:
+    // - SimpleObjectEmitter.cs: Simple object-to-object mapping
+    // - ListEmitter.cs: List and enumerable mapping
+    // - DictionaryEmitter.cs: Dictionary mapping
 }

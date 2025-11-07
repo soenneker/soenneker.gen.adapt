@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Soenneker.Gen.Adapt.Emitters;
 
-internal static partial class CollectionEmitter
+internal static class DictionaryEmitter
 {
     /// <summary>
     /// Handles dictionary-to-dictionary mapping logic.
@@ -96,8 +96,8 @@ internal static partial class CollectionEmitter
         sb.Append(indent).Append("foreach (var kv in source)").AppendLine();
         sb.Append(indent).AppendLine("{");
 
-        string keyExpr2 = SymbolEqualityComparer.Default.Equals(sKey, dKey) ? "kv.Key" : GetConversionExpression("kv.Key", sKey, dKey, names);
-        string valueExpr2 = SymbolEqualityComparer.Default.Equals(sValue, dValue) ? "kv.Value" : GetConversionExpression("kv.Value", sValue, dValue, names);
+        string keyExpr2 = SymbolEqualityComparer.Default.Equals(sKey, dKey) ? "kv.Key" : CollectionMappingHelper.GetConversionExpression("kv.Key", sKey, dKey, names);
+        string valueExpr2 = SymbolEqualityComparer.Default.Equals(sValue, dValue) ? "kv.Value" : CollectionMappingHelper.GetConversionExpression("kv.Value", sValue, dValue, names);
 
         if (!SymbolEqualityComparer.Default.Equals(sKey, dKey))
         {

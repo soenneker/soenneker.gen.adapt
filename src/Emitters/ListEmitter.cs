@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Soenneker.Gen.Adapt.Emitters;
 
-internal static partial class CollectionEmitter
+internal static class ListEmitter
 {
     /// <summary>
     /// Handles collection-to-collection mapping logic.
@@ -31,7 +31,7 @@ internal static partial class CollectionEmitter
             }
             else
             {
-                string itemExprFallback = GetConversionExpression("item", sElem, dElem, names);
+                string itemExprFallback = CollectionMappingHelper.GetConversionExpression("item", sElem, dElem, names);
                 sb.Append(indent).Append("\ttarget.Add(").Append(itemExprFallback).AppendLine(");");
             }
             sb.Append(indent).AppendLine("}");
@@ -58,7 +58,7 @@ internal static partial class CollectionEmitter
                 sb.Append(indent).Append("for (int i = 0; i < n; i++)").AppendLine();
                 sb.Append(indent).AppendLine("{");
                 sb.Append(indent).Append("\tref readonly var s = ref src[i];").AppendLine();
-                string itemExpr = GetConversionExpression("s", sElem, dElem, names);
+                string itemExpr = CollectionMappingHelper.GetConversionExpression("s", sElem, dElem, names);
                 sb.Append(indent).Append("\ttargetSpan[i] = ").Append(itemExpr).AppendLine(";");
                 sb.Append(indent).AppendLine("}");
             }
@@ -80,7 +80,7 @@ internal static partial class CollectionEmitter
                 sb.Append(indent).Append("var targetSpan = CollectionsMarshal.AsSpan(target);").AppendLine();
                 sb.Append(indent).Append("for (int i = 0; i < n; i++)").AppendLine();
                 sb.Append(indent).AppendLine("{");
-                string itemExpr = GetConversionExpression("source[i]", sElem, dElem, names);
+                string itemExpr = CollectionMappingHelper.GetConversionExpression("source[i]", sElem, dElem, names);
                 sb.Append(indent).Append("\ttargetSpan[i] = ").Append(itemExpr).AppendLine(";");
                 sb.Append(indent).AppendLine("}");
             }
@@ -106,7 +106,7 @@ internal static partial class CollectionEmitter
                 sb.Append(indent).Append("var targetSpan = CollectionsMarshal.AsSpan(target);").AppendLine();
                 sb.Append(indent).Append("for (int i = 0; i < count; i++)").AppendLine();
                 sb.Append(indent).AppendLine("{");
-                string itemExpr = GetConversionExpression("source[i]", sElem, dElem, names);
+                string itemExpr = CollectionMappingHelper.GetConversionExpression("source[i]", sElem, dElem, names);
                 sb.Append(indent).Append("\ttargetSpan[i] = ").Append(itemExpr).AppendLine(";");
                 sb.Append(indent).AppendLine("}");
             }
@@ -122,7 +122,7 @@ internal static partial class CollectionEmitter
             }
             else
             {
-                string itemExpr = GetConversionExpression("item", sElem, dElem, names);
+                string itemExpr = CollectionMappingHelper.GetConversionExpression("item", sElem, dElem, names);
                 sb.Append(indent).Append("\ttarget.Add(").Append(itemExpr).AppendLine(");");
             }
             sb.Append(indent).AppendLine("}");
