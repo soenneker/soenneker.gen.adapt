@@ -300,13 +300,49 @@ internal static class SimpleObjectAdapter
             }
 
             if (Types.IsAnyDictionary(sp.Type, out ITypeSymbol? sKey, out ITypeSymbol? sVal) &&
-                Types.IsAnyDictionary(dp.Type, out ITypeSymbol? dKey, out ITypeSymbol? dVal))
+                Types.IsAnyDictionary(dp.Type, out ITypeSymbol? dKey, out ITypeSymbol? dVal) &&
+                SymbolEqualityComparer.Default.Equals(sKey, dKey) && Assignment.CanAssign(sVal!, dVal!, enums))
             {
-                if (sVal is INamedTypeSymbol sValNamed && dVal is INamedTypeSymbol dValNamed && SymbolEqualityComparer.Default.Equals(sKey, dKey) &&
-                    Assignment.CanAssign(sVal, dVal, enums) && !Types.IsFrameworkType(sValNamed) && !Types.IsFrameworkType(dValNamed))
+                if (sVal is INamedTypeSymbol sValNamed && dVal is INamedTypeSymbol dValNamed &&
+                    !Types.IsFrameworkType(sValNamed) && !Types.IsFrameworkType(dValNamed))
                 {
                     EnsureMapping(map, sValNamed, dValNamed);
                     AddNestedPairs(map, sValNamed, dValNamed, enums, processed);
+                }
+
+                if (Types.IsAnyList(sVal, out ITypeSymbol? sValElem) && Types.IsAnyList(dVal, out ITypeSymbol? dValElem) &&
+                    Assignment.CanAssign(sValElem!, dValElem!, enums))
+                {
+                    if (sVal is INamedTypeSymbol sValListNamed && dVal is INamedTypeSymbol dValListNamed)
+                    {
+                        EnsureMapping(map, sValListNamed, dValListNamed);
+                        AddNestedPairs(map, sValListNamed, dValListNamed, enums, processed);
+                    }
+
+                    if (sValElem is INamedTypeSymbol sElemNamed && dValElem is INamedTypeSymbol dElemNamed &&
+                        !Types.IsFrameworkType(sElemNamed) && !Types.IsFrameworkType(dElemNamed))
+                    {
+                        EnsureMapping(map, sElemNamed, dElemNamed);
+                        AddNestedPairs(map, sElemNamed, dElemNamed, enums, processed);
+                    }
+                }
+
+                if (Types.IsAnyDictionary(sVal, out ITypeSymbol? sInnerKey, out ITypeSymbol? sInnerVal) &&
+                    Types.IsAnyDictionary(dVal, out ITypeSymbol? dInnerKey, out ITypeSymbol? dInnerVal) &&
+                    SymbolEqualityComparer.Default.Equals(sInnerKey, dInnerKey) && Assignment.CanAssign(sInnerVal!, dInnerVal!, enums))
+                {
+                    if (sVal is INamedTypeSymbol sValDictNamed && dVal is INamedTypeSymbol dValDictNamed)
+                    {
+                        EnsureMapping(map, sValDictNamed, dValDictNamed);
+                        AddNestedPairs(map, sValDictNamed, dValDictNamed, enums, processed);
+                    }
+
+                    if (sInnerVal is INamedTypeSymbol sInnerNamed && dInnerVal is INamedTypeSymbol dInnerNamed &&
+                        !Types.IsFrameworkType(sInnerNamed) && !Types.IsFrameworkType(dInnerNamed))
+                    {
+                        EnsureMapping(map, sInnerNamed, dInnerNamed);
+                        AddNestedPairs(map, sInnerNamed, dInnerNamed, enums, processed);
+                    }
                 }
             }
         }

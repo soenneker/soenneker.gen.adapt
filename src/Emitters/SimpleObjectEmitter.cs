@@ -471,8 +471,24 @@ internal static class SimpleObjectEmitter
             return "(" + expr + ").Adapt<" + Types.ShortName(toNamedType, requiredNamespaces) + ">()";
         }
 
+        // Handle collection-to-collection conversions via generated Adapt extensions
+        bool fromIsDictionary = Types.IsAnyDictionary(fromType, out _, out _);
+        bool toIsDictionary = Types.IsAnyDictionary(toType, out _, out _);
+        bool fromIsList = Types.IsAnyList(fromType, out _);
+        bool toIsList = Types.IsAnyList(toType, out _);
+        bool fromIsEnumerable = Types.IsIEnumerable(fromType, out _);
+        bool toIsEnumerable = Types.IsIEnumerable(toType, out _);
+        bool fromIsArray = Types.IsArray(fromType, out _);
+        bool toIsArray = Types.IsArray(toType, out _);
+
+        if ((fromIsDictionary || fromIsList || fromIsEnumerable || fromIsArray) &&
+            (toIsDictionary || toIsList || toIsEnumerable || toIsArray))
+        {
+            return "(" + expr + ").Adapt<" + Types.ShortName(toType, requiredNamespaces) + ">()";
+        }
+
         // Default: cast
-            return "(" + Types.Fq(toType) + ")" + expr;
+        return "(" + Types.Fq(toType) + ")" + expr;
     }
 
     private static string San(INamedTypeSymbol type)

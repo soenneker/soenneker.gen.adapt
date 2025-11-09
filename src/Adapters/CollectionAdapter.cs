@@ -69,13 +69,38 @@ internal static class CollectionAdapter
                         if (sVal is INamedTypeSymbol sValNamed && dVal is INamedTypeSymbol dValNamed && Assignment.CanAssign(sVal, dVal, enums) &&
                             !Types.IsFrameworkType(sValNamed) && !Types.IsFrameworkType(dValNamed))
                         {
-                            if (!referenced.TryGetValue(sValNamed, out HashSet<INamedTypeSymbol>? set))
+                            AddReferencedPair(referenced, sValNamed, dValNamed);
+                        }
+
+                        if (Types.IsAnyList(sVal, out ITypeSymbol? sValElem) && Types.IsAnyList(dVal, out ITypeSymbol? dValElem) &&
+                            Assignment.CanAssign(sValElem!, dValElem!, enums))
+                        {
+                            if (sVal is INamedTypeSymbol sValListNamed && dVal is INamedTypeSymbol dValListNamed)
                             {
-                                set = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
-                                referenced[sValNamed] = set;
+                                AddReferencedPair(referenced, sValListNamed, dValListNamed);
                             }
 
-                            set.Add(dValNamed);
+                            if (sValElem is INamedTypeSymbol sElemNamed && dValElem is INamedTypeSymbol dElemNamed &&
+                                !Types.IsFrameworkType(sElemNamed) && !Types.IsFrameworkType(dElemNamed))
+                            {
+                                AddReferencedPair(referenced, sElemNamed, dElemNamed);
+                            }
+                        }
+
+                        if (Types.IsAnyDictionary(sVal, out ITypeSymbol? sInnerKey, out ITypeSymbol? sInnerVal) &&
+                            Types.IsAnyDictionary(dVal, out ITypeSymbol? dInnerKey, out ITypeSymbol? dInnerVal) &&
+                            SymbolEqualityComparer.Default.Equals(sInnerKey, dInnerKey) && Assignment.CanAssign(sInnerVal!, dInnerVal!, enums))
+                        {
+                            if (sVal is INamedTypeSymbol sValDictNamed && dVal is INamedTypeSymbol dValDictNamed)
+                            {
+                                AddReferencedPair(referenced, sValDictNamed, dValDictNamed);
+                            }
+
+                            if (sInnerVal is INamedTypeSymbol sInnerNamed && dInnerVal is INamedTypeSymbol dInnerNamed &&
+                                !Types.IsFrameworkType(sInnerNamed) && !Types.IsFrameworkType(dInnerNamed))
+                            {
+                                AddReferencedPair(referenced, sInnerNamed, dInnerNamed);
+                            }
                         }
                     }
                 }
@@ -83,6 +108,17 @@ internal static class CollectionAdapter
         }
 
         return referenced;
+    }
+
+    private static void AddReferencedPair(Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> referenced, INamedTypeSymbol source, INamedTypeSymbol destination)
+    {
+        if (!referenced.TryGetValue(source, out HashSet<INamedTypeSymbol>? set))
+        {
+            set = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
+            referenced[source] = set;
+        }
+
+        set.Add(destination);
     }
 
     /// <summary>
