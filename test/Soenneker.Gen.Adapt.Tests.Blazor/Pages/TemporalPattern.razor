@@ -1,0 +1,95 @@
+@page "/temporal-pattern"
+@rendermode InteractiveWebAssembly
+@using System.Linq
+
+<PageTitle>Temporal Pattern Test</PageTitle>
+
+<h1>Temporal Pattern Test</h1>
+
+<button class="btn btn-primary" @onclick="TestTemporalPattern">Test Temporal Pattern</button>
+
+@if (_latestSchedule is not null)
+{
+    <div class="alert alert-info mt-3">
+        <h4 class="alert-heading">@_latestSchedule.Id</h4>
+        <p>Start: @($"{_latestSchedule.StartDate:yyyy-MM-dd} {_latestSchedule.StartTime:hh\\:mm}")</p>
+        <p>End: @(_latestSchedule.EndDate is DateOnly endDate 
+            ? $"{endDate:yyyy-MM-dd} {_latestSchedule.EndTime?.ToString("hh\\:mm") ?? "--:--"}" 
+            : "Open-ended")</p>
+        <p>Milestones tracked: @_latestSchedule.Milestones.Count</p>
+        <p>Resource links: @_latestSchedule.Resources.Count</p>
+    </div>
+}
+
+@code {
+    private TemporalScheduleViewModel? _latestSchedule;
+    private List<TemporalScheduleMetadata> _metadataSnapshots = new();
+
+    private void TestTemporalPattern()
+    {
+        var winterSchedule = new TemporalSchedule
+        {
+            Id = "winter-schedule",
+            StartDate = new DateOnly(2025, 01, 06),
+            StartTime = new TimeOnly(9, 0),
+            EndDate = new DateOnly(2025, 03, 28),
+            EndTime = new TimeOnly(17, 30),
+            Milestones = [new DateOnly(2025, 02, 01), new DateOnly(2025, 03, 01)],
+            Resources =
+            [
+                new Uri("https://contoso.org/resources/winter-overview"),
+                new Uri("https://contoso.org/resources/winter-checklist")
+            ],
+            Metadata = new TemporalScheduleMetadata
+            {
+                Overview = new Uri("https://contoso.org/resources/winter-metadata"),
+                Support = new Uri("https://contoso.org/support/winter"),
+                LastUpdated = new DateOnly(2024, 12, 15),
+                LastUpdatedTime = new TimeOnly(16, 45)
+            }
+        };
+
+        var evergreenSchedule = new TemporalSchedule
+        {
+            Id = "evergreen-schedule",
+            StartDate = new DateOnly(2025, 04, 01),
+            StartTime = new TimeOnly(8, 30),
+            EndDate = null,
+            EndTime = null,
+            Milestones = [new DateOnly(2025, 05, 15), new DateOnly(2025, 07, 10)],
+            Resources =
+            [
+                new Uri("https://contoso.org/resources/evergreen-overview")
+            ],
+            Metadata = new TemporalScheduleMetadata
+            {
+                Overview = new Uri("https://contoso.org/resources/evergreen-metadata"),
+                Support = null,
+                LastUpdated = new DateOnly(2025, 03, 20),
+                LastUpdatedTime = new TimeOnly(9, 15)
+            }
+        };
+
+        List<TemporalSchedule> schedules = [winterSchedule, evergreenSchedule];
+
+        List<TemporalScheduleViewModel> viewModels = schedules
+            .Select(schedule => schedule.Adapt<TemporalScheduleViewModel>())
+            .ToList();
+
+        _latestSchedule = viewModels.Last();
+
+        _metadataSnapshots = viewModels
+            .Select(vm => vm.Metadata.Adapt<TemporalScheduleMetadata>())
+            .ToList();
+
+        Dictionary<string, TemporalSchedule> lookup = schedules.ToDictionary(s => s.Id, s => s);
+        Dictionary<string, TemporalScheduleViewModel> viewModelLookup = lookup
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Adapt<TemporalScheduleViewModel>());
+
+        foreach (TemporalScheduleViewModel vm in viewModelLookup.Values)
+        {
+            _ = vm.Adapt<TemporalSchedule>();
+        }
+    }
+}
+

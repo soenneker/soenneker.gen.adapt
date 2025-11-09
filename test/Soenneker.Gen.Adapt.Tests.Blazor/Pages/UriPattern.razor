@@ -1,0 +1,60 @@
+@page "/uri-pattern"
+@rendermode InteractiveWebAssembly
+@using System.Linq
+
+<PageTitle>URI Pattern Test</PageTitle>
+
+<h1>URI Pattern Test</h1>
+
+<button class="btn btn-secondary" @onclick="TestUriPattern">Test URI Pattern</button>
+
+<div class="mt-3">
+    <p>Total profiles: @_profiles.Count</p>
+    <p>Profiles with backup links: @_profiles.Count(profile => profile.Secondary is not null)</p>
+</div>
+
+@code {
+    private List<LinkProfileViewModel> _profiles = new();
+    private Dictionary<string, LinkProfileViewModel> _profileLookup = new();
+
+    private void TestUriPattern()
+    {
+        var primaryProfile = new LinkProfile
+        {
+            Name = "primary",
+            Primary = new Uri("https://profiles.contoso.org/primary"),
+            Secondary = new Uri("https://profiles.contoso.org/primary-backup"),
+            Mirrors =
+            [
+                new Uri("https://mirror1.contoso.org/primary"),
+                new Uri("https://mirror2.contoso.org/primary")
+            ]
+        };
+
+        var overflowProfile = new LinkProfile
+        {
+            Name = "overflow",
+            Primary = new Uri("https://profiles.contoso.org/overflow"),
+            Secondary = null,
+            Mirrors =
+            [
+                new Uri("https://mirror1.contoso.org/overflow")
+            ]
+        };
+
+        List<LinkProfile> domainProfiles = [primaryProfile, overflowProfile];
+
+        _profiles = domainProfiles
+            .Select(profile => profile.Adapt<LinkProfileViewModel>())
+            .ToList();
+
+        _profileLookup = domainProfiles
+            .ToDictionary(profile => profile.Name, profile => profile.Adapt<LinkProfileViewModel>());
+
+        foreach (LinkProfileViewModel viewModel in _profileLookup.Values)
+        {
+            _ = viewModel.Adapt<LinkProfile>();
+        }
+    }
+}
+
