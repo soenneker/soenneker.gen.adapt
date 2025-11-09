@@ -14,6 +14,7 @@ internal static class ReflectionEmitter
         sb.AppendLine("using System.Reflection;");
         sb.AppendLine("using System.Collections.Generic;");
         sb.AppendLine("using System.Collections.Concurrent;");
+        sb.AppendLine("using System.Diagnostics.CodeAnalysis;");
         sb.AppendLine();
         sb.Append("namespace ").AppendLine(targetNamespace);
         sb.AppendLine("{");
@@ -137,6 +138,14 @@ internal static class ReflectionEmitter
         sb.AppendLine();
         sb.AppendLine("\t\t\tmapper(source!, dest!);");
         sb.AppendLine("\t\t\treturn dest;");
+        sb.AppendLine("\t\t}");
+        sb.AppendLine();
+        sb.AppendLine($"\t\t[System.CodeDom.Compiler.GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
+        sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
+        sb.AppendLine("\t\t[System.Runtime.CompilerServices.MethodImpl(System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]");
+        sb.AppendLine("\t\tpublic static TDest Adapt<TDest>(this object source)");
+        sb.AppendLine("\t\t{");
+        sb.AppendLine("\t\t\treturn AdaptViaReflection<TDest>(source);");
         sb.AppendLine("\t\t}");
         sb.AppendLine("\t}");
         sb.AppendLine("}");

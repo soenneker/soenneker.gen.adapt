@@ -257,6 +257,9 @@ internal static class Emitter
                         allTypes.Add(sourceType);
                         allTypes.Add(destType);
 
+                        // Diagnostic to observe resolved Razor pairs during builds
+                        context.ReportDiagnostic(Diagnostic.Create(_razorDebugInfo, Location.None, sourceType.ToDisplayString(), destType.ToDisplayString()));
+
                         if (Types.IsAnyList(sourceType, out ITypeSymbol? srcElem) && Types.IsAnyList(destType, out ITypeSymbol? dstElem))
                         {
                             if (srcElem is INamedTypeSymbol srcElemNamed && dstElem is INamedTypeSymbol dstElemNamed)

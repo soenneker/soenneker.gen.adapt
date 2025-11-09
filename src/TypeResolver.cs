@@ -296,6 +296,45 @@ internal static class TypeResolver
     /// </summary>
     public static ImmutableArray<string> ExtractAdaptCallsFromRazor(string content)
     {
+        static string NormalizeExpression(string expr)
+        {
+            if (string.IsNullOrWhiteSpace(expr))
+                return expr;
+
+            string s = expr.Trim();
+
+            // Strip outer parentheses repeatedly when balanced
+            while (s.Length >= 2 && s[0] == '(' && s[s.Length - 1] == ')')
+            {
+                int depth = 0;
+                bool balanced = true;
+                for (int i = 0; i < s.Length; i++)
+                {
+                    char c = s[i];
+                    if (c == '(') depth++;
+                    else if (c == ')')
+                    {
+                        depth--;
+                        if (depth < 0)
+                        {
+                            balanced = false;
+                            break;
+                        }
+                    }
+                }
+                if (balanced && depth == 0)
+                    s = s.Substring(1, s.Length - 2).Trim();
+                else
+                    break;
+            }
+
+            // Strip leading await
+            if (s.StartsWith("await "))
+                s = s.Substring("await ".Length).TrimStart();
+
+            return s;
+        }
+
         var result = new List<string>();
         
         // First, remove all comment lines to avoid false matches
@@ -307,16 +346,55 @@ internal static class TypeResolver
         
         // Use a more comprehensive regex to find all Adapt calls
         // This handles: variable.Adapt<>, new Type().Adapt<>, method().Adapt<>, obj.Property.Adapt<>
-        var adaptCallRegex = new Regex(@"((?:new\s+[a-zA-Z_][\w<>,\s]*?\([^)]*\))|(?:[a-zA-Z_][\w\.]*(?:\([^)]*\))?))\s*\.\s*Adapt\s*<([^>]+)>", RegexOptions.Singleline);
+        // and now also handles optional parentheses and leading 'await'
+        var adaptCallRegex = new Regex(@"((?:\(\s*)?(?:await\s+)?(?:(?:new\s+[a-zA-Z_][\w<>,\s]*?\([^)]*\))|(?:[a-zA-Z_][\w\.]*(?:\([^)]*\))?))\s*(?:\)\s*)?)\s*\.\s*Adapt\s*<([^>]+)>", RegexOptions.Singleline);
         MatchCollection matches = adaptCallRegex.Matches(contentWithoutComments);
         
         foreach (Match match in matches)
         {
             if (match.Groups.Count >= 3)
             {
-                string expression = match.Groups[1].Value.Trim();
+                string expression = NormalizeExpression(match.Groups[1].Value);
                 string destType = match.Groups[2].Value.Trim();
                 
+                if (!string.IsNullOrEmpty(destType) && !string.IsNullOrEmpty(expression))
+                {
+                    adaptCalls.Add((expression, destType));
+                }
+            }
+        }
+
+        // Extra pass for "(await expr).Adapt<T>()" forms
+        var awaitParenRegex = new Regex(@"\(\s*await\s+([^\)]*?)\s*\)\s*\.\s*Adapt\s*<([^>]+)>", RegexOptions.Singleline);
+        MatchCollection awaitMatches = awaitParenRegex.Matches(contentWithoutComments);
+        foreach (Match match in awaitMatches)
+        {
+            if (match.Groups.Count >= 3)
+            {
+                string expression = NormalizeExpression(match.Groups[1].Value);
+                string destType = match.Groups[2].Value.Trim();
+
+                if (!string.IsNullOrEmpty(destType) && !string.IsNullOrEmpty(expression))
+                {
+                    adaptCalls.Add((expression, destType));
+                }
+            }
+        }
+
+        // Broad fallback: capture any "expr.Adapt<T>()" on a single logical line
+        var broadRegex = new Regex(@"([^\n;]*?)\s*\.\s*Adapt\s*<([^>]+)>", RegexOptions.Singleline);
+        MatchCollection broadMatches = broadRegex.Matches(contentWithoutComments);
+        foreach (Match match in broadMatches)
+        {
+            if (match.Groups.Count >= 3)
+            {
+                string rawExpr = match.Groups[1].Value.Trim();
+                if (rawExpr.EndsWith("TypeAdapter") || rawExpr.Contains("Mapster.TypeAdapter"))
+                    continue;
+
+                string expression = NormalizeExpression(rawExpr);
+                string destType = match.Groups[2].Value.Trim();
+
                 if (!string.IsNullOrEmpty(destType) && !string.IsNullOrEmpty(expression))
                 {
                     adaptCalls.Add((expression, destType));
@@ -353,6 +431,35 @@ internal static class TypeResolver
 
     private static string ExtractSourceTypeFromExpression(string expression)
     {
+        // Normalize first: strip parentheses and leading 'await'
+        if (!string.IsNullOrWhiteSpace(expression))
+        {
+            // Slight duplication to avoid refactor of call-sites
+            string s = expression.Trim();
+            while (s.Length >= 2 && s[0] == '(' && s[s.Length - 1] == ')')
+            {
+                int depth = 0;
+                bool balanced = true;
+                for (int i = 0; i < s.Length; i++)
+                {
+                    char c = s[i];
+                    if (c == '(') depth++;
+                    else if (c == ')')
+                    {
+                        depth--;
+                        if (depth < 0) { balanced = false; break; }
+                    }
+                }
+                if (balanced && depth == 0)
+                    s = s.Substring(1, s.Length - 2).Trim();
+                else
+                    break;
+            }
+            if (s.StartsWith("await "))
+                s = s.Substring("await ".Length).TrimStart();
+            expression = s;
+        }
+
         // Simple heuristic to extract type from expression
         // This is a basic implementation - could be enhanced for more complex cases
         
@@ -371,6 +478,46 @@ internal static class TypeResolver
             // For property access, try to infer from context
             // This is simplified - in reality would need more sophisticated analysis
             return "object"; // Fallback
+        }
+        else if (expression.Contains("("))
+        {
+            // Method call like GetSource()
+            string methodName = expression.Substring(0, expression.IndexOf('('));
+
+            // Allow attributes/modifiers and capture fully-qualified/generic return types
+            var methodPattern =
+                $@"(?:\[.*?\]\s*)*(?:(?:private|public|protected|internal|static|virtual|override|sealed|partial|readonly|new|required|unsafe|async)\s+)*" +
+                $@"((?:global::)?[a-zA-Z_][a-zA-Z0-9_<>,\.\[\]]*(?:<[^>]*>)?)\s+{Regex.Escape(methodName)}\s*\(";
+
+            Match methodMatch = Regex.Match(expression, methodPattern, RegexOptions.Singleline);
+            if (methodMatch.Success)
+            {
+                string returnType = methodMatch.Groups[1].Value.Trim().Replace(" ", "");
+                if (returnType.Contains("<"))
+                {
+                    returnType = returnType.Replace(" ", "");
+                }
+
+                // When present inline, it could be Task<T>/ValueTask<T>, unwrap it
+                if (returnType.StartsWith("Task<") || returnType.StartsWith("System.Threading.Tasks.Task<") ||
+                    returnType.StartsWith("ValueTask<") || returnType.StartsWith("System.Threading.Tasks.ValueTask<"))
+                {
+                    int start = returnType.IndexOf('<') + 1;
+                    int depth = 1;
+                    for (int i = start; i < returnType.Length; i++)
+                    {
+                        if (returnType[i] == '<') depth++;
+                        else if (returnType[i] == '>')
+                        {
+                            depth--;
+                            if (depth == 0)
+                                return returnType.Substring(start, i - start);
+                        }
+                    }
+                }
+
+                return returnType;
+            }
         }
         
         return expression;

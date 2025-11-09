@@ -1,0 +1,23 @@
+@page "/async-pattern2"
+@rendermode InteractiveWebAssembly
+
+<PageTitle>Async Pattern Test</PageTitle>
+
+<h1>Async Pattern Test</h1>
+
+<button class="btn btn-primary" @onclick="TestAsyncPattern">Test Async Pattern</button>
+
+@code {
+    private async Task TestAsyncPattern()
+    {
+        var asyncAdaptedDouble = (await GetExternalSourceDto()).Adapt<ComplexSourceDto>();
+
+    }
+
+    private async ValueTask<ComplexDestDto> GetExternalSourceDto()
+    {
+        await Task.Delay(1);
+        return new ComplexDestDto();
+    }
+
+}
