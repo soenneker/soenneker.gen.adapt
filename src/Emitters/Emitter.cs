@@ -2,6 +2,7 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using Soenneker.Gen.Adapt.Adapters;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -38,15 +39,16 @@ internal static class Emitter
 
         // Extract type pairs from Adapt() invocations
         var typePairs = new List<TypePair>();
+        var pairSet = new HashSet<(INamedTypeSymbol Source, INamedTypeSymbol Destination)>(TypePairEqualityComparer.Instance);
         var allTypes = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
         var enums = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
         var deferredCalls = new List<(InvocationExpressionSyntax invocation, SemanticModel model, INamedTypeSymbol destType)>();
 
         // Process invocations and build type pairs
-        ProcessInvocations(invocations, razorCalls, compilation, typePairs, allTypes, enums, deferredCalls, context);
+        ProcessInvocations(invocations, razorCalls, compilation, typePairs, pairSet, allTypes, enums, deferredCalls, context);
 
         // Try to resolve deferred calls by tracing back through syntax
-        ProcessDeferredCalls(deferredCalls, typePairs, allTypes);
+        ProcessDeferredCalls(deferredCalls, typePairs, pairSet, allTypes);
 
         // Always generate reflection-based adapter for flexibility
         EmitReflectionAdapter(context, targetNamespace);
@@ -87,11 +89,12 @@ internal static class Emitter
     }
 
     private static void ProcessInvocations(ImmutableArray<(InvocationExpressionSyntax, SemanticModel)> invocations, ImmutableArray<string> razorCalls,
-        Compilation compilation, List<TypePair> typePairs, HashSet<INamedTypeSymbol> allTypes, HashSet<INamedTypeSymbol> enums,
+        Compilation compilation, List<TypePair> typePairs, HashSet<(INamedTypeSymbol Source, INamedTypeSymbol Destination)> pairSet,
+        HashSet<INamedTypeSymbol> allTypes, HashSet<INamedTypeSymbol> enums,
         List<(InvocationExpressionSyntax invocation, SemanticModel model, INamedTypeSymbol destType)> deferredCalls, SourceProductionContext context)
     {
         // Process Razor-extracted Adapt calls
-        ProcessRazorCalls(context, razorCalls, compilation, typePairs, allTypes);
+        ProcessRazorCalls(context, razorCalls, compilation, typePairs, pairSet, allTypes);
 
         var adaptMethodCount = 0;
         var failedToResolveSource = 0;
@@ -191,9 +194,7 @@ internal static class Emitter
 
             if (sourceType is not null && destType is not null)
             {
-                typePairs.Add(new TypePair(sourceType, destType, invocation.GetLocation()));
-                allTypes.Add(sourceType);
-                allTypes.Add(destType);
+                AddTypePair(typePairs, pairSet, allTypes, sourceType, destType, invocation.GetLocation());
 
                 if (Types.IsAnyList(sourceType, out ITypeSymbol? srcElem) && Types.IsAnyList(destType, out ITypeSymbol? dstElem))
                 {
@@ -201,14 +202,7 @@ internal static class Emitter
                     {
                         if (!SymbolEqualityComparer.Default.Equals(srcElemNamed, dstElemNamed))
                         {
-                            bool exists = typePairs.Any(tp => SymbolEqualityComparer.Default.Equals(tp.Source, srcElemNamed) &&
-                                                             SymbolEqualityComparer.Default.Equals(tp.Destination, dstElemNamed));
-                            if (!exists)
-                            {
-                                typePairs.Add(new TypePair(srcElemNamed, dstElemNamed, invocation.GetLocation()));
-                                allTypes.Add(srcElemNamed);
-                                allTypes.Add(dstElemNamed);
-                            }
+                            AddTypePair(typePairs, pairSet, allTypes, srcElemNamed, dstElemNamed, invocation.GetLocation());
                         }
                     }
                 }
@@ -233,12 +227,24 @@ internal static class Emitter
     }
 
     private static void ProcessRazorCalls(SourceProductionContext context, ImmutableArray<string> razorCalls, Compilation compilation,
-        List<TypePair> typePairs, HashSet<INamedTypeSymbol> allTypes)
+        List<TypePair> typePairs, HashSet<(INamedTypeSymbol Source, INamedTypeSymbol Destination)> pairSet, HashSet<INamedTypeSymbol> allTypes)
     {
         var razorResolved = 0;
         var razorFailed = 0;
         if (!razorCalls.IsDefaultOrEmpty)
         {
+            var typeCache = new Dictionary<string, INamedTypeSymbol?>(StringComparer.Ordinal);
+
+            INamedTypeSymbol? Resolve(string typeName)
+            {
+                if (typeCache.TryGetValue(typeName, out INamedTypeSymbol? cached))
+                    return cached;
+
+                INamedTypeSymbol? resolved = TypeResolver.FindTypeByName(compilation, typeName);
+                typeCache[typeName] = resolved;
+                return resolved;
+            }
+
             foreach (string razorCall in razorCalls)
             {
                 string[] parts = razorCall.Split('|');
@@ -248,14 +254,12 @@ internal static class Emitter
                     string destTypeName = parts[1];
 
                     // Try to resolve types from compilation
-                    INamedTypeSymbol? sourceType = TypeResolver.FindTypeByName(compilation, sourceTypeName);
-                    INamedTypeSymbol? destType = TypeResolver.FindTypeByName(compilation, destTypeName);
+                    INamedTypeSymbol? sourceType = Resolve(sourceTypeName);
+                    INamedTypeSymbol? destType = Resolve(destTypeName);
 
                     if (sourceType != null && destType != null)
                     {
-                        typePairs.Add(new TypePair(sourceType, destType, Location.None));
-                        allTypes.Add(sourceType);
-                        allTypes.Add(destType);
+                        AddTypePair(typePairs, pairSet, allTypes, sourceType, destType, Location.None);
 
                         // Diagnostic to observe resolved Razor pairs during builds
                         context.ReportDiagnostic(Diagnostic.Create(_razorDebugInfo, Location.None, sourceType.ToDisplayString(), destType.ToDisplayString()));
@@ -266,14 +270,7 @@ internal static class Emitter
                             {
                                 if (!SymbolEqualityComparer.Default.Equals(srcElemNamed, dstElemNamed))
                                 {
-                                    bool exists = typePairs.Any(tp => SymbolEqualityComparer.Default.Equals(tp.Source, srcElemNamed) &&
-                                                                     SymbolEqualityComparer.Default.Equals(tp.Destination, dstElemNamed));
-                                    if (!exists)
-                                    {
-                                        typePairs.Add(new TypePair(srcElemNamed, dstElemNamed, Location.None));
-                                        allTypes.Add(srcElemNamed);
-                                        allTypes.Add(dstElemNamed);
-                                    }
+                                    AddTypePair(typePairs, pairSet, allTypes, srcElemNamed, dstElemNamed, Location.None);
                                 }
                             }
                         }
@@ -292,20 +289,18 @@ internal static class Emitter
             // This is used in GenericPattern.razor for testing Dictionary adaptations with different value types
             if (compilation.AssemblyName != null && compilation.AssemblyName.Contains("Blazor"))
             {
-                INamedTypeSymbol? dictSrc = TypeResolver.FindTypeByName(compilation, "Dictionary<string,ExternalSourceDto>");
-                INamedTypeSymbol? dictDst = TypeResolver.FindTypeByName(compilation, "Dictionary<string,ExternalDestDto>");
+                INamedTypeSymbol? dictSrc = Resolve("Dictionary<string,ExternalSourceDto>");
+                INamedTypeSymbol? dictDst = Resolve("Dictionary<string,ExternalDestDto>");
                 if (dictSrc != null && dictDst != null)
                 {
-                    typePairs.Add(new TypePair(dictSrc, dictDst, Location.None));
-                    allTypes.Add(dictSrc);
-                    allTypes.Add(dictDst);
+                    AddTypePair(typePairs, pairSet, allTypes, dictSrc, dictDst, Location.None);
                 }
             }
         }
     }
 
     private static void ProcessDeferredCalls(List<(InvocationExpressionSyntax invocation, SemanticModel model, INamedTypeSymbol destType)> deferredCalls,
-        List<TypePair> typePairs, HashSet<INamedTypeSymbol> allTypes)
+        List<TypePair> typePairs, HashSet<(INamedTypeSymbol Source, INamedTypeSymbol Destination)> pairSet, HashSet<INamedTypeSymbol> allTypes)
     {
         var failedToResolveSource = 0;
 
@@ -327,8 +322,7 @@ internal static class Emitter
 
                 if (sourceType is not null)
                 {
-                    typePairs.Add(new TypePair(sourceType, destType, invocation.GetLocation()));
-                    allTypes.Add(sourceType);
+                    AddTypePair(typePairs, pairSet, allTypes, sourceType, destType, invocation.GetLocation());
                     // Successfully resolved - don't report any diagnostic
                     continue;
                 }
@@ -404,6 +398,18 @@ internal static class Emitter
         ctx.AddSource(fileName, SourceText.From(content, Encoding.UTF8));
     }
 
+    private static void AddTypePair(List<TypePair> typePairs, HashSet<(INamedTypeSymbol Source, INamedTypeSymbol Destination)> pairSet,
+        HashSet<INamedTypeSymbol> allTypes, INamedTypeSymbol source, INamedTypeSymbol destination, Location location)
+    {
+        if (pairSet.Add((source, destination)))
+        {
+            typePairs.Add(new TypePair(source, destination, location));
+        }
+
+        allTypes.Add(source);
+        allTypes.Add(destination);
+    }
+
     private static string GetTargetNamespace(Compilation compilation)
     {
         // Use the assembly name as the namespace
@@ -414,5 +420,22 @@ internal static class Emitter
         assemblyName = assemblyName.Replace(" ", "").Replace("-", "_");
 
         return assemblyName;
+    }
+
+    private sealed class TypePairEqualityComparer : IEqualityComparer<(INamedTypeSymbol Source, INamedTypeSymbol Destination)>
+    {
+        public static readonly TypePairEqualityComparer Instance = new();
+
+        public bool Equals((INamedTypeSymbol Source, INamedTypeSymbol Destination) x, (INamedTypeSymbol Source, INamedTypeSymbol Destination) y)
+        {
+            return SymbolEqualityComparer.Default.Equals(x.Source, y.Source) && SymbolEqualityComparer.Default.Equals(x.Destination, y.Destination);
+        }
+
+        public int GetHashCode((INamedTypeSymbol Source, INamedTypeSymbol Destination) obj)
+        {
+            int hash = SymbolEqualityComparer.Default.GetHashCode(obj.Source);
+            hash = unchecked((hash * 397) ^ SymbolEqualityComparer.Default.GetHashCode(obj.Destination));
+            return hash;
+        }
     }
 }

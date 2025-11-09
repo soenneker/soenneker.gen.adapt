@@ -2,6 +2,9 @@
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using Soenneker.Gen.Adapt.Emitters;
+using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Text.RegularExpressions;
 
@@ -10,11 +13,93 @@ namespace Soenneker.Gen.Adapt;
 [Generator]
 public sealed class AdaptGenerator : IIncrementalGenerator
 {
+    private static readonly Regex _declWithModifiersGenericRegex =
+        new(@"(?:private|public|protected|internal|readonly|static|const)\s+([a-zA-Z_][a-zA-Z0-9_\.]*<[^<>]+>(?:\?)?)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex _declWithModifiersRegex =
+        new(@"(?:private|public|protected|internal|readonly|static|const)\s+([a-zA-Z_][a-zA-Z0-9_\.]*(?:\?)?)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex _varDeclarationRegex =
+        new(@"var\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex _nullableDeclarationRegex =
+        new(@"([a-zA-Z_][a-zA-Z0-9_\.]*(?:<.+?>)?(?:\[\])?)\?\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex _assignmentNewRegex =
+        new(@"=\s*new\s+([a-zA-Z_][a-zA-Z0-9_\.]*(?:<.+?>)?)\s*[\(\{]", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex _assignmentAdaptRegex =
+        new(@"=\s*([a-zA-Z_][a-zA-Z0-9_\.]*)\s*\.\s*Adapt\s*<([a-zA-Z_][a-zA-Z0-9_\.]*(?:<.+?>)?)>",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex _propertyDeclarationRegex =
+        new(@"(?:\[.*?\]\s*)*(?:(?:private|public|protected|internal|static|virtual|override|sealed|partial|readonly|new|required|unsafe)\s+)+([a-zA-Z_][a-zA-Z0-9_<>,\.\[\]]*(?:\?)?)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\{\s*get\s*;\s*(?:set|init)\s*;\s*\}",
+            RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex _methodParameterBlockRegex =
+        new(@"(?:private|public|protected|internal|static)?\s+(?:void|[a-zA-Z_][a-zA-Z0-9_<>,\s\[\]]*?)\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\(([^)]*)\)",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex _parameterRegex =
+        new(@"([a-zA-Z_][a-zA-Z0-9_\.]*(?:<[^>]*>)?(?:\[\])?(?:\?)?)\s+([a-zA-Z_][a-zA-Z0-9_]*)$",
+            RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex _lineCommentRegex = new(@"//.*$", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex _adaptCallRegex =
+        new(
+            @"((?:\(\s*)?(?:await\s+)?(?:(?:new\s+[a-zA-Z_][\w<>,\s]*?\([^)]*\))|(?:[a-zA-Z_][\w\.]*(?:\([^)]*\))?))\s*(?:\)\s*)?)\s*\.\s*Adapt\s*<([^>]+)>",
+            RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex _awaitParentheticalRegex =
+        new(@"\(\s*await\s+([^\)]*?)\s*\)\s*\.\s*Adapt\s*<([^>]+)>", RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex _broadAdaptRegex =
+        new(@"([^\n;]*?)\s*\.\s*Adapt\s*<([^>]+)>", RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly string[] _awaitablePrefixes =
+    [
+        "System.Threading.Tasks.Task<",
+        "System.Threading.Tasks.ValueTask<",
+        "Task<",
+        "ValueTask<"
+    ];
+
+    private static readonly string[] _modifiers =
+    [
+        "private", "public", "protected", "internal", "readonly", "static", "const", "virtual", "override", "sealed", "partial", "new", "required", "unsafe"
+    ];
+
+    private static readonly HashSet<string> _keywords = new(StringComparer.Ordinal)
+    {
+        "var", "int", "string", "bool", "double", "float", "long", "short", "byte", "char", "object", "dynamic", "void", "abstract", "as", "base", "break",
+        "case", "catch", "class", "const", "continue", "decimal", "default", "delegate", "do", "enum", "event", "false", "finally", "fixed", "for", "foreach",
+        "goto", "if", "implicit", "in", "interface", "is", "lock", "namespace", "new", "null", "operator", "out", "override", "params", "private", "protected",
+        "public", "readonly", "ref", "return", "sbyte", "sealed", "short", "sizeof", "stackalloc", "static", "struct", "switch", "this", "throw", "true", "try",
+        "typeof", "uint", "ulong", "unchecked", "unsafe", "ushort", "using", "virtual", "volatile", "while"
+    };
+
+    private static readonly ConcurrentDictionary<string, Regex> _propertyLookupRegexCache = new(StringComparer.Ordinal);
+    private static readonly ConcurrentDictionary<string, Regex> _fieldLookupRegexCache = new(StringComparer.Ordinal);
+    private static readonly ConcurrentDictionary<string, Regex> _methodLookupRegexCache = new(StringComparer.Ordinal);
+    private static readonly ConcurrentDictionary<string, Regex> _asyncMethodLookupRegexCache = new(StringComparer.Ordinal);
+
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
-        // Find all invocations - we'll filter for Adapt calls in the Emitter
-        IncrementalValuesProvider<(InvocationExpressionSyntax, SemanticModel)> adaptInvocations = context.SyntaxProvider.CreateSyntaxProvider(
-            static (node, _) => node is InvocationExpressionSyntax, static (ctx, _) => ((InvocationExpressionSyntax)ctx.Node, ctx.SemanticModel));
+        // Find all Adapt invocations early to cut down on semantic model work for other calls
+        IncrementalValuesProvider<(InvocationExpressionSyntax invocation, SemanticModel semanticModel)> adaptInvocations =
+            context.SyntaxProvider.CreateSyntaxProvider(
+                static (node, _) => node is InvocationExpressionSyntax
+                {
+                    Expression: MemberAccessExpressionSyntax
+                    {
+                        Name: SimpleNameSyntax simpleName
+                    }
+                } && simpleName.Identifier.ValueText == "Adapt",
+                static (ctx, _) => ((InvocationExpressionSyntax)ctx.Node, ctx.SemanticModel));
 
         // Also scan .razor files for Adapt calls
         // NOTE: Razor compilation happens after source generation, so we need to pre-scan
@@ -53,7 +138,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
     private static ImmutableArray<string> ExtractAdaptCallsFromRazor(string content)
     {
         ImmutableArray<string>.Builder results = ImmutableArray.CreateBuilder<string>();
-        var seen = new System.Collections.Generic.HashSet<string>();
+        var seen = new HashSet<string>(StringComparer.Ordinal);
 
         static string NormalizeExpression(string expr)
         {
@@ -88,7 +173,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             }
 
             // Strip leading await
-            if (s.StartsWith("await "))
+            if (s.StartsWith("await ", StringComparison.Ordinal))
                 s = s.Substring("await ".Length).TrimStart();
 
             return s;
@@ -101,16 +186,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
 
             string t = typeName.Replace(" ", "");
 
-            // Support fully-qualified and simple Task/ValueTask
-            string[] candidates =
-            [
-                "System.Threading.Tasks.Task<",
-                "System.Threading.Tasks.ValueTask<",
-                "Task<",
-                "ValueTask<"
-            ];
-
-            foreach (string prefix in candidates)
+            foreach (string prefix in _awaitablePrefixes)
             {
                 if (t.StartsWith(prefix) && t.EndsWith(">"))
                 {
@@ -140,7 +216,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
         // Pass 1: Collect all type declarations (fields, properties, local variables)
         // Pass 2: Find all .Adapt<> calls and match them to declarations
 
-        var declarations = new System.Collections.Generic.Dictionary<string, string>(); // varName -> typeName
+        var declarations = new Dictionary<string, string>(StringComparer.Ordinal); // varName -> typeName
 
         // Pass 1: Extract all type declarations
         // Use simpler approach: find all variable/field declarations and extract their types manually
@@ -151,54 +227,49 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             string line = lines[lineIndex];
             string trimmed = line.Trim();
             // Skip markup, comments, etc.
-            if (trimmed.StartsWith("<") || trimmed.StartsWith("//") || (trimmed.StartsWith("@") && !trimmed.StartsWith("@code")))
+            if (trimmed.StartsWith("<", StringComparison.Ordinal) || trimmed.StartsWith("//", StringComparison.Ordinal) ||
+                (trimmed.StartsWith("@", StringComparison.Ordinal) && !trimmed.StartsWith("@code", StringComparison.Ordinal)))
                 continue;
 
-            // Look for variable declarations: [modifiers] TypeName varName =
-            // Handle both simple and generic types, including var declarations
-            // Try multiple patterns to be more robust
-            var declPattern1 =
-                @"(?:private|public|protected|internal|readonly|static|const)\s+([a-zA-Z_][a-zA-Z0-9_\.]*<[^<>]+>(?:\?)?)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=";
-            Match match = Regex.Match(trimmed, declPattern1);
-
+            Match match = _declWithModifiersGenericRegex.Match(trimmed);
             if (!match.Success)
             {
-                var declPattern2 =
-                    @"(?:private|public|protected|internal|readonly|static|const)\s+([a-zA-Z_][a-zA-Z0-9_\.]*(?:\?)?)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=";
-                match = Regex.Match(trimmed, declPattern2);
+                match = _declWithModifiersRegex.Match(trimmed);
             }
 
-            // Also handle var declarations
+            bool isVarDeclaration = false;
             if (!match.Success)
             {
-                var varPattern = @"var\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=";
-                Match varMatch = Regex.Match(trimmed, varPattern);
-                if (varMatch.Success)
+                match = _varDeclarationRegex.Match(trimmed);
+                isVarDeclaration = match.Success;
+            }
+
+            if (!match.Success)
+            {
+                match = _nullableDeclarationRegex.Match(trimmed);
+            }
+
+            if (match is { Success: true })
+            {
+                string typeName;
+                string varName;
+
+                if (isVarDeclaration)
                 {
-                    // For var declarations, we'll try to infer the type from the right-hand side
-                    match = varMatch;
+                    typeName = "var";
+                    varName = match.Groups[1].Value.Trim();
                 }
-            }
-
-            // Also handle nullable type declarations like "TypeName? varName ="
-            if (!match.Success)
-            {
-                var nullablePattern = @"([a-zA-Z_][a-zA-Z0-9_\.]*(?:<.+?>)?(?:\[\])?)\?\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=";
-                Match nullableMatch = Regex.Match(trimmed, nullablePattern);
-                if (nullableMatch.Success)
+                else if (match.Groups.Count >= 3)
                 {
-                    match = nullableMatch;
+                    typeName = match.Groups[1].Value.Trim();
+                    varName = match.Groups[2].Value.Trim();
                 }
-            }
+                else
+                {
+                    continue;
+                }
 
-            if (match is { Success: true, Groups.Count: >= 2 })
-            {
-                string typeName = match.Groups.Count >= 3 ? match.Groups[1].Value.Trim() : "var";
-                string varName = match.Groups.Count >= 3 ? match.Groups[2].Value.Trim() : match.Groups[1].Value.Trim();
-
-                // Remove modifiers if they got captured
-                typeName = typeName.Replace("private", "").Replace("public", "").Replace("protected", "").Replace("internal", "").Replace("readonly", "")
-                    .Replace("static", "").Replace("const", "").Trim();
+                typeName = StripModifiers(typeName);
 
                 // Handle "var" declarations - infer type from right-hand side
                 if (typeName == "var")
@@ -212,8 +283,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                     }
 
                     // First try to find "new TypeName" pattern
-                    var rhsPattern = @"=\s*new\s+([a-zA-Z_][a-zA-Z0-9_\.]*(?:<.+?>)?)\s*[\(\{]";
-                    Match rhsMatch = Regex.Match(multiLine, rhsPattern);
+                    Match rhsMatch = _assignmentNewRegex.Match(multiLine);
                     if (rhsMatch.Success)
                     {
                         typeName = rhsMatch.Groups[1].Value.Trim();
@@ -221,8 +291,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                     else
                     {
                         // Try to find Adapt calls: "var x = source.Adapt<DestType>()"
-                        var adaptPattern = @"=\s*([a-zA-Z_][a-zA-Z0-9_\.]*)\s*\.\s*Adapt\s*<([a-zA-Z_][a-zA-Z0-9_\.]*(?:<.+?>)?)>";
-                        Match adaptMatch = Regex.Match(multiLine, adaptPattern);
+                        Match adaptMatch = _assignmentAdaptRegex.Match(multiLine);
                         if (adaptMatch.Success)
                         {
                             // For Adapt calls, we'll handle this in the second pass
@@ -259,12 +328,8 @@ public sealed class AdaptGenerator : IIncrementalGenerator
         {
             if (propertyMatch.Groups.Count >= 3)
             {
-                string typeName = propertyMatch.Groups[1].Value.Trim();
+                string typeName = StripModifiers(propertyMatch.Groups[1].Value.Trim());
                 string propertyName = propertyMatch.Groups[2].Value.Trim();
-
-                typeName = typeName.Replace("private", "").Replace("public", "").Replace("protected", "").Replace("internal", "").Replace("static", "")
-                    .Replace("virtual", "").Replace("override", "").Replace("sealed", "").Replace("partial", "").Replace("readonly", "").Replace("new", "")
-                    .Replace("required", "").Replace("unsafe", "").Trim();
 
                 if (typeName.Contains("<"))
                 {
@@ -282,8 +347,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
 
         // Pass 1.5: Find method parameters
         // Look for method declarations like "Type MethodName(ParamType paramName)"
-        const string methodParamPattern = @"(?:private|public|protected|internal|static)?\s+(?:void|[a-zA-Z_][a-zA-Z0-9_<>,\s\[\]]*?)\s+[a-zA-Z_][a-zA-Z0-9_]*\s*\(([^)]*)\)";
-        MatchCollection methodMatches = Regex.Matches(content, methodParamPattern);
+        MatchCollection methodMatches = _methodParameterBlockRegex.Matches(content);
         foreach (Match methodMatch in methodMatches)
         {
             if (methodMatch.Groups.Count >= 2)
@@ -298,8 +362,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                         continue;
 
                     // Match "Type paramName"
-                    const string paramPattern = @"([a-zA-Z_][a-zA-Z0-9_\.]*(?:<[^>]*>)?(?:\[\])?(?:\?)?)\s+([a-zA-Z_][a-zA-Z0-9_]*)$";
-                    Match paramMatch = Regex.Match(trimmedParam, paramPattern);
+                    Match paramMatch = _parameterRegex.Match(trimmedParam);
                     if (paramMatch is { Success: true, Groups.Count: >= 3 })
                     {
                         string paramType = paramMatch.Groups[1].Value.Trim();
@@ -327,18 +390,13 @@ public sealed class AdaptGenerator : IIncrementalGenerator
 
         // Pass 2: Find all .Adapt<DestType>() calls (but skip comments)
         // First, remove all comment lines to avoid false matches
-        string contentWithoutComments = Regex.Replace(content, @"//.*$", "", RegexOptions.Multiline);
+        string contentWithoutComments = _lineCommentRegex.Replace(content, string.Empty);
 
         // Find all .Adapt<>() calls - match the whole pattern
         // This handles: variable.Adapt<>, new Type().Adapt<>, method().Adapt<>, obj.Property.Adapt<>
-        var adaptCalls = new System.Collections.Generic.List<(string expression, string destType)>();
+        var adaptCalls = new List<(string expression, string destType)>();
 
-        // Use a more comprehensive regex to find all Adapt calls
-        // This handles: variable.Adapt<>, new Type().Adapt<>, method().Adapt<>, obj.Property.Adapt<>
-        // and now also handles optional parentheses and leading 'await'
-        var adaptCallRegex = new Regex(@"((?:\(\s*)?(?:await\s+)?(?:(?:new\s+[a-zA-Z_][\w<>,\s]*?\([^)]*\))|(?:[a-zA-Z_][\w\.]*(?:\([^)]*\))?))\s*(?:\)\s*)?)\s*\.\s*Adapt\s*<([^>]+)>",
-            RegexOptions.Singleline);
-        MatchCollection matches = adaptCallRegex.Matches(contentWithoutComments);
+        MatchCollection matches = _adaptCallRegex.Matches(contentWithoutComments);
 
         foreach (Match match in matches)
         {
@@ -377,8 +435,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
         }
 
         // Extra pass: specifically catch patterns like "(await expr).Adapt<T>()" that may be missed
-        var awaitParenRegex = new Regex(@"\(\s*await\s+([^\)]*?)\s*\)\s*\.\s*Adapt\s*<([^>]+)>", RegexOptions.Singleline);
-        MatchCollection awaitMatches = awaitParenRegex.Matches(contentWithoutComments);
+        MatchCollection awaitMatches = _awaitParentheticalRegex.Matches(contentWithoutComments);
         foreach (Match match in awaitMatches)
         {
             if (match.Groups.Count >= 3)
@@ -394,8 +451,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
         }
 
         // Broad fallback: capture any "expr.Adapt<T>()" on a single logical line
-        var broadRegex = new Regex(@"([^\n;]*?)\s*\.\s*Adapt\s*<([^>]+)>", RegexOptions.Singleline);
-        MatchCollection broadMatches = broadRegex.Matches(contentWithoutComments);
+        MatchCollection broadMatches = _broadAdaptRegex.Matches(contentWithoutComments);
         foreach (Match match in broadMatches)
         {
             if (match.Groups.Count >= 3)
@@ -418,14 +474,14 @@ public sealed class AdaptGenerator : IIncrementalGenerator
         // Now match adapt calls to declarations
         foreach ((string expression, string destType) in adaptCalls)
         {
-            if (IsKeyword(destType))
+            if (string.IsNullOrEmpty(destType) || IsKeyword(destType))
                 continue;
 
             // Try to resolve source type
-            string sourceType = null;
+            string? sourceType = null;
 
             // Check if expression is "new TypeName()"
-            if (expression.StartsWith("new"))
+            if (expression.StartsWith("new", StringComparison.Ordinal))
             {
                 // Extract type from "new TypeName()"
                 string typeWithNew = expression.Substring(3).Trim(); // Remove "new"
@@ -461,8 +517,8 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                     {
                         string propertyName = parts[1];
                         // Look for "TypeName PropertyName { get; set; }"
-                        var propPattern = $@"([a-zA-Z_][a-zA-Z0-9_<>,]*?)\s+{Regex.Escape(propertyName)}\s*\{{\s*get";
-                        Match propMatch = Regex.Match(content, propPattern);
+                        Regex propertyLookup = GetPropertyLookupRegex(propertyName);
+                        Match propMatch = propertyLookup.Match(content);
                         if (propMatch.Success)
                         {
                             sourceType = propMatch.Groups[1].Value.Trim().Replace(" ", "");
@@ -493,15 +549,12 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             {
                 // Look for method return type declarations
                 string methodName = expression.Substring(0, expression.IndexOf('(')).Trim();
-                if (methodName.StartsWith("await "))
+                if (methodName.StartsWith("await ", StringComparison.Ordinal))
                     methodName = methodName.Substring("await ".Length).Trim();
 
                 // Allow attributes and common modifiers before the return type, and capture fully-qualified/generic types
-                var methodPattern =
-                    $@"(?:\[.*?\]\s*)*(?:(?:private|public|protected|internal|static|virtual|override|sealed|partial|readonly|new|required|unsafe|async)\s+)*" +
-                    $@"((?:global::)?[a-zA-Z_][a-zA-Z0-9_<>,\.\[\]]*(?:<[^>]*>)?)\s+{Regex.Escape(methodName)}\s*\(";
-
-                Match methodMatch = Regex.Match(content, methodPattern, RegexOptions.Singleline);
+                Regex methodRegex = GetMethodRegex(methodName);
+                Match methodMatch = methodRegex.Match(content);
                 if (methodMatch.Success)
                 {
                     sourceType = methodMatch.Groups[1].Value.Trim().Replace(" ", "");
@@ -516,10 +569,8 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 else
                 {
                     // Try explicit async return patterns: Task<T>/ValueTask<T>
-                    var asyncPattern =
-                        $@"(?:\[.*?\]\s*)*(?:(?:private|public|protected|internal|static|virtual|override|sealed|partial|readonly|new|required|unsafe|async)\s+)*" +
-                        $@"(?:(?:System\.Threading\.Tasks\.)?(?:Task|ValueTask))\s*<\s*([a-zA-Z_][a-zA-Z0-9_<>,\.\s]*)\s*>\s+{Regex.Escape(methodName)}\s*\(";
-                    Match asyncMatch = Regex.Match(content, asyncPattern, RegexOptions.Singleline);
+                    Regex asyncRegex = GetAsyncMethodRegex(methodName);
+                    Match asyncMatch = asyncRegex.Match(content);
                     if (asyncMatch.Success)
                     {
                         sourceType = ExtractCleanGenericType(asyncMatch.Groups[1].Value.Trim());
@@ -538,7 +589,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             }
 
             // Special heuristic: if dest is List<T> and source is unresolved, infer it
-            if (destType.StartsWith("List<") && destType.EndsWith(">"))
+            if (destType.StartsWith("List<", StringComparison.Ordinal) && destType.EndsWith(">", StringComparison.Ordinal))
             {
                 if (string.IsNullOrEmpty(sourceType))
                 {
@@ -573,40 +624,15 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 // where _businessResponse is a field/property that we can't resolve from declarations
 
                 // Look for field/property declarations in the content
-                if (expression.StartsWith("_") || char.IsUpper(expression[0]))
+                if (expression.StartsWith("_", StringComparison.Ordinal) || char.IsUpper(expression[0]))
                 {
-                    // Try multiple patterns to find the field/property declaration
-                    // Pattern 1: With modifiers and generic types
-                    var fieldPattern =
-                        $@"(?:private|public|protected|internal|readonly|static)\s+([a-zA-Z_][a-zA-Z0-9_\.]*<[^<>]+>(?:\?)?)\s+{Regex.Escape(expression)}\s*[;=]";
-                    Match fieldMatch = Regex.Match(content, fieldPattern);
-
-                    // Pattern 2: Try without requiring modifiers for generic types
-                    if (!fieldMatch.Success)
-                    {
-                        fieldPattern = $@"([a-zA-Z_][a-zA-Z0-9_\.]*<[^<>]+>(?:\?)?)\s+{Regex.Escape(expression)}\s*[;=]";
-                        fieldMatch = Regex.Match(content, fieldPattern);
-                    }
-
-                    // Pattern 3: Try simple non-generic types
-                    if (!fieldMatch.Success)
-                    {
-                        fieldPattern =
-                            $@"(?:private|public|protected|internal|readonly|static)\s+([a-zA-Z_][a-zA-Z0-9_\.]*(?:\?)?)\s+{Regex.Escape(expression)}\s*[;=]";
-                        fieldMatch = Regex.Match(content, fieldPattern);
-                    }
+                    Regex fieldRegex = GetFieldLookupRegex(expression);
+                    Match fieldMatch = fieldRegex.Match(content);
 
                     if (fieldMatch is { Success: true, Groups.Count: >= 2 })
                     {
-                        sourceType = fieldMatch.Groups[1].Value.Trim();
-                        sourceType = sourceType.Replace("private", "").Replace("public", "").Replace("protected", "").Replace("internal", "")
-                            .Replace("readonly", "").Replace("static", "").Trim();
-
-                        // Remove nullable marker
-                        if (sourceType.EndsWith("?"))
-                        {
-                            sourceType = sourceType.Substring(0, sourceType.Length - 1);
-                        }
+                        sourceType = StripModifiers(fieldMatch.Groups[1].Value.Trim());
+                        sourceType = RemoveNullableSuffix(sourceType);
 
                         if (sourceType.Contains("<"))
                         {
@@ -699,13 +725,64 @@ public sealed class AdaptGenerator : IIncrementalGenerator
 
     private static bool IsKeyword(string word)
     {
-        var keywords = new[] { "var", "int", "string", "bool", "double", "float", "long", "short", "byte", "char", "object", "dynamic", "void" };
-        for (var i = 0; i < keywords.Length; i++)
+        if (string.IsNullOrEmpty(word))
+            return false;
+
+        return _keywords.Contains(word);
+    }
+
+    private static string StripModifiers(string value)
+    {
+        if (string.IsNullOrEmpty(value))
+            return value;
+
+        string result = value;
+        for (int i = 0; i < _modifiers.Length; i++)
         {
-            if (keywords[i] == word)
-                return true;
+            string modifier = _modifiers[i];
+            if (result.Contains(modifier))
+                result = result.Replace(modifier, "");
         }
 
-        return false;
+        return result.Trim();
+    }
+
+    private static string RemoveNullableSuffix(string typeName)
+    {
+        if (string.IsNullOrEmpty(typeName) || typeName[typeName.Length - 1] != '?')
+            return typeName;
+
+        return typeName.Substring(0, typeName.Length - 1);
+    }
+
+    private static Regex GetPropertyLookupRegex(string propertyName)
+    {
+        return _propertyLookupRegexCache.GetOrAdd(propertyName, static name =>
+            new Regex(
+                $@"(?:(?:\[.*?\]\s*)*(?:(?:private|public|protected|internal|static|virtual|override|sealed|partial|readonly|new|required|unsafe)\s+)+)?([a-zA-Z_][a-zA-Z0-9_<>,\.\[\]]*(?:\?)?)\s+{Regex.Escape(name)}\s*\{{\s*get",
+                RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant));
+    }
+
+    private static Regex GetFieldLookupRegex(string fieldName)
+    {
+        return _fieldLookupRegexCache.GetOrAdd(fieldName, static name =>
+            new Regex($@"(?:(?:private|public|protected|internal|readonly|static)\s+)*([a-zA-Z_][a-zA-Z0-9_\.]*(?:<[^<>]+>)?(?:\?)?)\s+{Regex.Escape(name)}\s*[;=]",
+                RegexOptions.Compiled | RegexOptions.CultureInvariant));
+    }
+
+    private static Regex GetMethodRegex(string methodName)
+    {
+        return _methodLookupRegexCache.GetOrAdd(methodName, static name =>
+            new Regex(
+                $@"(?:\[.*?\]\s*)*(?:(?:private|public|protected|internal|static|virtual|override|sealed|partial|readonly|new|required|unsafe|async)\s+)*((?:global::)?[a-zA-Z_][a-zA-Z0-9_<>,\.\[\]]*(?:<[^>]*>)?)\s+{Regex.Escape(name)}\s*\(",
+                RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant));
+    }
+
+    private static Regex GetAsyncMethodRegex(string methodName)
+    {
+        return _asyncMethodLookupRegexCache.GetOrAdd(methodName, static name =>
+            new Regex(
+                $@"(?:\[.*?\]\s*)*(?:(?:private|public|protected|internal|static|virtual|override|sealed|partial|readonly|new|required|unsafe|async)\s+)*(?:(?:System\.Threading\.Tasks\.)?(?:Task|ValueTask))\s*<\s*([a-zA-Z_][a-zA-Z0-9_<>,\.\s]*)\s*>\s+{Regex.Escape(name)}\s*\(",
+                RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant));
     }
 }
