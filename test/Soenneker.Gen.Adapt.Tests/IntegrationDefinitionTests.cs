@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using AwesomeAssertions;
 using Soenneker.Gen.Adapt.Tests.Types.Banking;
-using Soenneker.Gen.Adapt.Tests.Types.Integrations;
+using Soenneker.Gen.Adapt.Tests.Types.Pipelines;
 using Soenneker.Tests.Unit;
 using Xunit;
 

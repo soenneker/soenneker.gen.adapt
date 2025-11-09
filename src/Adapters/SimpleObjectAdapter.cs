@@ -15,6 +15,7 @@ internal static class SimpleObjectAdapter
         SourceProductionContext context)
     {
         var map = new Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>>(SymbolEqualityComparer.Default);
+        var processedNestedPairs = new HashSet<(INamedTypeSymbol Source, INamedTypeSymbol Destination)>(SymbolPairComparer.Instance);
 
         foreach ((INamedTypeSymbol src, INamedTypeSymbol dst, Location location) in typePairs)
         {
@@ -35,7 +36,7 @@ internal static class SimpleObjectAdapter
                     if (!destList.Contains(dst))
                     {
                         destList.Add(dst);
-                        AddNestedPairs(map, src, dst, enums);
+                        AddNestedPairs(map, src, dst, enums, processedNestedPairs);
                     }
 
                     continue;
@@ -63,7 +64,7 @@ internal static class SimpleObjectAdapter
                     if (!destList.Contains(dst))
                     {
                         destList.Add(dst);
-                        AddNestedPairs(map, src, dst, enums);
+                        AddNestedPairs(map, src, dst, enums, processedNestedPairs);
                     }
 
                     continue;
@@ -96,7 +97,7 @@ internal static class SimpleObjectAdapter
                     if (!destList.Contains(dst))
                     {
                         destList.Add(dst);
-                        AddNestedPairs(map, src, dst, enums);
+                        AddNestedPairs(map, src, dst, enums, processedNestedPairs);
                     }
 
                     continue;
@@ -120,7 +121,7 @@ internal static class SimpleObjectAdapter
                     if (!destList.Contains(dst))
                     {
                         destList.Add(dst);
-                        AddNestedPairs(map, src, dst, enums);
+                        AddNestedPairs(map, src, dst, enums, processedNestedPairs);
                     }
 
                     continue;
@@ -144,7 +145,7 @@ internal static class SimpleObjectAdapter
                     if (!destList.Contains(dst))
                     {
                         destList.Add(dst);
-                        AddNestedPairs(map, src, dst, enums);
+                        AddNestedPairs(map, src, dst, enums, processedNestedPairs);
                     }
 
                     continue;
@@ -184,7 +185,7 @@ internal static class SimpleObjectAdapter
             if (!list.Contains(dst, SymbolEqualityComparer.Default))
             {
                 list.Add(dst);
-                AddNestedPairs(map, src, dst, enums);
+                AddNestedPairs(map, src, dst, enums, processedNestedPairs);
             }
         }
 
@@ -262,8 +263,11 @@ internal static class SimpleObjectAdapter
     }
 
     private static void AddNestedPairs(Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map, INamedTypeSymbol src, INamedTypeSymbol dst,
-        List<INamedTypeSymbol> enums)
+        List<INamedTypeSymbol> enums, HashSet<(INamedTypeSymbol Source, INamedTypeSymbol Destination)> processed)
     {
+        if (!processed.Add((src, dst)))
+            return;
+
         // Walk properties to ensure nested user-defined type pairs are present
         var srcProps = TypeProps.Build(src);
         var dstProps = TypeProps.Build(dst);
@@ -280,16 +284,8 @@ internal static class SimpleObjectAdapter
                 (dNamed.TypeKind == TypeKind.Class || dNamed.TypeKind == TypeKind.Struct) && !Types.IsFrameworkType(sNamed) && !Types.IsFrameworkType(dNamed) &&
                 !SymbolEqualityComparer.Default.Equals(sNamed, dNamed))
             {
-                if (!map.TryGetValue(sNamed, out List<INamedTypeSymbol>? list))
-                {
-                    list = new List<INamedTypeSymbol>(4);
-                    map[sNamed] = list;
-                }
-
-                if (!list.Contains(dNamed, SymbolEqualityComparer.Default))
-                {
-                    list.Add(dNamed);
-                }
+                EnsureMapping(map, sNamed, dNamed);
+                AddNestedPairs(map, sNamed, dNamed, enums, processed);
             }
 
             // Nested collection element types
@@ -298,16 +294,8 @@ internal static class SimpleObjectAdapter
                 if (sElem is INamedTypeSymbol sElemNamed && dElem is INamedTypeSymbol dElemNamed && !Types.IsFrameworkType(sElemNamed) &&
                     !Types.IsFrameworkType(dElemNamed))
                 {
-                    if (!map.TryGetValue(sElemNamed, out List<INamedTypeSymbol>? list))
-                    {
-                        list = new List<INamedTypeSymbol>(4);
-                        map[sElemNamed] = list;
-                    }
-
-                    if (!list.Contains(dElemNamed, SymbolEqualityComparer.Default))
-                    {
-                        list.Add(dElemNamed);
-                    }
+                    EnsureMapping(map, sElemNamed, dElemNamed);
+                    AddNestedPairs(map, sElemNamed, dElemNamed, enums, processed);
                 }
             }
 
@@ -317,18 +305,41 @@ internal static class SimpleObjectAdapter
                 if (sVal is INamedTypeSymbol sValNamed && dVal is INamedTypeSymbol dValNamed && SymbolEqualityComparer.Default.Equals(sKey, dKey) &&
                     Assignment.CanAssign(sVal, dVal, enums) && !Types.IsFrameworkType(sValNamed) && !Types.IsFrameworkType(dValNamed))
                 {
-                    if (!map.TryGetValue(sValNamed, out List<INamedTypeSymbol>? list))
-                    {
-                        list = new List<INamedTypeSymbol>(4);
-                        map[sValNamed] = list;
-                    }
-
-                    if (!list.Contains(dValNamed, SymbolEqualityComparer.Default))
-                    {
-                        list.Add(dValNamed);
-                    }
+                    EnsureMapping(map, sValNamed, dValNamed);
+                    AddNestedPairs(map, sValNamed, dValNamed, enums, processed);
                 }
             }
+        }
+    }
+
+    private static void EnsureMapping(Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map, INamedTypeSymbol source, INamedTypeSymbol destination)
+    {
+        if (!map.TryGetValue(source, out List<INamedTypeSymbol>? list))
+        {
+            list = new List<INamedTypeSymbol>(4);
+            map[source] = list;
+        }
+
+        if (!list.Contains(destination, SymbolEqualityComparer.Default))
+        {
+            list.Add(destination);
+        }
+    }
+
+    private sealed class SymbolPairComparer : IEqualityComparer<(INamedTypeSymbol Source, INamedTypeSymbol Destination)>
+    {
+        public static readonly SymbolPairComparer Instance = new();
+
+        public bool Equals((INamedTypeSymbol Source, INamedTypeSymbol Destination) x, (INamedTypeSymbol Source, INamedTypeSymbol Destination) y)
+        {
+            return SymbolEqualityComparer.Default.Equals(x.Source, y.Source) && SymbolEqualityComparer.Default.Equals(x.Destination, y.Destination);
+        }
+
+        public int GetHashCode((INamedTypeSymbol Source, INamedTypeSymbol Destination) obj)
+        {
+            int hash = SymbolEqualityComparer.Default.GetHashCode(obj.Source);
+            hash = unchecked((hash * 397) ^ SymbolEqualityComparer.Default.GetHashCode(obj.Destination));
+            return hash;
         }
     }
 }

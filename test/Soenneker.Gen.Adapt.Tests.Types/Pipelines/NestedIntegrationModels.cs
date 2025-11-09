@@ -1,4 +1,4 @@
-namespace Soenneker.Gen.Adapt.Tests.Types.Integrations;
+namespace Soenneker.Gen.Adapt.Tests.Types.Pipelines;
 
 public sealed class AdapterConnector
 {
