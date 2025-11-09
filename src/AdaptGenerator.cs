@@ -110,7 +110,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 return (file.Path, text?.ToString() ?? string.Empty);
             });
 
-        IncrementalValuesProvider<string> razorAdaptCalls = razorFiles.SelectMany(static (pair, _) => ExtractAdaptCallsFromRazor(pair.content));
+        IncrementalValuesProvider<string> razorAdaptCalls = razorFiles.SelectMany(static (pair, _) => ExtractAdaptCallsFromRazor(pair.path, pair.content));
 
         // Combine everything with compilation
         IncrementalValueProvider<(Compilation, ImmutableArray<(InvocationExpressionSyntax, SemanticModel)>, ImmutableArray<string>)> allData =
@@ -135,10 +135,11 @@ public sealed class AdaptGenerator : IIncrementalGenerator
         });
     }
 
-    private static ImmutableArray<string> ExtractAdaptCallsFromRazor(string content)
+    private static ImmutableArray<string> ExtractAdaptCallsFromRazor(string path, string content)
     {
         ImmutableArray<string>.Builder results = ImmutableArray.CreateBuilder<string>();
         var seen = new HashSet<string>(StringComparer.Ordinal);
+        const string AdaptToken = ".Adapt";
 
         static string NormalizeExpression(string expr)
         {
@@ -390,11 +391,12 @@ public sealed class AdaptGenerator : IIncrementalGenerator
 
         // Pass 2: Find all .Adapt<DestType>() calls (but skip comments)
         // First, remove all comment lines to avoid false matches
-        string contentWithoutComments = _lineCommentRegex.Replace(content, string.Empty);
+        string contentWithoutComments = _lineCommentRegex.Replace(content, match => new string(' ', match.Length));
+        SourceText sourceText = SourceText.From(content);
 
         // Find all .Adapt<>() calls - match the whole pattern
         // This handles: variable.Adapt<>, new Type().Adapt<>, method().Adapt<>, obj.Property.Adapt<>
-        var adaptCalls = new List<(string expression, string destType)>();
+        var adaptCalls = new List<(string expression, string destType, int adaptPosition)>();
 
         MatchCollection matches = _adaptCallRegex.Matches(contentWithoutComments);
 
@@ -429,7 +431,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                         }
                     }
 
-                    adaptCalls.Add((expression, destType));
+                    adaptCalls.Add((expression, destType, adaptPos));
                 }
             }
         }
@@ -445,7 +447,8 @@ public sealed class AdaptGenerator : IIncrementalGenerator
 
                 if (!string.IsNullOrEmpty(destType) && !string.IsNullOrEmpty(expression))
                 {
-                    adaptCalls.Add((expression, destType));
+                    int adaptPos = contentWithoutComments.IndexOf(AdaptToken, match.Index);
+                    adaptCalls.Add((expression, destType, adaptPos));
                 }
             }
         }
@@ -466,16 +469,41 @@ public sealed class AdaptGenerator : IIncrementalGenerator
 
                 if (!string.IsNullOrEmpty(destType) && !string.IsNullOrEmpty(expression))
                 {
-                    adaptCalls.Add((expression, destType));
+                    int adaptPos = contentWithoutComments.IndexOf(AdaptToken, match.Index);
+                    adaptCalls.Add((expression, destType, adaptPos));
                 }
             }
         }
 
         // Now match adapt calls to declarations
-        foreach ((string expression, string destType) in adaptCalls)
+        foreach ((string expression, string destType, int adaptPosition) in adaptCalls)
         {
             if (string.IsNullOrEmpty(destType) || IsKeyword(destType))
                 continue;
+
+            bool hasLocation = adaptPosition >= 0 && adaptPosition < content.Length;
+            string locationSuffix = string.Empty;
+
+            if (hasLocation)
+            {
+                int spanLength = Math.Min(content.Length - adaptPosition, AdaptToken.Length);
+                TextSpan span = new(adaptPosition, spanLength);
+                LinePosition startPos = sourceText.Lines.GetLinePosition(span.Start);
+                LinePosition endPos = sourceText.Lines.GetLinePosition(span.End);
+                locationSuffix = $"|{path}|{span.Start}|{span.Length}|{startPos.Line}|{startPos.Character}|{endPos.Line}|{endPos.Character}";
+            }
+
+            void AddPair(string? srcType, string dstType)
+            {
+                if (string.IsNullOrEmpty(srcType) || IsKeyword(srcType))
+                    return;
+
+                string pairKey = $"{srcType}|{dstType}";
+                if (!seen.Add(pairKey))
+                    return;
+
+                results.Add(hasLocation ? $"{pairKey}{locationSuffix}" : pairKey);
+            }
 
             // Try to resolve source type
             string? sourceType = null;
@@ -579,14 +607,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             }
 
             // If we found a valid source type, add it
-            if (!string.IsNullOrEmpty(sourceType) && !IsKeyword(sourceType))
-            {
-                var pair = $"{sourceType}|{destType}";
-                if (seen.Add(pair))
-                {
-                    results.Add(pair);
-                }
-            }
+            AddPair(sourceType, destType);
 
             // Special heuristic: if dest is List<T> and source is unresolved, infer it
             if (destType.StartsWith("List<", StringComparison.Ordinal) && destType.EndsWith(">", StringComparison.Ordinal))
@@ -608,14 +629,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 }
 
                 // Always add List mappings if we have a sourceType
-                if (!string.IsNullOrEmpty(sourceType) && !IsKeyword(sourceType))
-                {
-                    var pair = $"{sourceType}|{destType}";
-                    if (seen.Add(pair))
-                    {
-                        results.Add(pair);
-                    }
-                }
+                AddPair(sourceType, destType);
             }
             else
             {
@@ -639,14 +653,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                             sourceType = ExtractCleanGenericType(sourceType);
                         }
 
-                        if (!string.IsNullOrEmpty(sourceType) && !IsKeyword(sourceType))
-                        {
-                            var pair = $"{sourceType}|{destType}";
-                            if (seen.Add(pair))
-                            {
-                                results.Add(pair);
-                            }
-                        }
+                        AddPair(sourceType, destType);
                     }
                 }
             }

@@ -248,10 +248,29 @@ internal static class Emitter
             foreach (string razorCall in razorCalls)
             {
                 string[] parts = razorCall.Split('|');
-                if (parts.Length == 2)
+                if (parts.Length == 2 || parts.Length == 9)
                 {
                     string sourceTypeName = parts[0];
                     string destTypeName = parts[1];
+
+                    Location location = Location.None;
+                    if (parts.Length == 9)
+                    {
+                        string path = parts[2];
+                        if (!string.IsNullOrEmpty(path) &&
+                            int.TryParse(parts[3], out int spanStart) &&
+                            int.TryParse(parts[4], out int spanLength) &&
+                            int.TryParse(parts[5], out int startLine) &&
+                            int.TryParse(parts[6], out int startCharacter) &&
+                            int.TryParse(parts[7], out int endLine) &&
+                            int.TryParse(parts[8], out int endCharacter))
+                        {
+                            var textSpan = new TextSpan(spanStart, spanLength);
+                            var lineSpan = new LinePositionSpan(new LinePosition(startLine, startCharacter),
+                                new LinePosition(endLine, endCharacter));
+                            location = Location.Create(path, textSpan, lineSpan);
+                        }
+                    }
 
                     // Try to resolve types from compilation
                     INamedTypeSymbol? sourceType = Resolve(sourceTypeName);
@@ -259,10 +278,10 @@ internal static class Emitter
 
                     if (sourceType != null && destType != null)
                     {
-                        AddTypePair(typePairs, pairSet, allTypes, sourceType, destType, Location.None);
+                        AddTypePair(typePairs, pairSet, allTypes, sourceType, destType, location);
 
                         // Diagnostic to observe resolved Razor pairs during builds
-                        context.ReportDiagnostic(Diagnostic.Create(_razorDebugInfo, Location.None, sourceType.ToDisplayString(), destType.ToDisplayString()));
+                        context.ReportDiagnostic(Diagnostic.Create(_razorDebugInfo, location, sourceType.ToDisplayString(), destType.ToDisplayString()));
 
                         if (Types.IsAnyList(sourceType, out ITypeSymbol? srcElem) && Types.IsAnyList(destType, out ITypeSymbol? dstElem))
                         {
@@ -270,7 +289,7 @@ internal static class Emitter
                             {
                                 if (!SymbolEqualityComparer.Default.Equals(srcElemNamed, dstElemNamed))
                                 {
-                                    AddTypePair(typePairs, pairSet, allTypes, srcElemNamed, dstElemNamed, Location.None);
+                                    AddTypePair(typePairs, pairSet, allTypes, srcElemNamed, dstElemNamed, location);
                                 }
                             }
                         }
@@ -404,6 +423,23 @@ internal static class Emitter
         if (pairSet.Add((source, destination)))
         {
             typePairs.Add(new TypePair(source, destination, location));
+        }
+        else if (location.IsInSource)
+        {
+            for (var i = 0; i < typePairs.Count; i++)
+            {
+                TypePair existing = typePairs[i];
+                if (!SymbolEqualityComparer.Default.Equals(existing.Source, source) ||
+                    !SymbolEqualityComparer.Default.Equals(existing.Destination, destination))
+                    continue;
+
+                if (!existing.Location.IsInSource)
+                {
+                    typePairs[i] = new TypePair(source, destination, location);
+                }
+
+                break;
+            }
         }
 
         allTypes.Add(source);
