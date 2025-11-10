@@ -24,8 +24,9 @@ internal static class Emitter
 
     private static readonly DiagnosticDescriptor _typeResolutionFailed = new("SGA004", "Type resolution failed",
         "Failed to resolve source type '{0}' when mapping to '{1}'", "Adapt", DiagnosticSeverity.Warning, true);
-    private static readonly DiagnosticDescriptor _razorDebugInfo = new("SGA_DBG", "Razor pair",
-        "Razor pair '{0}' -> '{1}'", "Adapt", DiagnosticSeverity.Warning, true);
+
+    private static readonly DiagnosticDescriptor _razorDebugInfo = new("SGA_DBG", "Razor pair", "Razor pair '{0}' -> '{1}'", "Adapt",
+        DiagnosticSeverity.Warning, true);
 
 
     /// <summary>
@@ -75,7 +76,8 @@ internal static class Emitter
         EmitEnumParsers(context, enumList, nameCache, targetNamespace);
 
         // Build mapping graph from discovered type pairs using the simple object adapter
-        List<(INamedTypeSymbol Source, INamedTypeSymbol Destination, Location Location)> typePairList = typePairs.Select(tp => (tp.Source, tp.Destination, tp.Location)).ToList();
+        List<(INamedTypeSymbol Source, INamedTypeSymbol Destination, Location Location)> typePairList =
+            typePairs.Select(tp => (tp.Source, tp.Destination, tp.Location)).ToList();
         Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map = SimpleObjectAdapter.BuildMappingGraphFromPairs(typePairList, enumList, context);
 
         // Compute which source->dest pairs are referenced by other mappings (nested usage)
@@ -226,8 +228,8 @@ internal static class Emitter
         }
     }
 
-    private static void ProcessRazorCalls(SourceProductionContext context, ImmutableArray<string> razorCalls, Compilation compilation,
-        List<TypePair> typePairs, HashSet<(INamedTypeSymbol Source, INamedTypeSymbol Destination)> pairSet, HashSet<INamedTypeSymbol> allTypes)
+    private static void ProcessRazorCalls(SourceProductionContext context, ImmutableArray<string> razorCalls, Compilation compilation, List<TypePair> typePairs,
+        HashSet<(INamedTypeSymbol Source, INamedTypeSymbol Destination)> pairSet, HashSet<INamedTypeSymbol> allTypes)
     {
         var razorResolved = 0;
         var razorFailed = 0;
@@ -257,17 +259,12 @@ internal static class Emitter
                     if (parts.Length == 9)
                     {
                         string path = parts[2];
-                        if (!string.IsNullOrEmpty(path) &&
-                            int.TryParse(parts[3], out int spanStart) &&
-                            int.TryParse(parts[4], out int spanLength) &&
-                            int.TryParse(parts[5], out int startLine) &&
-                            int.TryParse(parts[6], out int startCharacter) &&
-                            int.TryParse(parts[7], out int endLine) &&
-                            int.TryParse(parts[8], out int endCharacter))
+                        if (!string.IsNullOrEmpty(path) && int.TryParse(parts[3], out int spanStart) && int.TryParse(parts[4], out int spanLength) &&
+                            int.TryParse(parts[5], out int startLine) && int.TryParse(parts[6], out int startCharacter) &&
+                            int.TryParse(parts[7], out int endLine) && int.TryParse(parts[8], out int endCharacter))
                         {
                             var textSpan = new TextSpan(spanStart, spanLength);
-                            var lineSpan = new LinePositionSpan(new LinePosition(startLine, startCharacter),
-                                new LinePosition(endLine, endCharacter));
+                            var lineSpan = new LinePositionSpan(new LinePosition(startLine, startCharacter), new LinePosition(endLine, endCharacter));
                             location = Location.Create(path, textSpan, lineSpan);
                         }
                     }

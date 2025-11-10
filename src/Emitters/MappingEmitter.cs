@@ -153,7 +153,8 @@ internal static class MappingEmitter
         bool destIsArray = Types.IsArray(dest, out _);
         bool sourceIsEnumerable = Types.IsIEnumerable(source, out _);
 
-        if (dstProps.Settable.Count == 0 && !sourceIsList && !destIsList && !sourceIsDict && !destIsDict && !sourceIsArray && !destIsArray && !sourceIsEnumerable)
+        if (dstProps.Settable.Count == 0 && !sourceIsList && !destIsList && !sourceIsDict && !destIsDict && !sourceIsArray && !destIsArray &&
+            !sourceIsEnumerable)
             return;
 
         string srcFq = Types.Fq(source);

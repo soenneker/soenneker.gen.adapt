@@ -151,9 +151,9 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             // Strip outer parentheses repeatedly when balanced
             while (s.Length >= 2 && s[0] == '(' && s[s.Length - 1] == ')')
             {
-                int depth = 0;
-                bool balanced = true;
-                for (int i = 0; i < s.Length; i++)
+                var depth = 0;
+                var balanced = true;
+                for (var i = 0; i < s.Length; i++)
                 {
                     char c = s[i];
                     if (c == '(') depth++;
@@ -193,7 +193,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 {
                     // Extract inner using bracket matching to support nested generics
                     int start = prefix.Length;
-                    int depth = 1;
+                    var depth = 1;
                     for (int i = start; i < t.Length; i++)
                     {
                         if (t[i] == '<') depth++;
@@ -217,15 +217,53 @@ public sealed class AdaptGenerator : IIncrementalGenerator
         // Pass 1: Collect all type declarations (fields, properties, local variables)
         // Pass 2: Find all .Adapt<> calls and match them to declarations
 
-        var declarations = new Dictionary<string, string>(StringComparer.Ordinal); // varName -> typeName
+        SourceText sourceText = SourceText.From(content);
+
+        var declarations = new Dictionary<string, List<DeclarationInfo>>(StringComparer.Ordinal); // varName -> declaration list
 
         // Pass 1: Extract all type declarations
         // Use simpler approach: find all variable/field declarations and extract their types manually
-        string[] lines = content.Split(['\r', '\n'], System.StringSplitOptions.None);
+        string[] lines = content.Split('\n');
+        var lineStartPositions = new int[lines.Length];
+        var runningOffset = 0;
+        for (var i = 0; i < lines.Length; i++)
+        {
+            lineStartPositions[i] = runningOffset;
+            runningOffset += lines[i].Length;
+            if (runningOffset < content.Length && content[runningOffset] == '\n')
+            {
+                runningOffset++;
+            }
+        }
+
+        void AddDeclaration(string name, string typeName, int lineIndex, int position)
+        {
+            if (string.IsNullOrEmpty(name) || string.IsNullOrEmpty(typeName))
+                return;
+
+            if (!declarations.TryGetValue(name, out List<DeclarationInfo>? list))
+            {
+                list = new List<DeclarationInfo>();
+                declarations[name] = list;
+            }
+
+            if (list.Count > 0)
+            {
+                DeclarationInfo last = list[list.Count - 1];
+                if (last.LineNumber == lineIndex && last.Position == position)
+                {
+                    list[list.Count - 1] = new DeclarationInfo(typeName, lineIndex, position);
+                    return;
+                }
+            }
+
+            list.Add(new DeclarationInfo(typeName, lineIndex, position));
+        }
 
         for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++)
         {
-            string line = lines[lineIndex];
+            string rawLine = lines[lineIndex];
+            string line = rawLine.TrimEnd('\r');
             string trimmed = line.Trim();
             // Skip markup, comments, etc.
             if (trimmed.StartsWith("<", StringComparison.Ordinal) || trimmed.StartsWith("//", StringComparison.Ordinal) ||
@@ -238,7 +276,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 match = _declWithModifiersRegex.Match(trimmed);
             }
 
-            bool isVarDeclaration = false;
+            var isVarDeclaration = false;
             if (!match.Success)
             {
                 match = _varDeclarationRegex.Match(trimmed);
@@ -280,7 +318,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                     string multiLine = line;
                     for (int j = lineIndex + 1; j < lines.Length && j < lineIndex + 5; j++)
                     {
-                        multiLine += " " + lines[j];
+                        multiLine += " " + lines[j].TrimEnd('\r');
                     }
 
                     // First try to find "new TypeName" pattern
@@ -314,9 +352,19 @@ public sealed class AdaptGenerator : IIncrementalGenerator
 
                 typeName = typeName.Replace("?", "");
 
-                if (!string.IsNullOrEmpty(typeName) && !IsKeyword(typeName) && !declarations.ContainsKey(varName))
+                int trimmedOffset = line.IndexOf(trimmed, StringComparison.Ordinal);
+                if (trimmedOffset < 0)
                 {
-                    declarations[varName] = typeName;
+                    trimmedOffset = 0;
+                }
+
+                int nameGroupIndex = isVarDeclaration ? 1 : 2;
+                Group nameGroup = match.Groups[nameGroupIndex];
+                int declarationPosition = lineStartPositions[lineIndex] + trimmedOffset + nameGroup.Index;
+
+                if (!string.IsNullOrEmpty(typeName) && !IsKeyword(typeName))
+                {
+                    AddDeclaration(varName, typeName, lineIndex, declarationPosition);
                 }
             }
         }
@@ -339,9 +387,16 @@ public sealed class AdaptGenerator : IIncrementalGenerator
 
                 typeName = typeName.Replace("?", "");
 
-                if (!string.IsNullOrEmpty(typeName) && !IsKeyword(typeName) && !declarations.ContainsKey(propertyName))
+                if (!string.IsNullOrEmpty(typeName) && !IsKeyword(typeName))
                 {
-                    declarations[propertyName] = typeName;
+                    int propertyLineIndex = sourceText.Lines.GetLineFromPosition(propertyMatch.Index).LineNumber;
+                    int propertyPosition = content.IndexOf(propertyName, propertyMatch.Index, StringComparison.Ordinal);
+                    if (propertyPosition < 0)
+                    {
+                        propertyPosition = propertyMatch.Index;
+                    }
+
+                    AddDeclaration(propertyName, typeName, propertyLineIndex, propertyPosition);
                 }
             }
         }
@@ -356,6 +411,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 string parameters = methodMatch.Groups[1].Value;
                 // Parse parameters: "Type1 param1, Type2 param2"
                 string[] paramPairs = parameters.Split(',');
+                int searchStart = methodMatch.Index;
                 foreach (string paramPair in paramPairs)
                 {
                     string trimmedParam = paramPair.Trim();
@@ -380,19 +436,57 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                             paramType = ExtractCleanGenericType(paramType);
                         }
 
-                        if (!string.IsNullOrEmpty(paramType) && !IsKeyword(paramType) && !declarations.ContainsKey(paramName))
+                        if (!string.IsNullOrEmpty(paramType) && !IsKeyword(paramType))
                         {
-                            declarations[paramName] = paramType;
+                            int nameIndex = content.IndexOf(paramName, searchStart, StringComparison.Ordinal);
+                            if (nameIndex < 0)
+                            {
+                                nameIndex = searchStart;
+                            }
+
+                            int paramLineIndex = sourceText.Lines.GetLineFromPosition(nameIndex).LineNumber;
+                            AddDeclaration(paramName, paramType, paramLineIndex, nameIndex);
+                            searchStart = nameIndex + paramName.Length;
                         }
                     }
                 }
             }
         }
 
+        string? ResolveDeclarationType(string name, int adaptLine, int adaptPosition)
+        {
+            if (!declarations.TryGetValue(name, out List<DeclarationInfo>? entries) || entries.Count == 0)
+                return null;
+
+            DeclarationInfo? candidate = null;
+
+            foreach (DeclarationInfo entry in entries)
+            {
+                if (adaptLine == int.MaxValue)
+                {
+                    candidate = entry;
+                    continue;
+                }
+
+                if (entry.LineNumber > adaptLine || (entry.LineNumber == adaptLine && entry.Position > adaptPosition))
+                {
+                    break;
+                }
+
+                candidate = entry;
+            }
+
+            if (!candidate.HasValue)
+            {
+                candidate = adaptLine == int.MaxValue ? entries[entries.Count - 1] : entries[0];
+            }
+
+            return candidate.Value.TypeName;
+        }
+
         // Pass 2: Find all .Adapt<DestType>() calls (but skip comments)
         // First, remove all comment lines to avoid false matches
         string contentWithoutComments = _lineCommentRegex.Replace(content, match => new string(' ', match.Length));
-        SourceText sourceText = SourceText.From(content);
 
         // Find all .Adapt<>() calls - match the whole pattern
         // This handles: variable.Adapt<>, new Type().Adapt<>, method().Adapt<>, obj.Property.Adapt<>
@@ -482,7 +576,9 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 continue;
 
             bool hasLocation = adaptPosition >= 0 && adaptPosition < content.Length;
-            string locationSuffix = string.Empty;
+            var locationSuffix = string.Empty;
+            var adaptLineNumber = int.MaxValue;
+            int adaptCharIndex = adaptPosition >= 0 ? adaptPosition : int.MaxValue;
 
             if (hasLocation)
             {
@@ -490,6 +586,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 TextSpan span = new(adaptPosition, spanLength);
                 LinePosition startPos = sourceText.Lines.GetLinePosition(span.Start);
                 LinePosition endPos = sourceText.Lines.GetLinePosition(span.End);
+                adaptLineNumber = startPos.Line;
                 locationSuffix = $"|{path}|{span.Start}|{span.Length}|{startPos.Line}|{startPos.Character}|{endPos.Line}|{endPos.Character}";
             }
 
@@ -498,7 +595,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 if (string.IsNullOrEmpty(srcType) || IsKeyword(srcType))
                     return;
 
-                string pairKey = $"{srcType}|{dstType}";
+                var pairKey = $"{srcType}|{dstType}";
                 if (!seen.Add(pairKey))
                     return;
 
@@ -523,85 +620,87 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                     }
                 }
             }
-            // Check if expression is a known variable/field/property
-            else if (declarations.TryGetValue(expression, out string? declaration))
+            else
             {
-                sourceType = declaration;
-                sourceType = MaybeUnwrapAwaitable(sourceType);
-            }
-            // Check if it's a nested property access like "_result.Value" or "_container.NestedSource"
-            else if (expression.Contains("."))
-            {
-                string[] parts = expression.Split('.');
-                string varName = parts[0];
-
-                if (declarations.TryGetValue(varName, out string? baseTypeName))
+                string? declaration = ResolveDeclarationType(expression, adaptLineNumber, adaptCharIndex);
+                if (!string.IsNullOrEmpty(declaration))
                 {
-                    // We know the base type, need to find the property type
+                    sourceType = MaybeUnwrapAwaitable(declaration);
+                }
+                else if (expression.Contains("."))
+                {
+                    string[] parts = expression.Split('.');
+                    string varName = parts[0];
 
-                    // For nested properties, we'd need to look up the property type
-                    // For now, try to find property declarations in nested classes
-                    if (parts.Length == 2)
+                    string? baseTypeName = ResolveDeclarationType(varName, adaptLineNumber, adaptCharIndex);
+                    if (!string.IsNullOrEmpty(baseTypeName))
                     {
-                        string propertyName = parts[1];
-                        // Look for "TypeName PropertyName { get; set; }"
-                        Regex propertyLookup = GetPropertyLookupRegex(propertyName);
-                        Match propMatch = propertyLookup.Match(content);
-                        if (propMatch.Success)
-                        {
-                            sourceType = propMatch.Groups[1].Value.Trim().Replace(" ", "");
-                        }
-                        else
-                        {
-                            sourceType = baseTypeName + "." + propertyName;
-                        }
-                    }
-                    else if (parts.Length > 2)
-                    {
-                        var pathBuilder = new System.Text.StringBuilder(baseTypeName.Length + expression.Length);
-                        pathBuilder.Append(baseTypeName);
+                        baseTypeName = MaybeUnwrapAwaitable(baseTypeName);
 
-                        for (int i = 1; i < parts.Length - 1; i++)
+                        // We know the base type, need to find the property type
+                        // For nested properties, we'd need to look up the property type
+                        // For now, try to find property declarations in nested classes
+                        if (parts.Length == 2)
                         {
+                            string propertyName = parts[1];
+                            // Look for "TypeName PropertyName { get; set; }"
+                            Regex propertyLookup = GetPropertyLookupRegex(propertyName);
+                            Match propMatch = propertyLookup.Match(content);
+                            if (propMatch.Success)
+                            {
+                                sourceType = propMatch.Groups[1].Value.Trim().Replace(" ", "");
+                            }
+                            else
+                            {
+                                sourceType = baseTypeName + "." + propertyName;
+                            }
+                        }
+                        else if (parts.Length > 2)
+                        {
+                            var pathBuilder = new System.Text.StringBuilder(baseTypeName.Length + expression.Length);
+                            pathBuilder.Append(baseTypeName);
+
+                            for (var i = 1; i < parts.Length - 1; i++)
+                            {
+                                pathBuilder.Append(".");
+                                pathBuilder.Append(parts[i]);
+                            }
                             pathBuilder.Append(".");
-                            pathBuilder.Append(parts[i]);
+                            pathBuilder.Append(parts[parts.Length - 1]);
+                            sourceType = pathBuilder.ToString();
                         }
-                        pathBuilder.Append(".");
-                        pathBuilder.Append(parts[parts.Length - 1]);
-                        sourceType = pathBuilder.ToString();
                     }
                 }
-            }
-            // Check for method calls like "GetSource()"
-            else if (expression.Contains("("))
-            {
-                // Look for method return type declarations
-                string methodName = expression.Substring(0, expression.IndexOf('(')).Trim();
-                if (methodName.StartsWith("await ", StringComparison.Ordinal))
-                    methodName = methodName.Substring("await ".Length).Trim();
-
-                // Allow attributes and common modifiers before the return type, and capture fully-qualified/generic types
-                Regex methodRegex = GetMethodRegex(methodName);
-                Match methodMatch = methodRegex.Match(content);
-                if (methodMatch.Success)
+                else if (expression.Contains("("))
                 {
-                    sourceType = methodMatch.Groups[1].Value.Trim().Replace(" ", "");
-                    if (sourceType.Contains("<"))
+                    // Look for method return type declarations
+                    string methodName = expression.Substring(0, expression.IndexOf('(')).Trim();
+                    if (methodName.StartsWith("await ", StringComparison.Ordinal))
+                        methodName = methodName.Substring("await ".Length).Trim();
+
+                    // Allow attributes and common modifiers before the return type, and capture fully-qualified/generic types
+                    Regex methodRegex = GetMethodRegex(methodName);
+                    Match methodMatch = methodRegex.Match(content);
+                    if (methodMatch.Success)
                     {
-                        sourceType = ExtractCleanGenericType(sourceType);
+                        sourceType = methodMatch.Groups[1].Value.Trim().Replace(" ", "");
+                        if (sourceType.Contains("<"))
+                        {
+                            sourceType = ExtractCleanGenericType(sourceType);
+                        }
+
+                        // Unwrap Task<T>/ValueTask<T> if present (common in async patterns)
+                        sourceType = MaybeUnwrapAwaitable(sourceType);
                     }
-
-                    // Unwrap Task<T>/ValueTask<T> if present (common in async patterns)
-                    sourceType = MaybeUnwrapAwaitable(sourceType);
-                }
-                else
-                {
-                    // Try explicit async return patterns: Task<T>/ValueTask<T>
-                    Regex asyncRegex = GetAsyncMethodRegex(methodName);
-                    Match asyncMatch = asyncRegex.Match(content);
-                    if (asyncMatch.Success)
+                    else
                     {
-                        sourceType = ExtractCleanGenericType(asyncMatch.Groups[1].Value.Trim());
+                        // Try explicit async return patterns: Task<T>/ValueTask<T>
+                        Regex asyncRegex = GetAsyncMethodRegex(methodName);
+                        Match asyncMatch = asyncRegex.Match(content);
+                        if (asyncMatch.Success)
+                        {
+                            sourceType = ExtractCleanGenericType(asyncMatch.Groups[1].Value.Trim());
+                        }
                     }
                 }
             }
@@ -744,7 +843,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             return value;
 
         string result = value;
-        for (int i = 0; i < _modifiers.Length; i++)
+        for (var i = 0; i < _modifiers.Length; i++)
         {
             string modifier = _modifiers[i];
             if (result.Contains(modifier))
@@ -791,5 +890,19 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             new Regex(
                 $@"(?:\[.*?\]\s*)*(?:(?:private|public|protected|internal|static|virtual|override|sealed|partial|readonly|new|required|unsafe|async)\s+)*(?:(?:System\.Threading\.Tasks\.)?(?:Task|ValueTask))\s*<\s*([a-zA-Z_][a-zA-Z0-9_<>,\.\s]*)\s*>\s+{Regex.Escape(name)}\s*\(",
                 RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant));
+    }
+
+    private readonly struct DeclarationInfo
+    {
+        public DeclarationInfo(string typeName, int lineNumber, int position)
+        {
+            TypeName = typeName;
+            LineNumber = lineNumber;
+            Position = position;
+        }
+
+        public string TypeName { get; }
+        public int LineNumber { get; }
+        public int Position { get; }
     }
 }

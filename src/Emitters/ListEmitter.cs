@@ -33,6 +33,7 @@ internal static class ListEmitter
                 string itemExprFallback = CollectionMappingHelper.GetConversionExpression("item", sElem, dElem, names);
                 sb.Append(indent).Append("\ttarget.Add(").Append(itemExprFallback).AppendLine(");");
             }
+
             sb.Append(indent).AppendLine("}");
             sb.Append(indent).AppendLine("return target;");
             return;
@@ -124,6 +125,7 @@ internal static class ListEmitter
                 string itemExpr = CollectionMappingHelper.GetConversionExpression("item", sElem, dElem, names);
                 sb.Append(indent).Append("\ttarget.Add(").Append(itemExpr).AppendLine(");");
             }
+
             sb.Append(indent).AppendLine("}");
             sb.Append(indent).AppendLine("return target;");
             return;

@@ -18,9 +18,8 @@ internal static class TypeResolver
     {
         // Try to get the symbol for this identifier
         SymbolInfo symbolInfo = model.GetSymbolInfo(identifier);
-        var localSymbol = symbolInfo.Symbol as ILocalSymbol;
-        
-        if (localSymbol != null)
+
+        if (symbolInfo.Symbol is ILocalSymbol localSymbol)
         {
             // Find the variable declarator for this local symbol
             SyntaxReference? syntaxReference = localSymbol.DeclaringSyntaxReferences.FirstOrDefault();
@@ -154,7 +153,7 @@ internal static class TypeResolver
 
         ITypeSymbol current = currentType;
 
-        for (int i = 1; i < segments.Length; i++)
+        for (var i = 1; i < segments.Length; i++)
         {
             string memberName = segments[i];
             ITypeSymbol? next = null;
@@ -306,9 +305,9 @@ internal static class TypeResolver
             // Strip outer parentheses repeatedly when balanced
             while (s.Length >= 2 && s[0] == '(' && s[s.Length - 1] == ')')
             {
-                int depth = 0;
-                bool balanced = true;
-                for (int i = 0; i < s.Length; i++)
+                var depth = 0;
+                var balanced = true;
+                for (var i = 0; i < s.Length; i++)
                 {
                     char c = s[i];
                     if (c == '(') depth++;
@@ -438,9 +437,9 @@ internal static class TypeResolver
             string s = expression.Trim();
             while (s.Length >= 2 && s[0] == '(' && s[s.Length - 1] == ')')
             {
-                int depth = 0;
-                bool balanced = true;
-                for (int i = 0; i < s.Length; i++)
+                var depth = 0;
+                var balanced = true;
+                for (var i = 0; i < s.Length; i++)
                 {
                     char c = s[i];
                     if (c == '(') depth++;
@@ -503,7 +502,7 @@ internal static class TypeResolver
                     returnType.StartsWith("ValueTask<") || returnType.StartsWith("System.Threading.Tasks.ValueTask<"))
                 {
                     int start = returnType.IndexOf('<') + 1;
-                    int depth = 1;
+                    var depth = 1;
                     for (int i = start; i < returnType.Length; i++)
                     {
                         if (returnType[i] == '<') depth++;

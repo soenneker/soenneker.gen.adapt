@@ -42,7 +42,7 @@ public sealed class IntegrationDefinitionTests : UnitTest
             }
         };
 
-        AdapterIntegrationDefinitionDocument result = source.Adapt<AdapterIntegrationDefinitionDocument>();
+        var result = source.Adapt<AdapterIntegrationDefinitionDocument>();
 
         result.Primary.Should().NotBeNull();
         result.Primary!.Name.Should().Be("Primary");
@@ -73,7 +73,7 @@ public sealed class IntegrationDefinitionTests : UnitTest
             ]
         };
 
-        List<LedgerEntryDto> result = response.Entries.Adapt<List<LedgerEntryDto>>();
+        var result = response.Entries.Adapt<List<LedgerEntryDto>>();
 
         result.Should().HaveCount(1);
         result[0].AccountId.Should().Be("acct-1");
