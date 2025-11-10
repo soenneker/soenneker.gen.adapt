@@ -11,10 +11,3 @@ public class ComplexWithCollectionsSource
     public List<ChildItemSource> Children { get; set; }
 }
 
-public class ChildItemSource
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public DateTime CreatedAt { get; set; }
-}
-

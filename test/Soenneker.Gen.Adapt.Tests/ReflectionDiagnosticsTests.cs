@@ -2,6 +2,7 @@ using System;
 using AwesomeAssertions;
 using Soenneker.Tests.Unit;
 using Soenneker.Gen.Adapt.Tests.Dtos;
+using Soenneker.Gen.Adapt.Tests.Dtos.Abstract;
 using Xunit;
 
 namespace Soenneker.Gen.Adapt.Tests;

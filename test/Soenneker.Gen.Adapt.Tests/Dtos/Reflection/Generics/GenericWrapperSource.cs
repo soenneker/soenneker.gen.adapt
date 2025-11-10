@@ -6,13 +6,3 @@ public class GenericWrapperSource<T>
     public string Name { get; set; }
 }
 
-public class ConcreteIntWrapperSource : GenericWrapperSource<int>
-{
-    public string AdditionalInfo { get; set; }
-}
-
-public class ConcreteStringWrapperSource : GenericWrapperSource<string>
-{
-    public bool IsActive { get; set; }
-}
-

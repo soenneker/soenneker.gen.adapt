@@ -11,9 +11,3 @@ public class ComplexSourceDto
     public List<string> Tags { get; set; } = [];
 }
 
-public class NestedObjectDto
-{
-    public string NestedId { get; set; }
-    public string NestedName { get; set; }
-}
-

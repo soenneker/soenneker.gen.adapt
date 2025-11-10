@@ -6,13 +6,3 @@ public class GenericWrapperDest<T>
     public string Name { get; set; }
 }
 
-public class ConcreteIntWrapperDest : GenericWrapperDest<int>
-{
-    public string AdditionalInfo { get; set; }
-}
-
-public class ConcreteStringWrapperDest : GenericWrapperDest<string>
-{
-    public bool IsActive { get; set; }
-}
-

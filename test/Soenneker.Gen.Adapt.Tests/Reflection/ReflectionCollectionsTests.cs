@@ -189,13 +189,15 @@ public sealed class ReflectionCollectionsTests : UnitTest
             },
             StringListDict = new Dictionary<string, List<int>>
             {
-                { "evens", [
+                {
+                    "evens", [
                         2,
                         4,
                         6
                     ]
                 },
-                { "odds", [
+                {
+                    "odds", [
                         1,
                         3,
                         5
@@ -367,4 +369,3 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.StringList.Count.Should().Be(4);
     }
 }
-

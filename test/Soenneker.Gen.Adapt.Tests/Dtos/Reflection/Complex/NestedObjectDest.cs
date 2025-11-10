@@ -8,10 +8,3 @@ public class NestedObjectDest
     public InnerObjectDest Inner { get; set; }
 }
 
-public class InnerObjectDest
-{
-    public int Id { get; set; }
-    public string Value { get; set; }
-    public DateTime Timestamp { get; set; }
-}
-

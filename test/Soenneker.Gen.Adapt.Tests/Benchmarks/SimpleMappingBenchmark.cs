@@ -70,10 +70,3 @@ public class SimpleMappingBenchmark
         return _basicSource.ToFacet<BasicFacetDest>();
     }
 }
-
-// Mapperly mapper class
-[Riok.Mapperly.Abstractions.Mapper]
-public partial class TestMapper
-{
-    public partial BasicDest MapToBasicDest(BasicSource source);
-}

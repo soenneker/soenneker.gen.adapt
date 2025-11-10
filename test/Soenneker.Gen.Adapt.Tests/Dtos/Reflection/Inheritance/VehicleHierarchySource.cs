@@ -7,15 +7,3 @@ public class VehicleSource
     public int Year { get; set; }
 }
 
-public class CarSource : VehicleSource
-{
-    public int NumberOfDoors { get; set; }
-    public bool HasSunroof { get; set; }
-}
-
-public class SportCarSource : CarSource
-{
-    public int Horsepower { get; set; }
-    public double TopSpeed { get; set; }
-}
-

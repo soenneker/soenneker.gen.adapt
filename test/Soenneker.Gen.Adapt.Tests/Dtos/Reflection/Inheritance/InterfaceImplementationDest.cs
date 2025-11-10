@@ -1,19 +1,11 @@
+using Soenneker.Gen.Adapt.Tests.Dtos.Reflection.Inheritance.Abstract;
+
 namespace Soenneker.Gen.Adapt.Tests.Dtos.Reflection.Inheritance;
-
-public interface IIdentifiableDest
-{
-    string Id { get; set; }
-}
-
-public interface INamedDest
-{
-    string Name { get; set; }
-}
 
 public class EntityDest : IIdentifiableDest, INamedDest
 {
-    public string Id { get; set; }
-    public string Name { get; set; }
-    public string Description { get; set; }
+    public string Id { get; set; } = null!;
+    public string Name { get; set; } = null!;
+    public string Description { get; set; } = null!;
 }
 

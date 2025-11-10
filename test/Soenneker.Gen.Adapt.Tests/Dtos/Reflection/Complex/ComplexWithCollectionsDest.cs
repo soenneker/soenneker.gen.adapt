@@ -11,10 +11,3 @@ public class ComplexWithCollectionsDest
     public List<ChildItemDest> Children { get; set; }
 }
 
-public class ChildItemDest
-{
-    public int Id { get; set; }
-    public string Name { get; set; }
-    public DateTime CreatedAt { get; set; }
-}
-

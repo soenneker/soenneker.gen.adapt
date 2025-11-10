@@ -92,12 +92,3 @@ public class ComplexListMappingBenchmark
         return _complexListSource.ToFacet<ComplexListFacetDest>();
     }
 }
-
-// Mapperly mapper class
-[Riok.Mapperly.Abstractions.Mapper]
-public partial class ComplexListTestMapper
-{
-    public partial BasicDest MapToBasicDest(BasicSource source);
-    public partial NestedDest MapToNestedDest(NestedSource source);
-    public partial ComplexListDest MapToComplexListDest(ComplexListSource source);
-}

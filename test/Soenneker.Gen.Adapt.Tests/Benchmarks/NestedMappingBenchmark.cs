@@ -78,11 +78,3 @@ public class NestedMappingBenchmark
         return _nestedSource.ToFacet<NestedFacetDest>();
     }
 }
-
-// Mapperly mapper class
-[Riok.Mapperly.Abstractions.Mapper]
-public partial class NestedTestMapper
-{
-    public partial BasicDest MapToBasicDest(BasicSource source);
-    public partial NestedDest MapToNestedDest(NestedSource source);
-}

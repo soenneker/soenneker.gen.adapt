@@ -8,10 +8,3 @@ public class NestedObjectSource
     public InnerObjectSource Inner { get; set; }
 }
 
-public class InnerObjectSource
-{
-    public int Id { get; set; }
-    public string Value { get; set; }
-    public DateTime Timestamp { get; set; }
-}
-

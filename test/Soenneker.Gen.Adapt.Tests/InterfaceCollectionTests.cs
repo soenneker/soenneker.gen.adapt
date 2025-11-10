@@ -3,14 +3,9 @@ using Soenneker.Gen.Adapt.Tests.Dtos;
 using System.Collections.Generic;
 using Xunit;
 using AwesomeAssertions;
+using Soenneker.Gen.Adapt.Tests.Dtos.Abstract;
 
 namespace Soenneker.Gen.Adapt.Tests;
-
-public static class Test
-{
-
-
-}
 
 public sealed class InterfaceCollectionTests : UnitTest
 {

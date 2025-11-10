@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Soenneker.Gen.Adapt.Tests.Dtos.Abstract;
 
 namespace Soenneker.Gen.Adapt.Tests.Dtos;
 

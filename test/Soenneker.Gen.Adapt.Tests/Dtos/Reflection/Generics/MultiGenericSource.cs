@@ -6,8 +6,3 @@ public class MultiGenericSource<TKey, TValue>
     public TValue Value { get; set; }
 }
 
-public class ConcreteKeyValueSource : MultiGenericSource<string, int>
-{
-    public string Description { get; set; }
-}
-
