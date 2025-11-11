@@ -181,6 +181,13 @@ internal static class MappingEmitter
     private static void EmitMappingBody(StringBuilder sb, INamedTypeSymbol source, INamedTypeSymbol dest, List<INamedTypeSymbol> enums, NameCache names,
         string indent)
     {
+        if (source.TypeKind != TypeKind.Struct)
+        {
+            sb.Append(indent).AppendLine("if (source is null)");
+            sb.Append(indent).AppendLine("\treturn null!;");
+            sb.AppendLine();
+        }
+
         // Handle direct collection-to-collection adaptations
         if (Types.IsAnyDictionary(source, out ITypeSymbol? srcKey, out ITypeSymbol? srcValue) &&
             Types.IsAnyDictionary(dest, out ITypeSymbol? dstKey, out ITypeSymbol? dstValue))

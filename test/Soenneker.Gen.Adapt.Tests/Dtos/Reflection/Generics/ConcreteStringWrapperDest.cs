@@ -5,3 +5,4 @@ public class ConcreteStringWrapperDest : GenericWrapperDest<string>
     public bool IsActive { get; set; }
 }
 
+

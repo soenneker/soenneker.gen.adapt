@@ -10,3 +10,4 @@ public class TemporalScheduleMetadataViewModel
     public TimeOnly LastUpdatedTime { get; set; }
 }
 
+

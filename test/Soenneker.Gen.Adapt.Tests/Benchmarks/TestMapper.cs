@@ -9,3 +9,4 @@ public partial class TestMapper
     public partial BasicDest MapToBasicDest(BasicSource source);
 }
 
+

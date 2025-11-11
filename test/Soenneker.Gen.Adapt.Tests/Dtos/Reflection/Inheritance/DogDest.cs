@@ -8,3 +8,4 @@ public class DogDest : AnimalBaseDest
     public bool IsGoodBoy { get; set; }
 }
 
+

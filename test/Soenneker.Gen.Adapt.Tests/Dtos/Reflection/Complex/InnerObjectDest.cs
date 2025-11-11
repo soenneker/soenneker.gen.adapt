@@ -9,3 +9,4 @@ public class InnerObjectDest
     public DateTime Timestamp { get; set; }
 }
 
+

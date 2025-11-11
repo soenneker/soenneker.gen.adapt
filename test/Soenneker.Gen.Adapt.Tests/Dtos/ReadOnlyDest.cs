@@ -7,3 +7,4 @@ public class ReadOnlyDest
     public int Value { get; }
 }
 
+

@@ -5,3 +5,4 @@ public sealed class MetadataPacket
     public string? Serialized { get; set; }
 }
 
+

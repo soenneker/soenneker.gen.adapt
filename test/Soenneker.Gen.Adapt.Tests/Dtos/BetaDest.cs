@@ -7,3 +7,4 @@ public sealed class BetaDest : SharedBaseDest
     public string Description { get; set; } = null!;
 }
 
+

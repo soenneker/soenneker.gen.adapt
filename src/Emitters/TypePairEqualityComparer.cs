@@ -20,3 +20,4 @@ internal sealed class TypePairEqualityComparer : IEqualityComparer<(INamedTypeSy
     }
 }
 
+

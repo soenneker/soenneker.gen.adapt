@@ -6,3 +6,4 @@ public class CarDest : VehicleDest
     public bool HasSunroof { get; set; }
 }
 
+

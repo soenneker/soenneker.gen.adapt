@@ -7,3 +7,4 @@ public sealed class GammaDest : SharedBaseDest
     public decimal Amount { get; set; }
 }
 
+

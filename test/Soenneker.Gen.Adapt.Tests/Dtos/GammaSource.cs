@@ -7,3 +7,4 @@ public sealed class GammaSource : SharedBaseSource
     public decimal Amount { get; set; }
 }
 
+

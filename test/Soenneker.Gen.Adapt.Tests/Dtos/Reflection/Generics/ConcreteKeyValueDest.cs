@@ -5,3 +5,4 @@ public class ConcreteKeyValueDest : MultiGenericDest<string, int>
     public string Description { get; set; }
 }
 
+

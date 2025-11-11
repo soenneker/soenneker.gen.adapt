@@ -7,3 +7,4 @@ public sealed class EndpointConfigRequest
     public string? ApiToken { get; set; }
 }
 
+
