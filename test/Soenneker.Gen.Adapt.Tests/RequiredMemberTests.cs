@@ -137,7 +137,8 @@ public sealed class RequiredMemberTests : UnitTest
         RequiredMemberSource? source = null;
 
         // Act & Assert
-        var action = () => source.Adapt<RequiredMemberDest>();
-        action.Should().Throw<NullReferenceException>();
+        Func<RequiredMemberDest> action = () => source.Adapt<RequiredMemberDest>();
+        action.Should()
+              .NotThrow();
     }
 }

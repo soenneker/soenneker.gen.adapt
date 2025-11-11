@@ -1,5 +1,3 @@
-using System;
-
 namespace Soenneker.Gen.Adapt.Tests.Types.Banking;
 
 public sealed class LedgerEntryDto

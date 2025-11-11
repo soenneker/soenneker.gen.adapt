@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-
 namespace Soenneker.Gen.Adapt.Tests.Types.Pipelines;
 
 public sealed class AdapterIntegrationDefinition

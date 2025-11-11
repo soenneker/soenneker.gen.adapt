@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using AwesomeAssertions;
 using Soenneker.Gen.Adapt.Tests.Dtos;
@@ -38,7 +37,7 @@ public sealed class DictionaryListValueTests : UnitTest
         result.Packages.Should().NotBeNull();
         result.Packages.Should().ContainKey(sharedDocument);
 
-        var mappedList = result.Packages[sharedDocument];
+        List<PackageEntity> mappedList = result.Packages[sharedDocument];
         mappedList.Should().NotBeNull();
         mappedList.Should().HaveCount(2);
         ReferenceEquals(mappedList, sourceList).Should().BeFalse();
@@ -72,7 +71,7 @@ public sealed class DictionaryListValueTests : UnitTest
         result.Should().NotBeNull();
         result.Should().ContainKey(sharedDocument);
 
-        var mappedList = result[sharedDocument];
+        List<PackageEntity> mappedList = result[sharedDocument];
         mappedList.Should().NotBeNull();
         mappedList.Should().HaveCount(2);
         ReferenceEquals(mappedList, sourceList).Should().BeFalse();

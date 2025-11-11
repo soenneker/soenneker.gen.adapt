@@ -25,7 +25,7 @@
 
     protected override void OnInitialized()
     {
-        var variable = _response.Entries;
+        List<LedgerEntryResponse> variable = _response.Entries;
 
         _entries = variable.Adapt<List<LedgerEntryDto>>();
     }

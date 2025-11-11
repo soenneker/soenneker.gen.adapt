@@ -484,7 +484,7 @@ internal static class TypeResolver
             string methodName = expression.Substring(0, expression.IndexOf('('));
 
             // Allow attributes/modifiers and capture fully-qualified/generic return types
-            var methodPattern =
+            string methodPattern =
                 $@"(?:\[.*?\]\s*)*(?:(?:private|public|protected|internal|static|virtual|override|sealed|partial|readonly|new|required|unsafe|async)\s+)*" +
                 $@"((?:global::)?[a-zA-Z_][a-zA-Z0-9_<>,\.\[\]]*(?:<[^>]*>)?)\s+{Regex.Escape(methodName)}\s*\(";
 

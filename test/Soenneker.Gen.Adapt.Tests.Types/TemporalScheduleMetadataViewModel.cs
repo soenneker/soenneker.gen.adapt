@@ -1,5 +1,3 @@
-using System;
-
 namespace Soenneker.Gen.Adapt.Tests.Types;
 
 public class TemporalScheduleMetadataViewModel

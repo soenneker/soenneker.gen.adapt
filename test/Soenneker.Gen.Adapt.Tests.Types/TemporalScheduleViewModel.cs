@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace Soenneker.Gen.Adapt.Tests.Types;
 
 public class TemporalScheduleViewModel
