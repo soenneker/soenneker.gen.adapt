@@ -159,7 +159,7 @@ internal static class SimpleObjectEmitter
                 sb.Append(indent).AppendLine("}");
                 sb.Append(indent).AppendLine("else");
                 sb.Append(indent).AppendLine("{");
-                sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = new ").Append(Types.ShortName(dp.Type, requiredNamespaces)).AppendLine("();");
+                sb.Append(indent).Append("\ttarget.").Append(dp.Name).AppendLine(" = null!;");
                 sb.Append(indent).AppendLine("}");
                 continue;
             }
@@ -302,7 +302,6 @@ internal static class SimpleObjectEmitter
                 sb.Append(indent).AppendLine("}");
                 sb.Append(indent).AppendLine("else");
                 sb.Append(indent).AppendLine("{");
-                // Initialize as empty collection when source is null
                 if (Types.IsArray(dp.Type, out _))
                 {
                     sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = Array.Empty<")
@@ -310,8 +309,7 @@ internal static class SimpleObjectEmitter
                 }
                 else
                 {
-                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = new ").Append(Types.ShortName(dp.Type, requiredNamespaces))
-                        .AppendLine("();");
+                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).AppendLine(" = null!;");
                 }
 
                 sb.Append(indent).AppendLine("}");
@@ -344,7 +342,7 @@ internal static class SimpleObjectEmitter
                 sb.Append(indent).AppendLine("}");
                 sb.Append(indent).AppendLine("else");
                 sb.Append(indent).AppendLine("{");
-                sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = new ").Append(Types.ShortName(dp.Type, requiredNamespaces)).AppendLine("();");
+                sb.Append(indent).Append("\ttarget.").Append(dp.Name).AppendLine(" = null!;");
                 sb.Append(indent).AppendLine("}");
                 continue;
             }
