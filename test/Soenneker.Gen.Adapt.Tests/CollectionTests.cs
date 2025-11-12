@@ -87,6 +87,29 @@ public sealed class CollectionTests : UnitTest
     }
 
     [Fact]
+    public void Adapt_NullAndEmptyLists_ShouldPreserveNullAndEmpty()
+    {
+        // Arrange
+        List<int>? nullSource = null;
+
+        // Act
+        var nullResult = nullSource.Adapt<List<int>>();
+
+        // Assert
+        nullResult.Should().BeNull();
+
+        // Arrange
+        var emptySource = new List<int>();
+
+        // Act
+        var emptyResult = emptySource.Adapt<List<int>>();
+
+        // Assert
+        emptyResult.Should().NotBeNull();
+        emptyResult.Should().BeEmpty();
+    }
+
+    [Fact]
     public void Adapt_List_WithDuplicates_ShouldCopy()
     {
         // Arrange
