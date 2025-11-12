@@ -41,8 +41,8 @@ internal static class CollectionMappingHelper
             string fromSan = names.Sanitized(fromNamed);
             string toSan = names.Sanitized(toNamed);
             if (fromNamed.TypeKind == TypeKind.Struct)
-                return "GenAdapt.Map_" + fromSan + "_To_" + toSan + "(in " + expr + ")";
-            return "GenAdapt.Map_" + fromSan + "_To_" + toSan + "(" + expr + ")";
+                return "Map_" + fromSan + "_To_" + toSan + "(in " + expr + ")";
+            return "Map_" + fromSan + "_To_" + toSan + "(" + expr + ")";
         }
 
         bool fromIsDictionary = Types.IsAnyDictionary(fromType, out _, out _);
@@ -57,10 +57,10 @@ internal static class CollectionMappingHelper
         if ((fromIsDictionary || fromIsList || fromIsEnumerable || fromIsArray) &&
             (toIsDictionary || toIsList || toIsEnumerable || toIsArray))
         {
-            return "(" + expr + ").Adapt<" + Types.Fq(toType) + ">()";
+            return "(" + expr + ").Adapt<" + Types.ShortName(toType) + ">()";
         }
 
-        return "(" + Types.Fq(toType) + ")" + expr;
+        return "(" + Types.ShortName(toType) + ")" + expr;
     }
 
     private static string San(INamedTypeSymbol type)

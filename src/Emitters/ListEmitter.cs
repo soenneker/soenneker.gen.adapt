@@ -11,7 +11,7 @@ internal static class ListEmitter
     public static void EmitListMappingInstructions(StringBuilder sb, INamedTypeSymbol source, INamedTypeSymbol dest, ITypeSymbol sElem, ITypeSymbol dElem,
         NameCache names, string indent)
     {
-        string dstFq = Types.Fq(dest);
+        string dstType = Types.ShortName(dest);
 
         bool srcIsList = Types.IsList(source, out _);
         bool srcIsArray = Types.IsArray(source, out _);
@@ -21,7 +21,7 @@ internal static class ListEmitter
 
         if (!destIsList)
         {
-            sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("();");
+            sb.Append(indent).Append("var target = new ").Append(dstType).AppendLine("();");
             sb.Append(indent).Append("foreach (var item in source)").AppendLine();
             sb.Append(indent).AppendLine("{");
             if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
@@ -44,7 +44,7 @@ internal static class ListEmitter
             sb.Append(indent).Append("var src = CollectionsMarshal.AsSpan(source);").AppendLine();
             sb.Append(indent).Append("int n = src.Length;").AppendLine();
             sb.AppendLine();
-            sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("(n);");
+            sb.Append(indent).Append("var target = new ").Append(dstType).AppendLine("(n);");
             sb.AppendLine();
             if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
             {
@@ -67,7 +67,7 @@ internal static class ListEmitter
         {
             sb.Append(indent).Append("int n = source.Length;").AppendLine();
             sb.AppendLine();
-            sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("(n);");
+            sb.Append(indent).Append("var target = new ").Append(dstType).AppendLine("(n);");
             sb.AppendLine();
             if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
             {
@@ -89,7 +89,7 @@ internal static class ListEmitter
         {
             sb.Append(indent).Append("int count = source.Count;").AppendLine();
             sb.AppendLine();
-            sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("(count);");
+            sb.Append(indent).Append("var target = new ").Append(dstType).AppendLine("(count);");
             sb.AppendLine();
             if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
             {
@@ -113,7 +113,7 @@ internal static class ListEmitter
         }
         else
         {
-            sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("();");
+            sb.Append(indent).Append("var target = new ").Append(dstType).AppendLine("();");
             sb.Append(indent).Append("foreach (var item in source)").AppendLine();
             sb.Append(indent).AppendLine("{");
             if (SymbolEqualityComparer.Default.Equals(sElem, dElem))

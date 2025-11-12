@@ -453,7 +453,7 @@ internal static class SimpleObjectEmitter
             return "(int)" + expr;
 
         if (Types.IsInt(fromType) && toType.TypeKind == TypeKind.Enum)
-            return "(" + Types.Fq(toType) + ")" + expr;
+            return "(" + Types.ShortName(toType, requiredNamespaces) + ")" + expr;
 
         // Handle Guid conversions
         if (Types.IsGuid(fromType) && Types.IsString(toType))
@@ -505,7 +505,7 @@ internal static class SimpleObjectEmitter
         }
 
         // Default: cast
-        return "(" + Types.Fq(toType) + ")" + expr;
+        return "(" + Types.ShortName(toType, requiredNamespaces) + ")" + expr;
     }
 
     private static string San(INamedTypeSymbol type)

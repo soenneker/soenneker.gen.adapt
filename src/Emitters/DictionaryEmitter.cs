@@ -11,7 +11,7 @@ internal static class DictionaryEmitter
     public static void EmitDictionaryMappingInstructions(StringBuilder sb, INamedTypeSymbol source, INamedTypeSymbol dest, ITypeSymbol sKey, ITypeSymbol sValue,
         ITypeSymbol dKey, ITypeSymbol dValue, NameCache names, string indent)
     {
-        string dstFq = Types.Fq(dest);
+        string dstType = Types.ShortName(dest);
 
         bool srcIsConcreteDict = Types.IsDictionary(source, out _, out _);
         bool srcIsIdict = Types.IsIDictionary(source, out _, out _);
@@ -27,8 +27,8 @@ internal static class DictionaryEmitter
             if (srcIsConcreteDict)
             {
                 sb.Append(indent).Append("var count = source.Count;").AppendLine();
-                sb.Append(indent).Append("if (count == 0) return new ").Append(dstFq).AppendLine("(0, source.Comparer);");
-                sb.Append(indent).Append("var target = new ").Append(dstFq).AppendLine("(count, source.Comparer);");
+                sb.Append(indent).Append("if (count == 0) return new ").Append(dstType).AppendLine("(0, source.Comparer);");
+                sb.Append(indent).Append("var target = new ").Append(dstType).AppendLine("(count, source.Comparer);");
                 sb.Append(indent).Append("foreach (var kv in source)").AppendLine();
                 sb.Append(indent).AppendLine("{");
                 sb.Append(indent)
@@ -43,8 +43,8 @@ internal static class DictionaryEmitter
                 sb.Append(indent).Append("if (source is ").Append(dictOfSrc).AppendLine(" d)");
                 sb.Append(indent).AppendLine("{");
                 sb.Append(indent).Append("\tvar count1 = d.Count;").AppendLine();
-                sb.Append(indent).Append("\tif (count1 == 0) return new ").Append(dstFq).AppendLine("(0, d.Comparer);");
-                sb.Append(indent).Append("\tvar __dictTarget = new ").Append(dstFq).AppendLine("(count1, d.Comparer);");
+                sb.Append(indent).Append("\tif (count1 == 0) return new ").Append(dstType).AppendLine("(0, d.Comparer);");
+                sb.Append(indent).Append("\tvar __dictTarget = new ").Append(dstType).AppendLine("(count1, d.Comparer);");
                 sb.Append(indent).Append("\tforeach (var kv in d)").AppendLine();
                 sb.Append(indent).AppendLine("\t{");
                 sb.Append(indent)
@@ -57,8 +57,8 @@ internal static class DictionaryEmitter
                 sb.Append(indent).AppendLine("}");
 
                 sb.Append(indent).Append("var count2 = source.Count;").AppendLine();
-                sb.Append(indent).Append("if (count2 == 0) return new ").Append(dstFq).AppendLine("(0);");
-                sb.Append(indent).Append("var __idictFallback = new ").Append(dstFq).AppendLine("(count2);");
+                sb.Append(indent).Append("if (count2 == 0) return new ").Append(dstType).AppendLine("(0);");
+                sb.Append(indent).Append("var __idictFallback = new ").Append(dstType).AppendLine("(count2);");
                 sb.Append(indent).Append("foreach (var kv in source)").AppendLine();
                 sb.Append(indent).AppendLine("{");
                 sb.Append(indent)
@@ -72,8 +72,8 @@ internal static class DictionaryEmitter
             else
             {
                 sb.Append(indent).Append("var count3 = source.Count;").AppendLine();
-                sb.Append(indent).Append("if (count3 == 0) return new ").Append(dstFq).AppendLine("(0);");
-                sb.Append(indent).Append("var __unknownTarget = new ").Append(dstFq).AppendLine("(count3);");
+                sb.Append(indent).Append("if (count3 == 0) return new ").Append(dstType).AppendLine("(0);");
+                sb.Append(indent).Append("var __unknownTarget = new ").Append(dstType).AppendLine("(count3);");
                 sb.Append(indent).Append("foreach (var kv in source)").AppendLine();
                 sb.Append(indent).AppendLine("{");
                 sb.Append(indent)
@@ -89,8 +89,8 @@ internal static class DictionaryEmitter
         }
 
         sb.Append(indent).Append("var count4 = source.Count;").AppendLine();
-        sb.Append(indent).Append("if (count4 == 0) return new ").Append(dstFq).AppendLine("(0);");
-        sb.Append(indent).Append("var __result = new ").Append(dstFq).AppendLine("(count4);");
+        sb.Append(indent).Append("if (count4 == 0) return new ").Append(dstType).AppendLine("(0);");
+        sb.Append(indent).Append("var __result = new ").Append(dstType).AppendLine("(count4);");
         sb.Append(indent).Append("foreach (var kv in source)").AppendLine();
         sb.Append(indent).AppendLine("{");
 
