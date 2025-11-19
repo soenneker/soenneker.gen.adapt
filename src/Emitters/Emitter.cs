@@ -25,7 +25,7 @@ internal static class Emitter
     private static readonly DiagnosticDescriptor _typeResolutionFailed = new("SGA004", "Type resolution failed",
         "Failed to resolve source type '{0}' when mapping to '{1}'", "Adapt", DiagnosticSeverity.Warning, true);
     private static readonly DiagnosticDescriptor _razorDebugInfo = new("SGA_DBG", "Razor pair",
-        "Razor pair '{0}' -> '{1}'", "Adapt", DiagnosticSeverity.Warning, true);
+        "Razor pair '{0}' -> '{1}'", "Adapt", DiagnosticSeverity.Info, true);
 
 
     /// <summary>
@@ -281,7 +281,7 @@ internal static class Emitter
                         AddTypePair(typePairs, pairSet, allTypes, sourceType, destType, location);
 
                         // Diagnostic to observe resolved Razor pairs during builds
-                        context.ReportDiagnostic(Diagnostic.Create(_razorDebugInfo, location, sourceType.ToDisplayString(), destType.ToDisplayString()));
+                        // context.ReportDiagnostic(Diagnostic.Create(_razorDebugInfo, location, sourceType.ToDisplayString(), destType.ToDisplayString()));
 
                         if (Types.IsAnyList(sourceType, out ITypeSymbol? srcElem) && Types.IsAnyList(destType, out ITypeSymbol? dstElem))
                         {
@@ -363,12 +363,12 @@ internal static class Emitter
         ImmutableArray<string> razorCalls, List<TypePair> typePairs, Compilation compilation, string targetNamespace)
     {
         // Diagnostic: Report how many invocations were found
-        var infoMessage =
-            $"Found {invocations.Length} total invocations, {typePairs.Count} valid type pairs in {compilation.AssemblyName} (namespace: '{targetNamespace}')";
-
-        var diagnostic = Diagnostic.Create(new DiagnosticDescriptor("SGA_INFO", "Adapt Generator Info", infoMessage, "Adapt", DiagnosticSeverity.Warning, true),
-            Location.None);
-        context.ReportDiagnostic(diagnostic);
+        // var infoMessage =
+        //     $"Found {invocations.Length} total invocations, {typePairs.Count} valid type pairs in {compilation.AssemblyName} (namespace: '{targetNamespace}')";
+        //
+        // var diagnostic = Diagnostic.Create(new DiagnosticDescriptor("SGA_INFO", "Adapt Generator Info", infoMessage, "Adapt", DiagnosticSeverity.Info, true),
+        //     Location.None);
+        // context.ReportDiagnostic(diagnostic);
     }
 
     private static void EmitEnumParsers(SourceProductionContext context, List<INamedTypeSymbol> enumList, NameCache nameCache, string targetNamespace)
