@@ -99,61 +99,72 @@ For generic type parameters or abstract base classes where concrete types are on
 **TL;DR**: Soenneker.Gen.Adapt is the fastest mapping library.
 
 
-### **Simple mapping**
+## **Simple**
 
-| Method                  |       Mean | Ratio         | Allocated | Alloc Ratio |
-| ----------------------- | ---------: | ------------- | --------: | ----------: |
-| **Soenneker.Gen.Adapt** |   4.143 ns | baseline      |      40 B |           — |
-| AutoMapper              |  31.661 ns | 7.69x slower  |      40 B |  1.00x more |
-| Mapster                 |   9.971 ns | 2.42x slower  |      40 B |  1.00x more |
-| Mapperly                |   5.591 ns | 1.36x slower  |      40 B |  1.00x more |
-| Facet                   | 183.466 ns | 44.55x slower |     296 B |  7.40x more |
-
----
-
-### **Nested mapping**
-
-| Method                  |       Mean | Ratio         | Allocated | Alloc Ratio |
-| ----------------------- | ---------: | ------------- | --------: | ----------: |
-| **Soenneker.Gen.Adapt** |   7.223 ns | baseline      |      72 B |           — |
-| AutoMapper              |  34.976 ns | 4.88x slower  |      72 B |  1.00x more |
-| Mapster                 |  14.085 ns | 1.97x slower  |      72 B |  1.00x more |
-| Mapperly                |   8.590 ns | 1.20x slower  |      72 B |  1.00x more |
-| Facet                   | 152.780 ns | 21.32x slower |     288 B |  4.00x more |
+| Method              |      Mean |        Ratio | Allocated | Alloc Ratio |
+| ------------------- | --------: | -----------: | --------: | ----------: |
+| Soenneker.Gen.Adapt |  4.954 ns |     baseline |      40 B |             |
+| AutoMapper          | 34.880 ns | 7.14x slower |      40 B |  1.00x more |
+| Mapster             | 12.639 ns | 2.59x slower |      40 B |  1.00x more |
+| Mapperly            |  5.055 ns | 1.03x slower |      40 B |  1.00x more |
+| Facet               |  6.068 ns | 1.24x slower |      40 B |  1.00x more |
 
 ---
 
-### **Nested list mapping**
+## **Nested**
 
-| Method                  |       Mean | Ratio        | Allocated | Alloc Ratio |
-| ----------------------- | ---------: | ------------ | --------: | ----------: |
-| **Soenneker.Gen.Adapt** |   916.3 ns | baseline     |   7.87 KB |           — |
-| AutoMapper              | 1,289.8 ns | 1.41x slower |   9.17 KB |  1.17x more |
-| Mapster                 | 1,005.4 ns | 1.10x slower |   7.87 KB |  1.00x more |
-| Mapperly                |   990.9 ns | 1.08x slower |   7.87 KB |  1.00x more |
-
----
-
-### **Large list mapping**
-
-| Method                  |     Mean | Ratio        | Allocated | Alloc Ratio |
-| ----------------------- | -------: | ------------ | --------: | ----------: |
-| **Soenneker.Gen.Adapt** | 5.473 μs | baseline     |  46.93 KB |           — |
-| AutoMapper              | 7.885 μs | 1.45x slower |  55.27 KB |  1.18x more |
-| Mapster                 | 5.708 μs | 1.05x slower |  46.93 KB |  1.00x more |
-| Mapperly                | 5.647 μs | 1.04x slower |  46.93 KB |  1.00x more |
+| Method              |      Mean |        Ratio | Allocated | Alloc Ratio |
+| ------------------- | --------: | -----------: | --------: | ----------: |
+| Soenneker.Gen.Adapt |  4.746 ns |     baseline |      32 B |             |
+| AutoMapper          | 36.247 ns | 7.72x slower |      32 B |  1.00x more |
+| Mapster             | 15.796 ns | 3.37x slower |      72 B |  2.25x more |
+| Mapperly            |  5.064 ns | 1.08x slower |      32 B |  1.00x more |
+| Facet               |  6.708 ns | 1.43x slower |      32 B |  1.00x more |
 
 ---
 
-### **Complex list mapping**
+## **Complex List**
 
-| Method                  |      Mean | Ratio        | Allocated | Alloc Ratio |
-| ----------------------- | --------: | ------------ | --------: | ----------: |
-| **Soenneker.Gen.Adapt** |  40.56 ns | baseline     |     320 B |           — |
-| AutoMapper              |  85.27 ns | 2.11x slower |     328 B |  1.02x more |
-| Mapster                 |  62.97 ns | 1.56x slower |     320 B |  1.00x more |
-| Mapperly                |  48.44 ns | 1.20x slower |     360 B |  1.12x more |
-| Facet                   | 184.25 ns | 4.57x slower |     280 B |  1.14x less |
+| Method              |     Mean |        Ratio | Allocated | Alloc Ratio |
+| ------------------- | -------: | -----------: | --------: | ----------: |
+| Soenneker.Gen.Adapt | 38.83 ns |     baseline |     320 B |             |
+| AutoMapper          | 86.14 ns | 2.24x slower |     328 B |  1.02x more |
+| Mapster             | 66.15 ns | 1.72x slower |     320 B |  1.00x more |
+| Mapperly            | 41.54 ns | 1.08x slower |     320 B |  1.00x more |
+
+---
+
+## **Complex List (No nested conversions)**
+
+| Method              |      Mean |         Ratio | Allocated | Alloc Ratio |
+| ------------------- | --------: | ------------: | --------: | ----------: |
+| Soenneker.Gen.Adapt |  3.735 ns |      baseline |      24 B |             |
+| AutoMapper          | 47.883 ns | 12.93x slower |     112 B |  4.67x more |
+| Mapster             | 49.255 ns | 13.30x slower |     320 B | 13.33x more |
+| Mapperly            |  4.221 ns |  1.14x slower |      24 B |  1.00x more |
+| Facet               |  4.521 ns |  1.22x slower |      24 B |  1.00x more |
+
+---
+
+## **Large Lists**
+
+| Method              |      Mean |        Ratio | Allocated | Alloc Ratio |
+| ------------------- | --------: | -----------: | --------: | ----------: |
+| Soenneker.Gen.Adapt |  6.549 μs |     baseline |  46.93 KB |             |
+| AutoMapper          | 10.655 μs | 1.64x slower |  55.27 KB |  1.18x more |
+| Mapster             |  7.196 μs | 1.11x slower |  46.93 KB |  1.00x more |
+| Mapperly            |  6.974 μs | 1.07x slower |  46.93 KB |  1.00x more |
+
+---
+
+## **Nested Lists**
+
+| Method              |     Mean |        Ratio | Allocated | Alloc Ratio |
+| ------------------- | -------: | -----------: | --------: | ----------: |
+| Soenneker.Gen.Adapt | 1.033 μs |     baseline |   7.87 KB |             |
+| AutoMapper          | 1.690 μs | 1.65x slower |   9.17 KB |  1.17x more |
+| Mapster             | 1.175 μs | 1.14x slower |   7.87 KB |  1.00x more |
+| Mapperly            | 1.143 μs | 1.11x slower |   7.87 KB |  1.00x more |
 
 ---
 

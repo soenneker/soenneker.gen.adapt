@@ -10,10 +10,10 @@ namespace Soenneker.Gen.Adapt.Tests.Benchmarks;
 [SimpleJob]
 public class ComplexListMappingFacetBenchmark
 {
-    private ComplexListSource _complexListSource;
+    private ComplexListSource2 _complexListSource;
     private IMapper _autoMapper;
     private Mapster.TypeAdapterConfig _mapsterConfig;
-    private ComplexListTestMapper _mapperly;
+    private Mappers.ComplexListTestMapper _mapperly;
 
     [GlobalSetup]
     public void Setup()
@@ -31,7 +31,7 @@ public class ComplexListMappingFacetBenchmark
             Child = basicSource
         };
 
-        _complexListSource = new ComplexListSource
+        _complexListSource = new ComplexListSource2
         {
             NestedItems =
             [
@@ -46,16 +46,16 @@ public class ComplexListMappingFacetBenchmark
         // Setup AutoMapper
         var config = new MapperConfiguration(cfg =>
         {
-            cfg.CreateMap<ComplexListSource, ComplexListFacetDestComparison>();
+            cfg.CreateMap<ComplexListSource2, ComplexListFacetDestComparison>();
         }, new NullLoggerFactory());
         _autoMapper = config.CreateMapper();
 
         // Setup Mapster
         _mapsterConfig = new Mapster.TypeAdapterConfig();
-        _mapsterConfig.NewConfig<ComplexListSource, ComplexListFacetDestComparison>();
+        _mapsterConfig.NewConfig<ComplexListSource2, ComplexListFacetDestComparison>();
 
         // Setup Mapperly
-        _mapperly = new ComplexListTestMapper();
+        _mapperly = new Mappers.ComplexListTestMapper();
     }
 
     [Benchmark(Baseline = true)]
@@ -85,6 +85,6 @@ public class ComplexListMappingFacetBenchmark
     [Benchmark]
     public ComplexListFacetDest Facet()
     {
-        return _complexListSource.ToFacet<ComplexListSource, ComplexListFacetDest>();
+        return _complexListSource.ToFacet<ComplexListSource2, ComplexListFacetDest>();
     }
 }

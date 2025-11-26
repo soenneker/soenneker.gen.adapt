@@ -14,7 +14,7 @@ public class LargeListMappingBenchmark
     private List<BasicSource> _basicList;
     private IMapper _autoMapper;
     private Mapster.TypeAdapterConfig _mapsterConfig;
-    private LargeListTestMapper _mapperly;
+    private Mappers.LargeListTestMapper _mapperly;
 
     [GlobalSetup]
     public void Setup()
@@ -40,7 +40,7 @@ public class LargeListMappingBenchmark
         _mapsterConfig.NewConfig<BasicSource, BasicDest>();
 
         // Setup Mapperly
-        _mapperly = new LargeListTestMapper();
+        _mapperly = new Mappers.LargeListTestMapper();
     }
 
     [Benchmark(Baseline = true)] 

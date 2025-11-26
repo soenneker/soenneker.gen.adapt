@@ -10,15 +10,15 @@ namespace Soenneker.Gen.Adapt.Tests.Benchmarks;
 [SimpleJob]
 public class SimpleMappingBenchmark
 {
-    private BasicSource _basicSource;
+    private BasicSource1 _basicSource;
     private IMapper _autoMapper;
     private Mapster.TypeAdapterConfig _mapsterConfig;
-    private TestMapper _mapperly;
+    private Mappers.TestMapper _mapperly;
 
     [GlobalSetup]
     public void Setup()
     {
-        _basicSource = new BasicSource
+        _basicSource = new BasicSource1
         {
             Id = "test-id-123",
             Name = "Test Name",
@@ -28,16 +28,16 @@ public class SimpleMappingBenchmark
         // Setup AutoMapper
         var config = new MapperConfiguration(cfg =>
         {
-            cfg.CreateMap<BasicSource, BasicDest>();
+            cfg.CreateMap<BasicSource1, BasicDest>();
         }, new NullLoggerFactory());
         _autoMapper = config.CreateMapper();
 
         // Setup Mapster
         _mapsterConfig = new Mapster.TypeAdapterConfig();
-        _mapsterConfig.NewConfig<BasicSource, BasicDest>();
+        _mapsterConfig.NewConfig<BasicSource1, BasicDest>();
 
         // Setup Mapperly
-        _mapperly = new TestMapper();
+        _mapperly = new Mappers.TestMapper();
     }
 
     [Benchmark(Baseline = true)]
@@ -67,6 +67,6 @@ public class SimpleMappingBenchmark
     [Benchmark]
     public BasicFacetDest Facet()
     {
-        return _basicSource.ToFacet<BasicSource, BasicFacetDest>();
+        return _basicSource.ToFacet<BasicSource1, BasicFacetDest>();
     }
 }

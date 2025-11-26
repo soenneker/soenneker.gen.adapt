@@ -9,10 +9,10 @@ namespace Soenneker.Gen.Adapt.Tests.Benchmarks;
 [SimpleJob]
 public class NestedMappingBenchmark
 {
-    private NestedSource _nestedSource;
+    private NestedSource2 _nestedSource;
     private IMapper _autoMapper;
     private Mapster.TypeAdapterConfig _mapsterConfig;
-    private NestedTestMapper _mapperly;
+    private Mappers.NestedTestMapper _mapperly;
 
     [GlobalSetup]
     public void Setup()
@@ -24,7 +24,7 @@ public class NestedMappingBenchmark
             Count = 42
         };
 
-        _nestedSource = new NestedSource
+        _nestedSource = new NestedSource2
         {
             Name = "Nested Test",
             Child = basicSource
@@ -34,17 +34,17 @@ public class NestedMappingBenchmark
         var config = new MapperConfiguration(cfg =>
         {
             cfg.CreateMap<BasicSource, BasicDest>();
-            cfg.CreateMap<NestedSource, NestedDest>();
+            cfg.CreateMap<NestedSource2, NestedDest>();
         }, new NullLoggerFactory());
         _autoMapper = config.CreateMapper();
 
         // Setup Mapster
         _mapsterConfig = new Mapster.TypeAdapterConfig();
         _mapsterConfig.NewConfig<BasicSource, BasicDest>();
-        _mapsterConfig.NewConfig<NestedSource, NestedDest>();
+        _mapsterConfig.NewConfig<NestedSource2, NestedDest>();
 
         // Setup Mapperly
-        _mapperly = new NestedTestMapper();
+        _mapperly = new Mappers.NestedTestMapper();
     }
 
     [Benchmark(Baseline = true)]

@@ -10,10 +10,10 @@ namespace Soenneker.Gen.Adapt.Tests.Benchmarks;
 [SimpleJob]
 public class NestedFacetMappingBenchmark
 {
-    private NestedSource _nestedSource;
+    private NestedSource1 _nestedSource;
     private IMapper _autoMapper;
     private Mapster.TypeAdapterConfig _mapsterConfig;
-    private NestedTestMapper _mapperly;
+    private Mappers.NestedTestMapper _mapperly;
 
     [GlobalSetup]
     public void Setup()
@@ -25,7 +25,7 @@ public class NestedFacetMappingBenchmark
             Count = 42
         };
 
-        _nestedSource = new NestedSource
+        _nestedSource = new NestedSource1
         {
             Name = "Nested Test",
             Child = basicSource
@@ -34,16 +34,16 @@ public class NestedFacetMappingBenchmark
         // Setup AutoMapper
         var config = new MapperConfiguration(cfg =>
         {
-            cfg.CreateMap<NestedSource, NestedFacetDestComparison>();
+            cfg.CreateMap<NestedSource1, NestedFacetDestComparison>();
         }, new NullLoggerFactory());
         _autoMapper = config.CreateMapper();
 
         // Setup Mapster
         _mapsterConfig = new Mapster.TypeAdapterConfig();
-        _mapsterConfig.NewConfig<NestedSource, NestedFacetDestComparison>();
+        _mapsterConfig.NewConfig<NestedSource1, NestedFacetDestComparison>();
 
         // Setup Mapperly
-        _mapperly = new NestedTestMapper();
+        _mapperly = new Mappers.NestedTestMapper();
     }
 
     [Benchmark(Baseline = true)]
@@ -73,6 +73,6 @@ public class NestedFacetMappingBenchmark
     [Benchmark]
     public NestedFacetDest Facet()
     {
-        return _nestedSource.ToFacet<NestedSource, NestedFacetDest>();
+        return _nestedSource.ToFacet<NestedSource1, NestedFacetDest>();
     }
 }

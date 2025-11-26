@@ -10,10 +10,10 @@ namespace Soenneker.Gen.Adapt.Tests.Benchmarks;
 [SimpleJob]
 public class ComplexListMappingBenchmark
 {
-    private ComplexListSource _complexListSource;
+    private ComplexListSource1 _complexListSource;
     private IMapper _autoMapper;
     private Mapster.TypeAdapterConfig _mapsterConfig;
-    private ComplexListTestMapper _mapperly;
+    private Mappers.ComplexListTestMapper _mapperly;
 
     [GlobalSetup]
     public void Setup()
@@ -31,7 +31,7 @@ public class ComplexListMappingBenchmark
             Child = basicSource
         };
 
-        _complexListSource = new ComplexListSource
+        _complexListSource = new ComplexListSource1
         {
             NestedItems =
             [
@@ -48,7 +48,7 @@ public class ComplexListMappingBenchmark
         {
             cfg.CreateMap<BasicSource, BasicDest>();
             cfg.CreateMap<NestedSource, NestedDest>();
-            cfg.CreateMap<ComplexListSource, ComplexListDest>();
+            cfg.CreateMap<ComplexListSource1, ComplexListDest>();
         }, new NullLoggerFactory());
         _autoMapper = config.CreateMapper();
 
@@ -56,10 +56,10 @@ public class ComplexListMappingBenchmark
         _mapsterConfig = new Mapster.TypeAdapterConfig();
         _mapsterConfig.NewConfig<BasicSource, BasicDest>();
         _mapsterConfig.NewConfig<NestedSource, NestedDest>();
-        _mapsterConfig.NewConfig<ComplexListSource, ComplexListDest>();
+        _mapsterConfig.NewConfig<ComplexListSource1, ComplexListDest>();
 
         // Setup Mapperly
-        _mapperly = new ComplexListTestMapper();
+        _mapperly = new Mappers.ComplexListTestMapper();
     }
 
     [Benchmark(Baseline = true)]

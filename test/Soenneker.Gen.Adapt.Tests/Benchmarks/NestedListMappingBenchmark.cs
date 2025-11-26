@@ -14,7 +14,7 @@ public class NestedListMappingBenchmark
     private List<NestedSource> _nestedList;
     private IMapper _autoMapper;
     private Mapster.TypeAdapterConfig _mapsterConfig;
-    private NestedListTestMapper _mapperly;
+    private Mappers.NestedListTestMapper _mapperly;
 
     [GlobalSetup]
     public void Setup()
@@ -46,7 +46,7 @@ public class NestedListMappingBenchmark
         _mapsterConfig.NewConfig<NestedSource, NestedDest>();
 
         // Setup Mapperly
-        _mapperly = new NestedListTestMapper();
+        _mapperly = new Mappers.NestedListTestMapper();
     }
 
     [Benchmark(Baseline = true)]

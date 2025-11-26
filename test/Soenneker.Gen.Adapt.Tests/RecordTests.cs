@@ -1,3 +1,7 @@
+using System;
+using System.CodeDom.Compiler;
+using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Soenneker.Tests.Unit;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 using Xunit;

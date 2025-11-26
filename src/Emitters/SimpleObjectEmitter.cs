@@ -195,11 +195,21 @@ internal static class SimpleObjectEmitter
             }
             else if (Types.IsAnyList(sp.Type, out ITypeSymbol? srcListToElement) && Types.IsAnyList(dp.Type, out ITypeSymbol? dstListToElement))
             {
-                sb.Append(indent).Append("if (source.").Append(sp.Name).Append(" != null)").AppendLine();
-                sb.Append(indent).AppendLine("{");
+                // Check if both list types and element types are the same - if so, just assign directly
+                bool sameListType = SymbolEqualityComparer.Default.Equals(sp.Type, dp.Type);
+                bool sameElementType = SymbolEqualityComparer.Default.Equals(srcListToElement, dstListToElement);
+                
+                if (sameListType && sameElementType)
+                {
+                    // Same type - just assign directly, no copying needed, no null check needed
+                    sb.Append(indent).Append("target.").Append(dp.Name).Append(" = source.").Append(sp.Name).AppendLine(";");
+                }
+                else
+                {
+                    sb.Append(indent).Append("if (source.").Append(sp.Name).Append(" != null)").AppendLine();
+                    sb.Append(indent).AppendLine("{");
 
-                // Generate proper collection mapping logic
-                if (Types.IsList(sp.Type, out _))
+                    if (Types.IsList(sp.Type, out _))
                 {
                     usesCollectionsMarshal = true;
                     sb.Append(indent).Append("\tvar src = CollectionsMarshal.AsSpan(source.").Append(sp.Name).AppendLine(");");
@@ -207,7 +217,7 @@ internal static class SimpleObjectEmitter
                     sb.AppendLine();
                     sb.Append(indent).Append("\tvar targetList = new ").Append(Types.ShortName(dp.Type, requiredNamespaces)).AppendLine("(n);");
                     sb.AppendLine();
-                    if (SymbolEqualityComparer.Default.Equals(srcListToElement, dstListToElement))
+                    if (sameElementType)
                     {
                         sb.Append(indent).Append("\tCollectionsMarshal.SetCount(targetList, n);").AppendLine();
                         sb.Append(indent).Append("\tsrc.CopyTo(CollectionsMarshal.AsSpan(targetList));").AppendLine();
@@ -299,20 +309,21 @@ internal static class SimpleObjectEmitter
                     sb.Append(indent).AppendLine("\t}");
                 }
 
-                sb.Append(indent).AppendLine("}");
-                sb.Append(indent).AppendLine("else");
-                sb.Append(indent).AppendLine("{");
-                if (Types.IsArray(dp.Type, out _))
-                {
-                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = Array.Empty<")
-                        .Append(Types.ShortName(dp.Type, requiredNamespaces).Replace("[]", "")).AppendLine(">();");
-                }
-                else
-                {
-                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).AppendLine(" = null!;");
-                }
+                    sb.Append(indent).AppendLine("}");
+                    sb.Append(indent).AppendLine("else");
+                    sb.Append(indent).AppendLine("{");
+                    if (Types.IsArray(dp.Type, out _))
+                    {
+                        sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = Array.Empty<")
+                            .Append(Types.ShortName(dp.Type, requiredNamespaces).Replace("[]", "")).AppendLine(">();");
+                    }
+                    else
+                    {
+                        sb.Append(indent).Append("\ttarget.").Append(dp.Name).AppendLine(" = null!;");
+                    }
 
-                sb.Append(indent).AppendLine("}");
+                    sb.Append(indent).AppendLine("}");
+                }
                 continue;
             }
 

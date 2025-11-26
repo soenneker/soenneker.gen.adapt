@@ -127,6 +127,9 @@ internal static class MappingEmitter
             sb.AppendLine("\t\t}");
             sb.AppendLine();
 
+            // Note: We don't generate optimized Adapt<TSource, TDest> methods when there are multiple destinations
+            // because they would all have the same signature and conflict. Use Adapt<TDest>() instead.
+
             // (removed) Bulk path for List<source> since not used
 
             // No per-call throw helper emitted here; __ThrowUnsupported_* is used by the function pointer
