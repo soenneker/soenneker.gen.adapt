@@ -476,8 +476,7 @@ internal static class SimpleObjectEmitter
         {
             string fromSan = names.Sanitized(fromNamed);
             string toSan = names.Sanitized(toNamed);
-            if (fromNamed.TypeKind == TypeKind.Struct)
-                return "Map_" + fromSan + "_To_" + toSan + "(in " + expr + ")";
+            // Note: Can't use 'in' with property accesses or expressions, only with method parameters
             return "Map_" + fromSan + "_To_" + toSan + "(" + expr + ")";
         }
 

@@ -7,7 +7,10 @@ namespace Soenneker.Gen.Adapt.Tests.Benchmarks;
 public partial class NestedTestMapper
 {
     public partial BasicDest MapToBasicDest(BasicSource source);
+
     public partial NestedDest MapToNestedDest(NestedSource source);
+
+    public partial NestedFacetDestComparison MapToNestedFacetDest(NestedSource source);
 }
 
 

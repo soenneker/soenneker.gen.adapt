@@ -37,32 +37,38 @@ internal static class MappingEmitter
             bool sourceIsIEnum = Types.IsIEnumerable(source, out _);
             bool srcIsStruct = source.TypeKind == TypeKind.Struct;
 
-            sb.AppendLine($"\t\t[GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
-            sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
-            sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
             if (sourceIsList || sourceIsDict || sourceIsIEnum)
             {
                 // Private non-generic method: Adapt(source) for collection mapping rename
+                sb.AppendLine($"\t\t[GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
+                sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
+                sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
                 sb.Append("\t\tprivate static ").Append(dType).Append(" Adapt(");
                 if (srcIsStruct)
                     sb.Append("in ");
                 sb.Append(srcType).AppendLine(" source)");
+                sb.AppendLine("\t\t{");
+                EmitMappingBody(sb, source, d, enums, names, "\t\t\t");
+                sb.AppendLine("\t\t}");
+                sb.AppendLine();
             }
             else
             {
                 // Private Map_* for object mapping to support nested calls
                 string srcSanLocal0 = names.Sanitized(source);
                 string dstSanLocal0 = names.Sanitized(d);
+                sb.AppendLine($"\t\t[GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
+                sb.AppendLine("\t\t[ExcludeFromCodeCoverage]");
+                sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
                 sb.Append("\t\tinternal static ").Append(dType).Append(" Map_").Append(srcSanLocal0).Append("_To_").Append(dstSanLocal0).Append('(');
                 if (srcIsStruct)
                     sb.Append("in ");
                 sb.Append(srcType).AppendLine(" source)");
+                sb.AppendLine("\t\t{");
+                EmitMappingBody(sb, source, d, enums, names, "\t\t\t");
+                sb.AppendLine("\t\t}");
+                sb.AppendLine();
             }
-
-            sb.AppendLine("\t\t{");
-            EmitMappingBody(sb, source, d, enums, names, "\t\t\t");
-            sb.AppendLine("\t\t}");
-            sb.AppendLine();
 
             // Generic overload (for explicit .Adapt<TDest>() calls) with Unsafe.As
             sb.AppendLine($"\t\t[GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");

@@ -7,8 +7,10 @@ namespace Soenneker.Gen.Adapt.Tests.Benchmarks;
 public partial class ComplexListTestMapper
 {
     public partial BasicDest MapToBasicDest(BasicSource source);
+
     public partial NestedDest MapToNestedDest(NestedSource source);
+
     public partial ComplexListDest MapToComplexListDest(ComplexListSource source);
+
+    public partial ComplexListFacetDestComparison MapToComplexListFacetDestComparison(ComplexListSource source);
 }
-
-

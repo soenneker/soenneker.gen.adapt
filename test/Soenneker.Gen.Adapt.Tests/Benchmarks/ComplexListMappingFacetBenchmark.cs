@@ -8,7 +8,7 @@ namespace Soenneker.Gen.Adapt.Tests.Benchmarks;
 
 [MemoryDiagnoser]
 [SimpleJob]
-public class ComplexListMappingBenchmark
+public class ComplexListMappingFacetBenchmark
 {
     private ComplexListSource _complexListSource;
     private IMapper _autoMapper;
@@ -46,43 +46,45 @@ public class ComplexListMappingBenchmark
         // Setup AutoMapper
         var config = new MapperConfiguration(cfg =>
         {
-            cfg.CreateMap<BasicSource, BasicDest>();
-            cfg.CreateMap<NestedSource, NestedDest>();
-            cfg.CreateMap<ComplexListSource, ComplexListDest>();
+            cfg.CreateMap<ComplexListSource, ComplexListFacetDestComparison>();
         }, new NullLoggerFactory());
         _autoMapper = config.CreateMapper();
 
         // Setup Mapster
         _mapsterConfig = new Mapster.TypeAdapterConfig();
-        _mapsterConfig.NewConfig<BasicSource, BasicDest>();
-        _mapsterConfig.NewConfig<NestedSource, NestedDest>();
-        _mapsterConfig.NewConfig<ComplexListSource, ComplexListDest>();
+        _mapsterConfig.NewConfig<ComplexListSource, ComplexListFacetDestComparison>();
 
         // Setup Mapperly
         _mapperly = new ComplexListTestMapper();
     }
 
     [Benchmark(Baseline = true)]
-    public ComplexListDest GenAdapt()
+    public ComplexListFacetDestComparison GenAdapt()
     {
-        return _complexListSource.Adapt<ComplexListDest>();
+        return _complexListSource.Adapt<ComplexListFacetDestComparison>();
     }
 
     [Benchmark]
-    public ComplexListDest AutoMapper()
+    public ComplexListFacetDestComparison AutoMapper()
     {
-        return _autoMapper.Map<ComplexListDest>(_complexListSource);
+        return _autoMapper.Map<ComplexListFacetDestComparison>(_complexListSource);
     }
 
     [Benchmark]
-    public ComplexListDest MapsterBenchmark()
+    public ComplexListFacetDestComparison MapsterBenchmark()
     {
-        return Mapster.TypeAdapter.Adapt<ComplexListDest>(_complexListSource, _mapsterConfig);
+        return Mapster.TypeAdapter.Adapt<ComplexListFacetDestComparison>(_complexListSource, _mapsterConfig);
     }
 
     [Benchmark]
-    public ComplexListDest Mapperly()
+    public ComplexListFacetDestComparison Mapperly()
     {
-        return _mapperly.MapToComplexListDest(_complexListSource);
+        return _mapperly.MapToComplexListFacetDestComparison(_complexListSource);
+    }
+
+    [Benchmark]
+    public ComplexListFacetDest Facet()
+    {
+        return _complexListSource.ToFacet<ComplexListSource, ComplexListFacetDest>();
     }
 }

@@ -1,5 +1,6 @@
 using AutoMapper;
 using BenchmarkDotNet.Attributes;
+using Facet.Extensions;
 using Microsoft.Extensions.Logging.Abstractions;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 
@@ -7,7 +8,7 @@ namespace Soenneker.Gen.Adapt.Tests.Benchmarks;
 
 [MemoryDiagnoser]
 [SimpleJob]
-public class NestedMappingBenchmark
+public class NestedFacetMappingBenchmark
 {
     private NestedSource _nestedSource;
     private IMapper _autoMapper;
@@ -33,41 +34,45 @@ public class NestedMappingBenchmark
         // Setup AutoMapper
         var config = new MapperConfiguration(cfg =>
         {
-            cfg.CreateMap<BasicSource, BasicDest>();
-            cfg.CreateMap<NestedSource, NestedDest>();
+            cfg.CreateMap<NestedSource, NestedFacetDestComparison>();
         }, new NullLoggerFactory());
         _autoMapper = config.CreateMapper();
 
         // Setup Mapster
         _mapsterConfig = new Mapster.TypeAdapterConfig();
-        _mapsterConfig.NewConfig<BasicSource, BasicDest>();
-        _mapsterConfig.NewConfig<NestedSource, NestedDest>();
+        _mapsterConfig.NewConfig<NestedSource, NestedFacetDestComparison>();
 
         // Setup Mapperly
         _mapperly = new NestedTestMapper();
     }
 
     [Benchmark(Baseline = true)]
-    public NestedDest GenAdapt()
+    public NestedFacetDestComparison GenAdapt()
     {
-        return _nestedSource.Adapt<NestedDest>();
+        return _nestedSource.Adapt<NestedFacetDestComparison>();
     }
 
     [Benchmark]
-    public NestedDest AutoMapper()
+    public NestedFacetDestComparison AutoMapper()
     {
-        return _autoMapper.Map<NestedDest>(_nestedSource);
+        return _autoMapper.Map<NestedFacetDestComparison>(_nestedSource);
     }
 
     [Benchmark]
-    public NestedDest MapsterBenchmark()
+    public NestedFacetDestComparison MapsterBenchmark()
     {
-        return Mapster.TypeAdapter.Adapt<NestedDest>(_nestedSource, _mapsterConfig);
+        return Mapster.TypeAdapter.Adapt<NestedFacetDestComparison>(_nestedSource, _mapsterConfig);
     }
 
     [Benchmark]
-    public NestedDest Mapperly()
+    public NestedFacetDestComparison Mapperly()
     {
-        return _mapperly.MapToNestedDest(_nestedSource);
+        return _mapperly.MapToNestedFacetDest(_nestedSource);
+    }
+
+    [Benchmark]
+    public NestedFacetDest Facet()
+    {
+        return _nestedSource.ToFacet<NestedSource, NestedFacetDest>();
     }
 }

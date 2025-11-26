@@ -2,6 +2,7 @@
 using Soenneker.Benchmarking.Extensions.Summary;
 using Soenneker.Tests.Benchmark;
 using System.Threading.Tasks;
+using Soenneker.Facts.Local;
 using Xunit;
 
 namespace Soenneker.Gen.Adapt.Tests.Benchmarks;
@@ -12,7 +13,7 @@ public class BenchmarkRunner : BenchmarkTest
     {
     }
 
-   // [LocalFact]
+    [LocalFact]
     public async ValueTask ComplexListMappingBenchmark()
     {
         Summary summary = BenchmarkDotNet.Running.BenchmarkRunner.Run<ComplexListMappingBenchmark>(DefaultConf);
@@ -20,7 +21,15 @@ public class BenchmarkRunner : BenchmarkTest
         await summary.OutputSummaryToLog(OutputHelper, CancellationToken);
     }
 
-//    [LocalFact]
+    [LocalFact]
+    public async ValueTask ComplexListMappingFacetBenchmark()
+    {
+        Summary summary = BenchmarkDotNet.Running.BenchmarkRunner.Run<ComplexListMappingFacetBenchmark>(DefaultConf);
+
+        await summary.OutputSummaryToLog(OutputHelper, CancellationToken);
+    }
+
+    [LocalFact]
     public async ValueTask LargeListMappingBenchmark()
     {
         Summary summary = BenchmarkDotNet.Running.BenchmarkRunner.Run<LargeListMappingBenchmark>(DefaultConf);
@@ -28,7 +37,7 @@ public class BenchmarkRunner : BenchmarkTest
         await summary.OutputSummaryToLog(OutputHelper, CancellationToken);
     }
 
- //   [LocalFact]
+    [LocalFact]
     public async ValueTask SimpleMappingBenchmark()
     {
         Summary summary = BenchmarkDotNet.Running.BenchmarkRunner.Run<SimpleMappingBenchmark>(DefaultConf);
@@ -36,7 +45,7 @@ public class BenchmarkRunner : BenchmarkTest
         await summary.OutputSummaryToLog(OutputHelper, CancellationToken);
     }
 
- //   [LocalFact]
+    [LocalFact]
     public async ValueTask NestedMappingBenchmark()
     {
         Summary summary = BenchmarkDotNet.Running.BenchmarkRunner.Run<NestedMappingBenchmark>(DefaultConf);
@@ -44,7 +53,15 @@ public class BenchmarkRunner : BenchmarkTest
         await summary.OutputSummaryToLog(OutputHelper, CancellationToken);
     }
 
- //   [LocalFact]
+    [LocalFact]
+    public async ValueTask NestedFacetMappingBenchmark()
+    {
+        Summary summary = BenchmarkDotNet.Running.BenchmarkRunner.Run<NestedFacetMappingBenchmark>(DefaultConf);
+
+        await summary.OutputSummaryToLog(OutputHelper, CancellationToken);
+    }
+
+    [LocalFact]
     public async ValueTask NestedListMappingBenchmark()
     {
         Summary summary = BenchmarkDotNet.Running.BenchmarkRunner.Run<NestedListMappingBenchmark>(DefaultConf);
