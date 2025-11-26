@@ -75,6 +75,6 @@ public class NestedMappingBenchmark
     [Benchmark]
     public NestedFacetDest Facet()
     {
-        return _nestedSource.ToFacet<NestedFacetDest>();
+        return _nestedSource.ToFacet<NestedSource, NestedFacetDest>();
     }
 }

@@ -89,6 +89,6 @@ public class ComplexListMappingBenchmark
     [Benchmark]
     public ComplexListFacetDest Facet()
     {
-        return _complexListSource.ToFacet<ComplexListFacetDest>();
+        return _complexListSource.ToFacet<ComplexListSource, ComplexListFacetDest>();
     }
 }

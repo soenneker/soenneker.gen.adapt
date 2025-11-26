@@ -67,6 +67,6 @@ public class SimpleMappingBenchmark
     [Benchmark]
     public BasicFacetDest Facet()
     {
-        return _basicSource.ToFacet<BasicFacetDest>();
+        return _basicSource.ToFacet<BasicSource, BasicFacetDest>();
     }
 }
