@@ -8,7 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Soenneker.Gen.Adapt" Version="4.0.59">
+      <PackageReference Include="Soenneker.Gen.Adapt" Version="4.0.60">
         <PrivateAssets>all</PrivateAssets>
         <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       </PackageReference>
