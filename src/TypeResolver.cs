@@ -9,6 +9,21 @@ namespace Soenneker.Gen.Adapt;
 
 internal static class TypeResolver
 {
+    // Regexes here run inside the generator; caching avoids per-file regex construction/allocation.
+    private static readonly Regex _lineCommentRegex = new Regex(@"//.*$", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex _adaptCallRegex = new Regex(
+        @"((?:\(\s*)?(?:await\s+)?(?:(?:new\s+[a-zA-Z_][\w<>,\s]*?\([^)]*\))|(?:[a-zA-Z_][\w\.]*(?:\([^)]*\))?))\s*(?:\)\s*)?)\s*\.\s*Adapt\s*<([^>]+)>",
+        RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex _awaitParentheticalRegex = new Regex(
+        @"\(\s*await\s+([^\)]*?)\s*\)\s*\.\s*Adapt\s*<([^>]+)>",
+        RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex _broadAdaptRegex = new Regex(
+        @"([^\n;]*?)\s*\.\s*Adapt\s*<([^>]+)>",
+        RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
     /// <summary>
     /// Traces an identifier back to its source by looking at variable declarations and finding Adapt calls.
     /// For example, if we see "doc.Adapt&lt;Foo&gt;()" and doc is declared as "var doc = entity.Adapt&lt;Bar&gt;()",
@@ -337,7 +352,7 @@ internal static class TypeResolver
         var result = new List<string>();
         
         // First, remove all comment lines to avoid false matches
-        string contentWithoutComments = Regex.Replace(content, @"//.*$", "", RegexOptions.Multiline);
+        string contentWithoutComments = _lineCommentRegex.Replace(content, "");
         
         // Find all .Adapt<>() calls - match the whole pattern
         // This handles: variable.Adapt<>, new Type().Adapt<>, method().Adapt<>, obj.Property.Adapt<>
@@ -346,8 +361,7 @@ internal static class TypeResolver
         // Use a more comprehensive regex to find all Adapt calls
         // This handles: variable.Adapt<>, new Type().Adapt<>, method().Adapt<>, obj.Property.Adapt<>
         // and now also handles optional parentheses and leading 'await'
-        var adaptCallRegex = new Regex(@"((?:\(\s*)?(?:await\s+)?(?:(?:new\s+[a-zA-Z_][\w<>,\s]*?\([^)]*\))|(?:[a-zA-Z_][\w\.]*(?:\([^)]*\))?))\s*(?:\)\s*)?)\s*\.\s*Adapt\s*<([^>]+)>", RegexOptions.Singleline);
-        MatchCollection matches = adaptCallRegex.Matches(contentWithoutComments);
+        MatchCollection matches = _adaptCallRegex.Matches(contentWithoutComments);
         
         foreach (Match match in matches)
         {
@@ -364,8 +378,7 @@ internal static class TypeResolver
         }
 
         // Extra pass for "(await expr).Adapt<T>()" forms
-        var awaitParenRegex = new Regex(@"\(\s*await\s+([^\)]*?)\s*\)\s*\.\s*Adapt\s*<([^>]+)>", RegexOptions.Singleline);
-        MatchCollection awaitMatches = awaitParenRegex.Matches(contentWithoutComments);
+        MatchCollection awaitMatches = _awaitParentheticalRegex.Matches(contentWithoutComments);
         foreach (Match match in awaitMatches)
         {
             if (match.Groups.Count >= 3)
@@ -381,8 +394,7 @@ internal static class TypeResolver
         }
 
         // Broad fallback: capture any "expr.Adapt<T>()" on a single logical line
-        var broadRegex = new Regex(@"([^\n;]*?)\s*\.\s*Adapt\s*<([^>]+)>", RegexOptions.Singleline);
-        MatchCollection broadMatches = broadRegex.Matches(contentWithoutComments);
+        MatchCollection broadMatches = _broadAdaptRegex.Matches(contentWithoutComments);
         foreach (Match match in broadMatches)
         {
             if (match.Groups.Count >= 3)

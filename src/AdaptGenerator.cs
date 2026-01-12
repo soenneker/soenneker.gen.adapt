@@ -370,9 +370,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
         }
 
         // Pass 1a: Extract auto-property declarations (including component parameters)
-        const string propertyPattern =
-            @"(?:\[.*?\]\s*)*(?:(?:private|public|protected|internal|static|virtual|override|sealed|partial|readonly|new|required|unsafe)\s+)+([a-zA-Z_][a-zA-Z0-9_<>,\.\[\]]*(?:\?)?)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\{\s*get\s*;\s*(?:set|init)\s*;\s*\}";
-        MatchCollection propertyMatches = Regex.Matches(content, propertyPattern, RegexOptions.Singleline);
+        MatchCollection propertyMatches = _propertyDeclarationRegex.Matches(content);
         foreach (Match propertyMatch in propertyMatches)
         {
             if (propertyMatch.Groups.Count >= 3)
