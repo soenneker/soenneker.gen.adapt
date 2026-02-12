@@ -27,7 +27,7 @@
         <PackageReference Include="AutoMapper" Version="16.0.0" />
         <PackageReference Include="Facet.Extensions" Version="5.5.2" />
         <PackageReference Include="Mapster" Version="9.0.0-pre01" /><PackageReference Include="Riok.Mapperly" Version="4.3.1" />
-        <PackageReference Include="Soenneker.Facts.Local" Version="4.0.562" />
+        <PackageReference Include="Soenneker.Facts.Local" Version="4.0.563" />
         <PackageReference Include="Soenneker.Tests.Benchmark" Version="4.0.63" />
         <PackageReference Include="Soenneker.Documents.Audit" Version="4.0.2444" />
         <PackageReference Include="Soenneker.Dtos.IdNamePair" Version="4.0.689" />
