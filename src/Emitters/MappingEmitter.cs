@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 using System.Text;
 
@@ -218,6 +218,13 @@ internal static class MappingEmitter
         if (Types.IsIEnumerable(source, out ITypeSymbol? srcElement) && Types.IsAnyList(dest, out ITypeSymbol? dstElement))
         {
             ListEmitter.EmitListMappingInstructions(sb, source, dest, srcElement!, dstElement!, names, indent);
+            return;
+        }
+
+        // Same-type mapping: only use identity when we cannot instantiate (e.g. EnumValue types have no accessible parameterless ctor). Otherwise we copy.
+        if (SymbolEqualityComparer.Default.Equals(source, dest) && !Types.HasAccessibleParameterlessConstructor(dest))
+        {
+            sb.Append(indent).AppendLine("return source;");
             return;
         }
 

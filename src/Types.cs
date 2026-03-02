@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
 
 namespace Soenneker.Gen.Adapt;
@@ -342,5 +342,31 @@ internal static class Types
         string? ns = t.ContainingNamespace?.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
         if (ns is null) return false;
         return ns == "global::System" || ns.StartsWith("global::System.");
+    }
+
+    /// <summary>
+    /// True if we can emit "new T()" for the type (e.g. for same-type copy). Structs always can; classes only if they have an accessible parameterless constructor.
+    /// Types like EnumValue (sealed class with only private constructor) return false.
+    /// Classes with no explicit constructors have an implicit public parameterless ctor (empty InstanceConstructors → true).
+    /// </summary>
+    public static bool HasAccessibleParameterlessConstructor(INamedTypeSymbol t)
+    {
+        if (t.TypeKind == TypeKind.Struct)
+            return true;
+
+        var constructors = t.InstanceConstructors;
+        if (constructors.Length == 0)
+            return true; // Implicit public parameterless constructor
+
+        foreach (IMethodSymbol ctor in constructors)
+        {
+            if (ctor.Parameters.Length != 0)
+                continue;
+            var accessibility = ctor.DeclaredAccessibility;
+            if (accessibility == Accessibility.Public || accessibility == Accessibility.Internal)
+                return true;
+        }
+
+        return false;
     }
 }

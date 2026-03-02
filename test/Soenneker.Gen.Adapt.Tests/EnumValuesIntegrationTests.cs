@@ -149,4 +149,40 @@ public sealed class EnumValuesIntegrationTests : UnitTest
                   .Be(color);
         }
     }
+
+    // --- Same-type: identity vs copy (HasAccessibleParameterlessConstructor) ---
+
+    [Fact]
+    public void Adapt_EnumValue_same_type_returns_same_reference_TestOrderStatus()
+    {
+        // EnumValue types have no public parameterless ctor → generator emits "return source" (identity).
+        var source = new EnumValueTypeSource { Status = TestOrderStatus.Completed };
+        var result = source.Adapt<EnumValueTypeDest>();
+
+        result.Status.Should().BeSameAs(source.Status);
+        result.Status.Should().Be(TestOrderStatus.Completed);
+    }
+
+    [Fact]
+    public void Adapt_EnumValue_same_type_returns_same_reference_TestColorCode()
+    {
+        // EnumValue<string> same behavior: identity when same-type mapping.
+        var source = new EnumValueStringTypeSource { Color = TestColorCode.Green };
+        var result = source.Adapt<EnumValueStringTypeDest>();
+
+        result.Color.Should().BeSameAs(source.Color);
+        result.Color.Should().Be(TestColorCode.Green);
+    }
+
+    [Fact]
+    public void Adapt_type_with_parameterless_ctor_same_type_returns_new_instance()
+    {
+        // When mapping T -> T at the root (item.Adapt<CopyableItem>()), types with accessible parameterless ctor get "new T()" and copy.
+        var source = new CopyableItem { Id = 42, Name = "foo" };
+        var result = source.Adapt<CopyableItem>();
+
+        result.Should().NotBeSameAs(source);
+        result.Id.Should().Be(42);
+        result.Name.Should().Be("foo");
+    }
 }
