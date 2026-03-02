@@ -14,4 +14,3 @@ public class TestIntellenum
         return new TestIntellenum(value);
     }
 }
-
