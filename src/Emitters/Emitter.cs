@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using Soenneker.Gen.Adapt.Adapters;
@@ -76,13 +76,13 @@ internal static class Emitter
 
         // Build mapping graph from discovered type pairs using the simple object adapter
         List<(INamedTypeSymbol Source, INamedTypeSymbol Destination, Location Location)> typePairList = typePairs.Select(tp => (tp.Source, tp.Destination, tp.Location)).ToList();
-        Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map = SimpleObjectAdapter.BuildMappingGraphFromPairs(typePairList, enumList, context);
+        Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map = SimpleObjectAdapter.BuildMappingGraphFromPairs(typePairList, enumList, context, compilation.Assembly);
 
         // Compute which source->dest pairs are referenced by other mappings (nested usage)
         Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> referencedPairs = CollectionAdapter.BuildReferencedPairs(map, enumList);
 
         // Emit source mappers
-        EmitSourceMappers(context, map, enumList, nameCache, targetNamespace, referencedPairs);
+        EmitSourceMappers(context, compilation, map, enumList, nameCache, targetNamespace, referencedPairs);
 
         // Collections
         EmitCollections(context, targetNamespace);
@@ -381,7 +381,7 @@ internal static class Emitter
         }
     }
 
-    private static void EmitSourceMappers(SourceProductionContext context, Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map,
+    private static void EmitSourceMappers(SourceProductionContext context, Compilation compilation, Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map,
         List<INamedTypeSymbol> enumList, NameCache nameCache, string targetNamespace, Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>> referencedPairs)
     {
         foreach (KeyValuePair<INamedTypeSymbol, List<INamedTypeSymbol>> kv in map)
@@ -392,7 +392,7 @@ internal static class Emitter
                 continue;
 
             var sb = new StringBuilder(16_384);
-            MappingEmitter.EmitSourceMapperAndDispatcher(sb, source, destinations, enumList, nameCache, targetNamespace, referencedPairs);
+            MappingEmitter.EmitSourceMapperAndDispatcher(sb, source, destinations, enumList, nameCache, targetNamespace, compilation.Assembly, referencedPairs);
 
             string sanitized = nameCache.Sanitized(source);
             if (sanitized.StartsWith("global__"))

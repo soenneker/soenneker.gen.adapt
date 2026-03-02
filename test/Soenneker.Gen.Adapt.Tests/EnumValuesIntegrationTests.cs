@@ -1,6 +1,7 @@
 using Soenneker.Gen.Adapt.Tests.Dtos;
 using Soenneker.Tests.Unit;
 using AwesomeAssertions;
+using Soenneker.Enums.DayOfWeek;
 using Xunit;
 
 namespace Soenneker.Gen.Adapt.Tests;
@@ -172,6 +173,87 @@ public sealed class EnumValuesIntegrationTests : UnitTest
 
         result.Color.Should().BeSameAs(source.Color);
         result.Color.Should().Be(TestColorCode.Green);
+    }
+
+    [Fact]
+    public void Adapt_DayOfWeekType_same_type_returns_same_reference()
+    {
+        // DayOfWeekType (EnumValue<string>) must use identity, not "new DayOfWeekType()".
+        DayOfWeekType source = DayOfWeekType.Wednesday;
+        var result = source.Adapt<DayOfWeekType>();
+
+        result.Should().BeSameAs(source);
+        result.Should().Be(DayOfWeekType.Wednesday);
+    }
+
+    [Fact]
+    public void Adapt_DayOfWeekType_via_DTO_returns_same_reference()
+    {
+        var source = new DayOfWeekTypeSource { Day = DayOfWeekType.Friday };
+        var result = source.Adapt<DayOfWeekTypeDest>();
+
+        result.Day.Should().BeSameAs(source.Day);
+        result.Day.Should().Be(DayOfWeekType.Friday);
+    }
+
+    // --- Same-assembly EnumValues (types defined in this test project, Adapt called here) ---
+
+    [Fact]
+    public void SameAssembly_EnumValue_int_TestOrderStatus_Adapt_root_returns_identity()
+    {
+        // TestOrderStatus is [EnumValue] (int) in this assembly; Adapt<T>() at root must return same reference.
+        TestOrderStatus source = TestOrderStatus.Completed;
+        var result = source.Adapt<TestOrderStatus>();
+
+        result.Should().BeSameAs(source);
+        result.Value.Should().Be(2);
+    }
+
+    [Fact]
+    public void SameAssembly_EnumValue_int_TestOrderStatus_Adapt_via_DTO_returns_identity()
+    {
+        // TestOrderStatus in this assembly; mapping DTOs that hold it must preserve reference.
+        var source = new EnumValueTypeSource { Status = TestOrderStatus.Pending };
+        var result = source.Adapt<EnumValueTypeDest>();
+
+        result.Status.Should().BeSameAs(source.Status);
+        result.Status.Should().Be(TestOrderStatus.Pending);
+    }
+
+    [Fact]
+    public void SameAssembly_EnumValue_string_TestColorCode_Adapt_root_returns_identity()
+    {
+        // TestColorCode is [EnumValue<string>] in this assembly; Adapt<T>() at root must return same reference.
+        TestColorCode source = TestColorCode.Green;
+        var result = source.Adapt<TestColorCode>();
+
+        result.Should().BeSameAs(source);
+        result.Value.Should().Be("G");
+    }
+
+    [Fact]
+    public void SameAssembly_EnumValue_string_TestColorCode_Adapt_via_DTO_returns_identity()
+    {
+        // TestColorCode in this assembly; mapping DTOs that hold it must preserve reference.
+        var source = new EnumValueStringTypeSource { Color = TestColorCode.Red };
+        var result = source.Adapt<EnumValueStringTypeDest>();
+
+        result.Color.Should().BeSameAs(source.Color);
+        result.Color.Should().Be(TestColorCode.Red);
+    }
+
+    [Fact]
+    public void SameAssembly_All_EnumValue_types_roundtrip_via_Adapt()
+    {
+        // Same-assembly EnumValue types only (TestOrderStatus, TestColorCode defined in this test project).
+        TestOrderStatus order = TestOrderStatus.FromValue(1);
+        order.Adapt<TestOrderStatus>().Should().BeSameAs(order);
+
+        TestColorCode color = TestColorCode.FromName("Blue");
+        color.Adapt<TestColorCode>().Should().BeSameAs(color);
+
+        new EnumValueTypeSource { Status = order }.Adapt<EnumValueTypeDest>().Status.Should().BeSameAs(order);
+        new EnumValueStringTypeSource { Color = color }.Adapt<EnumValueStringTypeDest>().Color.Should().BeSameAs(color);
     }
 
     [Fact]

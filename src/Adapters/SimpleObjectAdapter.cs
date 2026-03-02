@@ -12,7 +12,7 @@ internal static class SimpleObjectAdapter
     /// </summary>
     public static Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> BuildMappingGraphFromPairs(
         List<(INamedTypeSymbol Source, INamedTypeSymbol Destination, Location Location)> typePairs, List<INamedTypeSymbol> enums,
-        SourceProductionContext context)
+        SourceProductionContext context, IAssemblySymbol? currentAssembly = null)
     {
         var map = new Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>>(SymbolEqualityComparer.Default);
         var processedNestedPairs = new HashSet<(INamedTypeSymbol Source, INamedTypeSymbol Destination)>(SymbolPairComparer.Instance);
@@ -152,8 +152,9 @@ internal static class SimpleObjectAdapter
                 }
             }
 
-            // Validate that mapping is possible for simple objects
-            if (!HasParameterlessCtor(dst))
+            // Validate that mapping is possible for simple objects (skip for same-type class: we emit identity "return source", no ctor needed)
+            bool sameTypeClass = SymbolEqualityComparer.Default.Equals(src, dst) && dst.TypeKind == TypeKind.Class;
+            if (!sameTypeClass && !HasParameterlessCtor(dst))
             {
                 // Report diagnostic for missing parameterless constructor
                 context.ReportDiagnostic(Diagnostic.Create(
@@ -168,6 +169,22 @@ internal static class SimpleObjectAdapter
 
             if (!HasAnyMappableProperty(src, dst, srcProps, dstProps, enums))
             {
+                // Same-type for classes: emit identity or copy. Allow the pair instead of reporting an error (e.g. EnumValue types like DayOfWeekType).
+                if (SymbolEqualityComparer.Default.Equals(src, dst) && dst.TypeKind == TypeKind.Class)
+                {
+                    if (!map.TryGetValue(src, out List<INamedTypeSymbol>? destList))
+                    {
+                        destList = new List<INamedTypeSymbol>(8);
+                        map[src] = destList;
+                    }
+                    if (!destList.Contains(dst, SymbolEqualityComparer.Default))
+                    {
+                        destList.Add(dst);
+                        AddNestedPairs(map, src, dst, enums, processedNestedPairs);
+                    }
+                    continue;
+                }
+
                 // Report diagnostic for no mappable properties
                 context.ReportDiagnostic(Diagnostic.Create(
                     new DiagnosticDescriptor("SGA003", "No mappable properties found",

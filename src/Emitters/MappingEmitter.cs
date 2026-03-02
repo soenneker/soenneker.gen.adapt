@@ -7,7 +7,7 @@ namespace Soenneker.Gen.Adapt.Emitters;
 internal static class MappingEmitter
 {
     public static void EmitSourceMapperAndDispatcher(StringBuilder sb, INamedTypeSymbol source, List<INamedTypeSymbol> destinations,
-        List<INamedTypeSymbol> enums, NameCache names, string targetNamespace, Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>? referencedPairs = null)
+        List<INamedTypeSymbol> enums, NameCache names, string targetNamespace, IAssemblySymbol? currentAssembly = null, Dictionary<INamedTypeSymbol, HashSet<INamedTypeSymbol>>? referencedPairs = null)
     {
         string srcType = Types.ShortName(source);
         string srcSan = names.Sanitized(source);
@@ -48,7 +48,7 @@ internal static class MappingEmitter
                     sb.Append("in ");
                 sb.Append(srcType).AppendLine(" source)");
                 sb.AppendLine("\t\t{");
-                EmitMappingBody(sb, source, d, enums, names, "\t\t\t");
+                EmitMappingBody(sb, source, d, enums, names, "\t\t\t", currentAssembly);
                 sb.AppendLine("\t\t}");
                 sb.AppendLine();
             }
@@ -65,7 +65,7 @@ internal static class MappingEmitter
                     sb.Append("in ");
                 sb.Append(srcType).AppendLine(" source)");
                 sb.AppendLine("\t\t{");
-                EmitMappingBody(sb, source, d, enums, names, "\t\t\t");
+                EmitMappingBody(sb, source, d, enums, names, "\t\t\t", currentAssembly);
                 sb.AppendLine("\t\t}");
                 sb.AppendLine();
             }
@@ -100,7 +100,7 @@ internal static class MappingEmitter
         {
             // Multiple destinations: emit private mapping methods + per-TDest id cache with switch dispatch
             for (var i = 0; i < destinations.Count; i++)
-                EmitMappingMethod(sb, source, destinations[i], enums, names);
+                EmitMappingMethod(sb, source, destinations[i], enums, names, currentAssembly);
 
             // Generic overload using typeof-dispatch and Unsafe.As
             sb.AppendLine($"\t\t[GeneratedCode(\"{GeneratorMetadata.Name}\", \"{GeneratorMetadata.Version}\")] ");
@@ -152,7 +152,7 @@ internal static class MappingEmitter
         return false;
     }
 
-    private static void EmitMappingMethod(StringBuilder sb, INamedTypeSymbol source, INamedTypeSymbol dest, List<INamedTypeSymbol> enums, NameCache names)
+    private static void EmitMappingMethod(StringBuilder sb, INamedTypeSymbol source, INamedTypeSymbol dest, List<INamedTypeSymbol> enums, NameCache names, IAssemblySymbol? currentAssembly = null)
     {
         var srcProps = TypeProps.Build(source);
         var dstProps = TypeProps.Build(dest);
@@ -165,8 +165,9 @@ internal static class MappingEmitter
         bool destIsArray = Types.IsArray(dest, out _);
         bool sourceIsEnumerable = Types.IsIEnumerable(source, out _);
 
+        bool sameTypeIdentity = SymbolEqualityComparer.Default.Equals(source, dest) && !Types.HasAccessibleParameterlessConstructor(dest, currentAssembly);
         if (dstProps.Settable.Count == 0 && !sourceIsList && !destIsList && !sourceIsDict && !destIsDict && !sourceIsArray && !destIsArray &&
-            !sourceIsEnumerable)
+            !sourceIsEnumerable && !sameTypeIdentity)
             return;
 
         string srcType = Types.ShortName(source);
@@ -184,14 +185,14 @@ internal static class MappingEmitter
         sb.Append(srcType).AppendLine(" source)");
         sb.AppendLine("\t\t{");
 
-        EmitMappingBody(sb, source, dest, enums, names, "\t\t\t");
+        EmitMappingBody(sb, source, dest, enums, names, "\t\t\t", currentAssembly);
 
         sb.AppendLine("\t\t}");
         sb.AppendLine();
     }
 
     private static void EmitMappingBody(StringBuilder sb, INamedTypeSymbol source, INamedTypeSymbol dest, List<INamedTypeSymbol> enums, NameCache names,
-        string indent)
+        string indent, IAssemblySymbol? currentAssembly = null)
     {
         if (source.TypeKind != TypeKind.Struct)
         {
@@ -221,11 +222,16 @@ internal static class MappingEmitter
             return;
         }
 
-        // Same-type mapping: only use identity when we cannot instantiate (e.g. EnumValue types have no accessible parameterless ctor). Otherwise we copy.
-        if (SymbolEqualityComparer.Default.Equals(source, dest) && !Types.HasAccessibleParameterlessConstructor(dest))
+        // Same-type mapping: use identity when we cannot instantiate or when there are no settable properties (e.g. EnumValue types).
+        if (SymbolEqualityComparer.Default.Equals(source, dest))
         {
-            sb.Append(indent).AppendLine("return source;");
-            return;
+            bool canInstantiate = Types.HasAccessibleParameterlessConstructor(dest, currentAssembly);
+            bool hasSettableProps = TypeProps.Build(dest).Settable.Count > 0;
+            if (!canInstantiate || !hasSettableProps)
+            {
+                sb.Append(indent).AppendLine("return source;");
+                return;
+            }
         }
 
         // Delegate to simple object mapper for regular object-to-object mappings

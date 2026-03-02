@@ -1,5 +1,6 @@
 using Microsoft.CodeAnalysis;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace Soenneker.Gen.Adapt;
 
@@ -347,22 +348,33 @@ internal static class Types
     /// <summary>
     /// True if we can emit "new T()" for the type (e.g. for same-type copy). Structs always can; classes only if they have an accessible parameterless constructor.
     /// Types like EnumValue (sealed class with only private constructor) return false.
-    /// Classes with no explicit constructors have an implicit public parameterless ctor (empty InstanceConstructors → true).
+    /// When currentAssembly is null, uses same-assembly rules only (empty constructors → implicit public).
     /// </summary>
-    public static bool HasAccessibleParameterlessConstructor(INamedTypeSymbol t)
+    /// <param name="t">The type to check.</param>
+    /// <param name="currentAssembly">The assembly being compiled. If not null and t is from a different assembly, we cannot assume empty InstanceConstructors means "implicit public" (metadata may hide private ctors).</param>
+    public static bool HasAccessibleParameterlessConstructor(INamedTypeSymbol t, IAssemblySymbol? currentAssembly = null)
     {
         if (t.TypeKind == TypeKind.Struct)
             return true;
 
-        var constructors = t.InstanceConstructors;
+        ImmutableArray<IMethodSymbol> constructors = t.InstanceConstructors;
+
+        // Types from a referenced assembly: we may not see private constructors (e.g. EnumValue types). Empty = do not assume we can new T().
+        if (currentAssembly is not null && !SymbolEqualityComparer.Default.Equals(t.ContainingAssembly, currentAssembly) && constructors.Length == 0)
+            return false;
+
+        // Sealed class with no visible constructors: likely EnumValue-style (private ctor in generated partial). Do not assume we can new T().
+        if (t.IsSealed && constructors.Length == 0)
+            return false;
+
         if (constructors.Length == 0)
-            return true; // Implicit public parameterless constructor
+            return true; // Same assembly: implicit public parameterless constructor
 
         foreach (IMethodSymbol ctor in constructors)
         {
             if (ctor.Parameters.Length != 0)
                 continue;
-            var accessibility = ctor.DeclaredAccessibility;
+            Accessibility accessibility = ctor.DeclaredAccessibility;
             if (accessibility == Accessibility.Public || accessibility == Accessibility.Internal)
                 return true;
         }
