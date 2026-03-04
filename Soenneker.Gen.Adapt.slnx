@@ -1,0 +1,18 @@
+<Solution>
+  <Folder Name="/.github/">
+    <File Path=".github/renovate.json" />
+  </Folder>
+  <Folder Name="/.github/workflows/">
+    <File Path=".github/workflows/build-and-test.yml" />
+    <File Path=".github/workflows/publish-package.yml" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/Soenneker.Gen.Adapt.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/Soenneker.Gen.Adapt.Tests.Blazor/Soenneker.Gen.Adapt.Tests.Blazor.csproj" />
+    <Project Path="test/Soenneker.Gen.Adapt.Tests.NuGet/Soenneker.Gen.Adapt.Tests.NuGet.csproj" />
+    <Project Path="test/Soenneker.Gen.Adapt.Tests.Types/Soenneker.Gen.Adapt.Tests.Types.csproj" />
+    <Project Path="test/Soenneker.Gen.Adapt.Tests/Soenneker.Gen.Adapt.Tests.csproj" />
+  </Folder>
+</Solution>
