@@ -1,6 +1,7 @@
-Ôªø[![](https://img.shields.io/nuget/v/soenneker.gen.adapt.svg?style=for-the-badge)](https://www.nuget.org/packages/soenneker.gen.adapt/)
+[![](https://img.shields.io/nuget/v/soenneker.gen.adapt.svg?style=for-the-badge)](https://www.nuget.org/packages/soenneker.gen.adapt/)
 [![](https://img.shields.io/github/actions/workflow/status/soenneker/soenneker.gen.adapt/publish-package.yml?style=for-the-badge)](https://github.com/soenneker/soenneker.gen.adapt/actions/workflows/publish-package.yml)
 [![](https://img.shields.io/nuget/dt/soenneker.gen.adapt.svg?style=for-the-badge)](https://www.nuget.org/packages/soenneker.gen.adapt/)
+[![](https://img.shields.io/github/actions/workflow/status/soenneker/soenneker.gen.adapt/codeql.yml?label=CodeQL&style=for-the-badge)](https://github.com/soenneker/soenneker.gen.adapt/actions/workflows/codeql.yml)
 
 # ![](https://user-images.githubusercontent.com/4441470/224455560-91ed3ee7-f510-4041-a8d2-3fc093025112.png) Soenneker.Gen.Adapt
 
@@ -65,7 +66,7 @@ public static partial class GenAdapt
 - **Same-type assignments** - Direct property copying
 - **Collections** - `List<T>`, `IEnumerable<T>`, arrays with element conversion
 - **Dictionaries** - `Dictionary<TKey, TValue>` with key/value conversion
-- **Enums** - Bidirectional conversion between enum ‚Üî string, enum ‚Üî int
+- **Enums** - Bidirectional conversion between enum ? string, enum ? int
 - **Nested objects** - Recursive mapping of complex object graphs
 - **Nullables** - Automatic nullable handling
 
@@ -150,10 +151,10 @@ For generic type parameters or abstract base classes where concrete types are on
 
 | Method              |      Mean |        Ratio | Allocated | Alloc Ratio |
 | ------------------- | --------: | -----------: | --------: | ----------: |
-| Soenneker.Gen.Adapt |  6.549 Œºs |     baseline |  46.93 KB |             |
-| AutoMapper          | 10.655 Œºs | 1.64x slower |  55.27 KB |  1.18x more |
-| Mapster             |  7.196 Œºs | 1.11x slower |  46.93 KB |  1.00x more |
-| Mapperly            |  6.974 Œºs | 1.07x slower |  46.93 KB |  1.00x more |
+| Soenneker.Gen.Adapt |  6.549 µs |     baseline |  46.93 KB |             |
+| AutoMapper          | 10.655 µs | 1.64x slower |  55.27 KB |  1.18x more |
+| Mapster             |  7.196 µs | 1.11x slower |  46.93 KB |  1.00x more |
+| Mapperly            |  6.974 µs | 1.07x slower |  46.93 KB |  1.00x more |
 
 ---
 
@@ -161,10 +162,10 @@ For generic type parameters or abstract base classes where concrete types are on
 
 | Method              |     Mean |        Ratio | Allocated | Alloc Ratio |
 | ------------------- | -------: | -----------: | --------: | ----------: |
-| Soenneker.Gen.Adapt | 1.033 Œºs |     baseline |   7.87 KB |             |
-| AutoMapper          | 1.690 Œºs | 1.65x slower |   9.17 KB |  1.17x more |
-| Mapster             | 1.175 Œºs | 1.14x slower |   7.87 KB |  1.00x more |
-| Mapperly            | 1.143 Œºs | 1.11x slower |   7.87 KB |  1.00x more |
+| Soenneker.Gen.Adapt | 1.033 µs |     baseline |   7.87 KB |             |
+| AutoMapper          | 1.690 µs | 1.65x slower |   9.17 KB |  1.17x more |
+| Mapster             | 1.175 µs | 1.14x slower |   7.87 KB |  1.00x more |
+| Mapperly            | 1.143 µs | 1.11x slower |   7.87 KB |  1.00x more |
 
 ---
 
@@ -181,5 +182,5 @@ The generator creates multiple files per source type (e.g., `Adapt.BasicSource.g
 
 Generated files will appear in `Project -> Dependencies -> Analyzers -> Soenneker.Gen.Adapt`
 
-‚ö†Ô∏è Note: Source Generators don‚Äôt work transitively across project references.
+?? Note: Source Generators donít work transitively across project references.
 Any project that calls `Adapt()` must include its own direct package reference.
