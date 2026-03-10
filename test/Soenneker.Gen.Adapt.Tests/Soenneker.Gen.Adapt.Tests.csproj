@@ -30,7 +30,7 @@
         <PackageReference Include="Soenneker.Enums.DayOfWeek" Version="4.0.722" />
         <PackageReference Include="Soenneker.Facts.Local" Version="4.0.585" />
         <PackageReference Include="Soenneker.Gen.EnumValues" Version="4.0.23" />
-        <PackageReference Include="Soenneker.Tests.Benchmark" Version="4.0.66" />
+        <PackageReference Include="Soenneker.Tests.Benchmark" Version="4.0.71" />
         <PackageReference Include="Soenneker.Documents.Audit" Version="4.0.2468" />
         <PackageReference Include="Soenneker.Dtos.IdNamePair" Version="4.0.697" />
         <PackageReference Include="Soenneker.Utils.Test" Version="4.0.304" />
