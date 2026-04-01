@@ -24,7 +24,7 @@
 
     <ItemGroup>
         <PackageReference Include="AutoMapper" Version="16.1.1" />
-        <PackageReference Include="Facet.Extensions" Version="5.8.6" />
+        <PackageReference Include="Facet.Extensions" Version="5.8.7" />
         <PackageReference Include="Mapster" Version="10.0.6" />
         <PackageReference Include="Riok.Mapperly" Version="4.3.1" />
         <PackageReference Include="Soenneker.Enums.DayOfWeek" Version="4.0.738" />
