@@ -9,10 +9,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class IntegrationDefinitionTests : UnitTest
 {
-    public IntegrationDefinitionTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_IntegrationDefinition_WithNestedConnectors_ShouldMap_AllMembers()
     {
@@ -51,7 +47,6 @@ public sealed class IntegrationDefinitionTests : UnitTest
         result.Connectors.Should().ContainKey("alpha");
         result.Connectors!["alpha"].Endpoint.Should().Be("https://alpha");
     }
-
     [Test]
     public void Adapt_List_FromRazorInferredTypes_ShouldMapEntries()
     {

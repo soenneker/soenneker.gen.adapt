@@ -7,10 +7,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class BasicMappingTests : UnitTest
 {
-    public BasicMappingTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_BasicPropertyMapping_ShouldMapMatchingProperties()
     {
@@ -31,7 +27,6 @@ public sealed class BasicMappingTests : UnitTest
         result.Name.Should().Be("Test Name");
         result.Count.Should().Be(42);
     }
-
     [Test]
     public void Adapt_PartialPropertyMatch_ShouldMapOnlyMatchingProperties()
     {
@@ -52,7 +47,6 @@ public sealed class BasicMappingTests : UnitTest
         result.Id.Should().Be("partial-123");
         result.Name.Should().Be("Partial Name");
     }
-
     [Test]
     public void Adapt_Guid_ShouldMapCorrectly()
     {
@@ -72,7 +66,6 @@ public sealed class BasicMappingTests : UnitTest
         result.Id.Should().Be(guid);
         result.Name.Should().Be("Test Guid");
     }
-
     [Test]
     public void Adapt_DateTime_ShouldMapCorrectly()
     {
@@ -92,7 +85,6 @@ public sealed class BasicMappingTests : UnitTest
         result.CreatedAt.Should().Be(now);
         result.UpdatedAt.Should().Be(now.AddDays(1));
     }
-
     [Test]
     public void Adapt_Bool_ShouldMapCorrectly()
     {
@@ -111,7 +103,6 @@ public sealed class BasicMappingTests : UnitTest
         result.IsActive.Should().BeTrue();
         result.IsDeleted.Should().BeFalse();
     }
-
     [Test]
     public void Adapt_Decimal_ShouldMapCorrectly()
     {
@@ -130,7 +121,6 @@ public sealed class BasicMappingTests : UnitTest
         result.Price.Should().Be(99.99m);
         result.Discount.Should().Be(10.5m);
     }
-
     [Test]
     public void Adapt_ClassWithMultipleProperties_ShouldMapProperties()
     {
@@ -151,7 +141,6 @@ public sealed class BasicMappingTests : UnitTest
         result.LastName.Should().Be("Doe");
         result.Age.Should().Be(30);
     }
-
     [Test]
     public void Adapt_Struct_ShouldMapProperties()
     {
@@ -169,7 +158,6 @@ public sealed class BasicMappingTests : UnitTest
         result.X.Should().Be(10);
         result.Y.Should().Be(20);
     }
-
     [Test]
     public void Adapt_ClassWithStructProperty_ShouldMapRecursively()
     {
@@ -189,7 +177,6 @@ public sealed class BasicMappingTests : UnitTest
         result.Location.Y.Should().Be(200);
         result.Label.Should().Be("Point A");
     }
-
     [Test]
     public void Adapt_MultipleInstancesOfSameType_ShouldCreateIndependentObjects()
     {
@@ -208,7 +195,6 @@ public sealed class BasicMappingTests : UnitTest
         result1.Id.Should().Be("1");
         result2.Id.Should().Be("2");
     }
-
     [Test]
     public void Adapt_EmptyStrings_ShouldMapEmptyStrings()
     {
@@ -224,7 +210,6 @@ public sealed class BasicMappingTests : UnitTest
         result.Name.Should().Be("");
         result.Count.Should().Be(0);
     }
-
     [Test]
     public void Adapt_MinMaxIntValues_ShouldMapCorrectly()
     {
@@ -237,7 +222,6 @@ public sealed class BasicMappingTests : UnitTest
         // Assert
         result.Count.Should().Be(int.MaxValue);
     }
-
     [Test]
     public void Adapt_MinIntValues_ShouldMapCorrectly()
     {
@@ -250,7 +234,6 @@ public sealed class BasicMappingTests : UnitTest
         // Assert
         result.Count.Should().Be(int.MinValue);
     }
-
     [Test]
     public void Adapt_DefaultDateTime_ShouldMapCorrectly()
     {
@@ -268,7 +251,6 @@ public sealed class BasicMappingTests : UnitTest
         result.CreatedAt.Should().Be(default(DateTime));
         result.UpdatedAt.Should().BeNull(); // nullable property
     }
-
     [Test]
     public void Adapt_MaxDateTime_ShouldMapCorrectly()
     {

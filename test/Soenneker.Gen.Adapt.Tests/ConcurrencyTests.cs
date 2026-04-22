@@ -9,10 +9,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class ConcurrencyTests : UnitTest
 {
-    public ConcurrencyTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_ParallelAdaptations_ShouldAllSucceed()
     {
@@ -36,7 +32,6 @@ public sealed class ConcurrencyTests : UnitTest
             results[i].Count.Should().Be(i + 1);
         }
     }
-
     [Test]
     public void Adapt_ConcurrentListAdaptations_ShouldAllSucceed()
     {
@@ -57,7 +52,6 @@ public sealed class ConcurrencyTests : UnitTest
             result.Sum().Should().Be(5050);
         });
     }
-
     [Test]
     public void Adapt_ConcurrentDictionaryAdaptations_ShouldAllSucceed()
     {
@@ -82,7 +76,6 @@ public sealed class ConcurrencyTests : UnitTest
             result["e"].Should().Be(5);
         });
     }
-
     [Test]
     public void Adapt_SequentialAdaptations_10000Times_ShouldNotDegradePerformance()
     {
@@ -113,7 +106,6 @@ public sealed class ConcurrencyTests : UnitTest
             }
         }
     }
-
     [Test]
     public void Adapt_HugeNestedListStructure_ShouldMapAll()
     {
@@ -142,7 +134,6 @@ public sealed class ConcurrencyTests : UnitTest
         results[99].Numbers[99].Should().Be(9999);
         results[50].Tags[50].Should().Be("tag_5050");
     }
-
     [Test]
     public void Adapt_ListOfComplexObjects_1000Items_ShouldMapAll()
     {
@@ -174,7 +165,6 @@ public sealed class ConcurrencyTests : UnitTest
         results[999].Name.Should().Be("Parent_1000");
         results[999].Child.Count.Should().Be(1000);
     }
-
     [Test]
     public void Adapt_MixedCollectionTypes_Simultaneously_ShouldAllWork()
     {
@@ -195,7 +185,6 @@ public sealed class ConcurrencyTests : UnitTest
         listResult.Should().BeEquivalentTo([1, 2, 3]);
         dictResult["a"].Should().Be(1);
     }
-
     [Test]
     public void Adapt_RecursiveBackAndForth_100Times_ShouldPreserveData()
     {
@@ -218,7 +207,6 @@ public sealed class ConcurrencyTests : UnitTest
         final.Name.Should().Be("recursive");
         final.Count.Should().Be(999);
     }
-
     [Test]
     public void Adapt_MultipleEnumConversions_InParallel_ShouldAllSucceed()
     {
@@ -240,7 +228,6 @@ public sealed class ConcurrencyTests : UnitTest
             results[i].Status.Should().Be(i % 3);
         }
     }
-
     [Test]
     public void Adapt_StringToEnum_MultipleThreads_ShouldAllParse()
     {
@@ -263,7 +250,6 @@ public sealed class ConcurrencyTests : UnitTest
         results[2].StatusString.Should().Be(TestStatus.Completed);
         results[299].StatusString.Should().Be(TestStatus.Completed);
     }
-
     [Test]
     public void Adapt_MixedStructAndClass_InParallel_ShouldWork()
     {
@@ -289,7 +275,6 @@ public sealed class ConcurrencyTests : UnitTest
         results[50].Location.Y.Should().Be(100);
         results[99].Label.Should().Be("point_99");
     }
-
     [Test]
     public void Adapt_Records_InParallel_ShouldWork()
     {
@@ -315,7 +300,6 @@ public sealed class ConcurrencyTests : UnitTest
         results[50].Age.Should().Be(50);
         results[99].FirstName.Should().Be("Person_99");
     }
-
     [Test]
     public void Adapt_DictionaryWithComplexValues_100Items_ShouldMapAll()
     {

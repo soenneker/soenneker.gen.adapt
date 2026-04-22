@@ -7,10 +7,6 @@ namespace Soenneker.Gen.Adapt.Tests.Reflection;
 
 public sealed class ReflectionPrimitivesTests : UnitTest
 {
-    public ReflectionPrimitivesTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void AdaptViaReflection_AllPrimitiveTypes_ShouldMapCorrectly()
     {
@@ -61,7 +57,6 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         result.TimeSpanValue.Should().Be(source.TimeSpanValue);
         result.GuidValue.Should().Be(source.GuidValue);
     }
-
     [Test]
     public void AdaptViaReflection_AllPrimitiveTypes_WithDefaultValues_ShouldMapCorrectly()
     {
@@ -99,7 +94,6 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         result.StringValue.Should().BeEmpty();
         result.GuidValue.Should().Be(Guid.Empty);
     }
-
     [Test]
     public void AdaptViaReflection_NullablePrimitives_WithValues_ShouldMapCorrectly()
     {
@@ -128,7 +122,6 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         result.DateTimeValue.Should().Be(source.DateTimeValue);
         result.GuidValue.Should().Be(source.GuidValue);
     }
-
     [Test]
     public void AdaptViaReflection_NullablePrimitives_WithNullValues_ShouldMapCorrectly()
     {
@@ -157,7 +150,6 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         result.DateTimeValue.Should().BeNull();
         result.GuidValue.Should().BeNull();
     }
-
     [Test]
     public void AdaptViaReflection_MixedNullable_ShouldMapCorrectly()
     {
@@ -182,7 +174,6 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         result.NonNullableDateTime.Should().Be(source.NonNullableDateTime);
         result.NullableDateTime.Should().Be(source.NullableDateTime);
     }
-
     [Test]
     public void AdaptViaReflection_MixedNullable_WithNullValues_ShouldMapCorrectly()
     {
@@ -207,7 +198,6 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         result.NonNullableDateTime.Should().Be(DateTime.MinValue);
         result.NullableDateTime.Should().BeNull();
     }
-
     [Test]
     public void AdaptViaReflection_StringProperties_WithSpecialCharacters_ShouldMapCorrectly()
     {
@@ -223,7 +213,6 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         // Assert
         result.StringValue.Should().Be(source.StringValue);
     }
-
     [Test]
     public void AdaptViaReflection_DateTimeEdgeCases_ShouldMapCorrectly()
     {
@@ -239,7 +228,6 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         // Assert
         result.DateTimeValue.Should().Be(DateTime.MaxValue);
     }
-
     [Test]
     public void AdaptViaReflection_GuidValues_MultipleTimes_ShouldBeDifferent()
     {

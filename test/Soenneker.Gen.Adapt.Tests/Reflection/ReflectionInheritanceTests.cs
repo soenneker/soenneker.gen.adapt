@@ -6,10 +6,6 @@ namespace Soenneker.Gen.Adapt.Tests.Reflection;
 
 public sealed class ReflectionInheritanceTests : UnitTest
 {
-    public ReflectionInheritanceTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void AdaptViaReflection_DogDerivedClass_ShouldMapAllProperties()
     {
@@ -32,7 +28,6 @@ public sealed class ReflectionInheritanceTests : UnitTest
         result.Breed.Should().Be(source.Breed);
         result.IsGoodBoy.Should().Be(source.IsGoodBoy);
     }
-
     [Test]
     public void AdaptViaReflection_CatDerivedClass_ShouldMapAllProperties()
     {
@@ -55,7 +50,6 @@ public sealed class ReflectionInheritanceTests : UnitTest
         result.LivesRemaining.Should().Be(source.LivesRemaining);
         result.LikesLasagna.Should().Be(source.LikesLasagna);
     }
-
     [Test]
     public void AdaptViaReflection_VehicleBaseClass_ShouldMapBaseProperties()
     {
@@ -80,7 +74,6 @@ public sealed class ReflectionInheritanceTests : UnitTest
         result.NumberOfDoors.Should().Be(source.NumberOfDoors);
         result.HasSunroof.Should().Be(source.HasSunroof);
     }
-
     [Test]
     public void AdaptViaReflection_MultiLevelInheritance_ShouldMapAllLevels()
     {
@@ -112,7 +105,6 @@ public sealed class ReflectionInheritanceTests : UnitTest
         result.Horsepower.Should().Be(source.Horsepower);
         result.TopSpeed.Should().Be(source.TopSpeed);
     }
-
     [Test]
     public void AdaptViaReflection_InterfaceImplementation_ShouldMapAllProperties()
     {
@@ -133,7 +125,6 @@ public sealed class ReflectionInheritanceTests : UnitTest
         result.Name.Should().Be(source.Name);
         result.Description.Should().Be(source.Description);
     }
-
     [Test]
     public void AdaptViaReflection_BaseVehicle_ToBaseCar_ShouldMapCommonProperties()
     {
@@ -157,7 +148,6 @@ public sealed class ReflectionInheritanceTests : UnitTest
         result.Year.Should().Be(source.Year);
         result.NumberOfDoors.Should().Be(source.NumberOfDoors);
     }
-
     [Test]
     public void AdaptViaReflection_DifferentDerivedTypes_ShouldMapCorrectly()
     {
@@ -175,7 +165,6 @@ public sealed class ReflectionInheritanceTests : UnitTest
         catResult.Name.Should().Be("Whiskers");
         catResult.LivesRemaining.Should().Be(9);
     }
-
     [Test]
     public void AdaptViaReflection_SportCar_WithDefaultValues_ShouldMap()
     {
@@ -200,7 +189,6 @@ public sealed class ReflectionInheritanceTests : UnitTest
         result.Horsepower.Should().Be(0);
         result.TopSpeed.Should().Be(0);
     }
-
     [Test]
     public void AdaptViaReflection_Car_ToVehicle_ShouldMapBaseProperties()
     {
@@ -223,7 +211,6 @@ public sealed class ReflectionInheritanceTests : UnitTest
         result.Model.Should().Be(source.Model);
         result.Year.Should().Be(source.Year);
     }
-
     [Test]
     public void AdaptViaReflection_InterfaceImplementation_WithEmptyStrings_ShouldMap()
     {
@@ -244,7 +231,6 @@ public sealed class ReflectionInheritanceTests : UnitTest
         result.Name.Should().BeEmpty();
         result.Description.Should().BeEmpty();
     }
-
     [Test]
     public void AdaptViaReflection_MultipleDogs_WithCaching_ShouldMapCorrectly()
     {

@@ -7,10 +7,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class DictionaryTests : UnitTest
 {
-    public DictionaryTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_Dictionary_StringString_ShouldCopy()
     {
@@ -33,7 +29,6 @@ public sealed class DictionaryTests : UnitTest
         result["key2"].Should().Be("value2");
         result["key3"].Should().Be("value3");
     }
-
     [Test]
     public void Adapt_Dictionary_IntString_ShouldCopy()
     {
@@ -56,7 +51,6 @@ public sealed class DictionaryTests : UnitTest
         result[2].Should().Be("two");
         result[3].Should().Be("three");
     }
-
     [Test]
     public void Adapt_Dictionary_StringInt_ShouldCopy()
     {
@@ -78,7 +72,6 @@ public sealed class DictionaryTests : UnitTest
         result["two"].Should().Be(2);
         result["three"].Should().Be(3);
     }
-
     [Test]
     public void Adapt_Dictionary_Empty_ShouldReturnEmpty()
     {
@@ -92,7 +85,6 @@ public sealed class DictionaryTests : UnitTest
         result.Should().NotBeNull();
         result.Should().BeEmpty();
     }
-
     [Test]
     public void Adapt_IDictionary_ShouldCopy()
     {
@@ -112,7 +104,6 @@ public sealed class DictionaryTests : UnitTest
         result["a"].Should().Be(100);
         result["b"].Should().Be(200);
     }
-
     [Test]
     public void Adapt_Dictionary_ComplexKey_Guid_ShouldCopy()
     {
@@ -134,7 +125,6 @@ public sealed class DictionaryTests : UnitTest
         result[key1].Should().Be("first");
         result[key2].Should().Be("second");
     }
-
     [Test]
     public void Adapt_Dictionary_LargeCollection_ShouldCopy()
     {
@@ -154,7 +144,6 @@ public sealed class DictionaryTests : UnitTest
         result[0].Should().Be("value_0");
         result[499].Should().Be("value_499");
     }
-
     [Test]
     public void Adapt_Dictionary_IntInt_ShouldCopy()
     {
@@ -175,7 +164,6 @@ public sealed class DictionaryTests : UnitTest
         result[2].Should().Be(20);
         result[3].Should().Be(30);
     }
-
     [Test]
     public void Adapt_Dictionary_LongLong_ShouldCopy()
     {
@@ -193,7 +181,6 @@ public sealed class DictionaryTests : UnitTest
         result.Count.Should().Be(2);
         result[1000000000L].Should().Be(9000000000L);
     }
-
     [Test]
     public void Adapt_Dictionary_BoolString_ShouldCopy()
     {
@@ -212,7 +199,6 @@ public sealed class DictionaryTests : UnitTest
         result[true].Should().Be("yes");
         result[false].Should().Be("no");
     }
-
     [Test]
     public void Adapt_Dictionary_WithNullValues_ShouldCopy()
     {
@@ -233,7 +219,6 @@ public sealed class DictionaryTests : UnitTest
         result["key2"].Should().BeNull();
         result["key3"].Should().Be("value3");
     }
-
     [Test]
     public void Adapt_Dictionary_SingleEntry_ShouldCopy()
     {
@@ -247,7 +232,6 @@ public sealed class DictionaryTests : UnitTest
         result.Count.Should().Be(1);
         result["solo"].Should().Be(42);
     }
-
     [Test]
     public void Adapt_Dictionary_DateTimeKeys_ShouldCopy()
     {
@@ -268,7 +252,6 @@ public sealed class DictionaryTests : UnitTest
         result[date1].Should().Be("today");
         result[date2].Should().Be("tomorrow");
     }
-
     [Test]
     public void Adapt_Dictionary_DecimalValues_ShouldCopy()
     {

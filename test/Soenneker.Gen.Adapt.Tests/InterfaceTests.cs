@@ -7,10 +7,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class InterfaceTests : UnitTest
 {
-    public InterfaceTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_ClassToImplementation_WithInterfaceInMiddle_ShouldMapProperties()
     {
@@ -31,7 +27,6 @@ public sealed class InterfaceTests : UnitTest
         result.LastName.Should().Be("Doe");
         result.Age.Should().Be(30);
     }
-
     [Test]
     public void Adapt_ImplementationToAnotherImplementation_ShouldMapProperties()
     {
@@ -52,7 +47,6 @@ public sealed class InterfaceTests : UnitTest
         result.LastName.Should().Be("Smith");
         result.Age.Should().Be(25);
     }
-
     [Test]
     public void Adapt_ImplementationToClass_ShouldMapProperties()
     {
@@ -73,7 +67,6 @@ public sealed class InterfaceTests : UnitTest
         result.LastName.Should().Be("Johnson");
         result.Age.Should().Be(35);
     }
-
     [Test]
     public void Adapt_ClassToImplementation_ShouldMapProperties()
     {
@@ -94,7 +87,6 @@ public sealed class InterfaceTests : UnitTest
         result.LastName.Should().Be("Williams");
         result.Age.Should().Be(28);
     }
-
     [Test]
     public void Adapt_ProductImplementationToClass_ShouldMapProperties()
     {
@@ -115,7 +107,6 @@ public sealed class InterfaceTests : UnitTest
         result.Name.Should().Be("Test Product");
         result.Price.Should().Be(99.99m);
     }
-
     [Test]
     public void Adapt_ProductClassToImplementation_ShouldMapProperties()
     {
@@ -136,7 +127,6 @@ public sealed class InterfaceTests : UnitTest
         result.Name.Should().Be("Another Product");
         result.Price.Should().Be(149.99m);
     }
-
     [Test]
     public void Adapt_ClassWithConcreteProperties_ShouldMapRecursively()
     {
@@ -165,7 +155,6 @@ public sealed class InterfaceTests : UnitTest
         result.Should().NotBeNull();
         result.OrderId.Should().Be("ORDER-001");
     }
-
     [Test]
     public void Adapt_BetweenClassesWithConcreteTypes_ShouldMapRecursively()
     {
@@ -194,7 +183,6 @@ public sealed class InterfaceTests : UnitTest
         result.Should().NotBeNull();
         result.OrderId.Should().Be("ORDER-002");
     }
-
     [Test]
     public void Adapt_WithEmptyStrings_ShouldMapCorrectly()
     {
@@ -215,7 +203,6 @@ public sealed class InterfaceTests : UnitTest
         result.LastName.Should().Be("");
         result.Age.Should().Be(0);
     }
-
     [Test]
     public void Adapt_WithMinMaxValues_ShouldMapCorrectly()
     {
@@ -234,7 +221,6 @@ public sealed class InterfaceTests : UnitTest
         result.Should().NotBeNull();
         result.Age.Should().Be(int.MaxValue);
     }
-
     [Test]
     public void Adapt_MultipleInstances_ShouldCreateIndependentObjects()
     {
@@ -266,7 +252,6 @@ public sealed class InterfaceTests : UnitTest
         result1.Age.Should().Be(10);
         result2.Age.Should().Be(20);
     }
-
     [Test]
     public void Adapt_BidirectionalMapping_ShouldWork()
     {
@@ -288,7 +273,6 @@ public sealed class InterfaceTests : UnitTest
         backToClass.LastName.Should().Be("Doe");
         backToClass.Age.Should().Be(30);
     }
-
     [Test]
     public void Adapt_DirectlyFromInterface_ShouldWork()
     {
@@ -309,7 +293,6 @@ public sealed class InterfaceTests : UnitTest
         result.LastName.Should().Be("Doe");
         result.Age.Should().Be(25);
     }
-
     [Test]
     public void Adapt_DirectlyFromProductInterface_ShouldWork()
     {

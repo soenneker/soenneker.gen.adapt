@@ -8,10 +8,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class InterfaceCollectionTests : UnitTest
 {
-    public InterfaceCollectionTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_ListOfInterfaces_ShouldMapToListOfClasses()
     {
@@ -55,7 +51,6 @@ public sealed class InterfaceCollectionTests : UnitTest
         result.Products[1].Name.Should().Be("Product 2");
         result.Products[1].Price.Should().Be(149.99m);
     }
-
     [Test]
     public void Adapt_IReadOnlyListOfInterfaces_ShouldMapToList()
     {
@@ -90,7 +85,6 @@ public sealed class InterfaceCollectionTests : UnitTest
         result.Products[0].Id.Should().Be("P3");
         result.Products[0].Price.Should().Be(199.99m);
     }
-
     [Test]
     public void Adapt_EmptyListOfInterfaces_ShouldMapToEmptyList()
     {
@@ -111,7 +105,6 @@ public sealed class InterfaceCollectionTests : UnitTest
         result.Products.Should().NotBeNull();
         result.Products.Count.Should().Be(0);
     }
-
     [Test]
     public void Adapt_ListOfInterfacesWithManyItems_ShouldMapAll()
     {
@@ -142,7 +135,6 @@ public sealed class InterfaceCollectionTests : UnitTest
         result.People[50].FirstName.Should().Be("First50");
         result.People[99].Age.Should().Be(99);
     }
-
     [Test]
     public void Adapt_ListOfInterfaces_ShouldCreateIndependentCopies()
     {
@@ -163,7 +155,6 @@ public sealed class InterfaceCollectionTests : UnitTest
         // Assert
         result.People[0].FirstName.Should().Be("Original"); // Should be unchanged
     }
-
     [Test]
     public void Adapt_DictionaryWithInterfaceValues_ShouldMapValueTypes()
     {
@@ -200,7 +191,6 @@ public sealed class InterfaceCollectionTests : UnitTest
         result.ProductsById["prod1"].Price.Should().Be(99.99m);
         result.ProductsById["prod2"].Name.Should().Be("Product 2");
     }
-
     [Test]
     public void Adapt_IReadOnlyDictionaryWithInterfaceValues_ShouldMap()
     {
@@ -224,7 +214,6 @@ public sealed class InterfaceCollectionTests : UnitTest
         result.ProductsById["key1"].Name.Should().Be("Test");
         result.ProductsById["key1"].Price.Should().Be(50m);
     }
-
     [Test]
     public void Adapt_DictionaryOfInterfaces_ShouldCreateIndependentCopies()
     {

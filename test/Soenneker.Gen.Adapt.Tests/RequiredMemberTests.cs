@@ -7,10 +7,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class RequiredMemberTests : UnitTest
 {
-    public RequiredMemberTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_RequiredMembers_ShouldUseObjectInitializer()
     {
@@ -31,7 +27,6 @@ public sealed class RequiredMemberTests : UnitTest
         result.Name.Should().Be("Test Name");
         result.Count.Should().Be(42);
     }
-
     [Test]
     public void Adapt_InitOnlyProperties_ShouldUseObjectInitializer()
     {
@@ -52,7 +47,6 @@ public sealed class RequiredMemberTests : UnitTest
         result.Name.Should().Be("Init Name");
         result.Count.Should().Be(100);
     }
-
     [Test]
     public void Adapt_RegularProperties_ShouldUseObjectInitializer()
     {
@@ -73,7 +67,6 @@ public sealed class RequiredMemberTests : UnitTest
         result.Name.Should().Be("Regular Name");
         result.Count.Should().Be(200);
     }
-
     [Test]
     public void Adapt_ShouldAlwaysUseObjectInitializers_ForConsistency()
     {
@@ -107,7 +100,6 @@ public sealed class RequiredMemberTests : UnitTest
         regularResult.Name.Should().Be("Regular");
         regularResult.Count.Should().Be(300);
     }
-
     [Test]
     public void Adapt_RequiredMembersWithMissingSource_ShouldProvideDefaults()
     {
@@ -128,7 +120,6 @@ public sealed class RequiredMemberTests : UnitTest
         result.Name.Should().Be("Test Name");
         result.Count.Should().Be(0); // Default value for int
     }
-
     [Test]
     public void Adapt_RequiredMembersWithNullSource_ShouldHandleGracefully()
     {

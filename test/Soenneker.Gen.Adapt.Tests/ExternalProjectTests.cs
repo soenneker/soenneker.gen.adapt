@@ -7,10 +7,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class ExternalProjectTests : UnitTest
 {
-    public ExternalProjectTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_FromExternalProjectDto_ToBasicDest_ShouldMapCorrectly()
     {
@@ -27,7 +23,6 @@ public sealed class ExternalProjectTests : UnitTest
         result.Should().NotBeNull();
         result.Id.Should().Be("external-123");
     }
-
     [Test]
     public void Adapt_FromBasicSource_ToExternalProjectDto_ShouldMapCorrectly()
     {
@@ -46,7 +41,6 @@ public sealed class ExternalProjectTests : UnitTest
         result.Should().NotBeNull();
         result.Id.Should().Be("internal-456");
     }
-
     [Test]
     public void Adapt_ExternalProjectDto_RoundTrip_ShouldPreserveData()
     {
@@ -64,7 +58,6 @@ public sealed class ExternalProjectTests : UnitTest
         result.Should().NotBeNull();
         result.Id.Should().Be("roundtrip-789");
     }
-
     [Test]
     public void Adapt_ExternalProjectDto_WithNullId_ShouldMapNull()
     {
@@ -81,7 +74,6 @@ public sealed class ExternalProjectTests : UnitTest
         result.Should().NotBeNull();
         result.Id.Should().BeNull();
     }
-
     [Test]
     public void Adapt_ExternalProjectDto_WithEmptyId_ShouldMapEmpty()
     {

@@ -7,10 +7,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class NuGetTypesTests : UnitTest
 {
-    public NuGetTypesTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_Document_should_Adapt()
     {
@@ -21,7 +17,6 @@ public sealed class NuGetTypesTests : UnitTest
         newDoc.Should().NotBeNull();
         newDoc.Id.Should().Be(document.Id);
     }
-
     [Test]
     public void Adapt_Document_to_IdNamePair_should_adapt()
     {
@@ -32,7 +27,6 @@ public sealed class NuGetTypesTests : UnitTest
         idNamePair.Should().NotBeNull();
         idNamePair.Id.Should().Be(document.Id);
     }
-
     [Test]
     public void Adapt_IdNamePair_to_Document_should_adapt()
     {

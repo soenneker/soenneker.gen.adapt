@@ -7,10 +7,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class DictionaryListValueTests : UnitTest
 {
-    public DictionaryListValueTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_DictionaryWithListValue_ShouldMapListValues()
     {
@@ -48,7 +44,6 @@ public sealed class DictionaryListValueTests : UnitTest
         sourceList[0].Tracking = "UPDATED";
         mappedList[0].Tracking.Should().Be("PKG-1");
     }
-
     [Test]
     public void Adapt_DictionaryWithListValue_DirectCall_ShouldMapListValues()
     {

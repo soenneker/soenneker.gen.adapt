@@ -20,15 +20,15 @@
 
     <ItemGroup>
         <PackageReference Include="AutoMapper" Version="16.1.1" />
-        <PackageReference Include="Facet.Extensions" Version="6.3.4" />
+        <PackageReference Include="Facet.Extensions" Version="6.4.0" />
         <PackageReference Include="Mapster" Version="10.0.7" />
         <PackageReference Include="Riok.Mapperly" Version="4.3.1" />
         <PackageReference Include="Soenneker.Enums.DayOfWeek" Version="4.0.738" />
-        <PackageReference Include="Soenneker.Tests.Attributes.Local" Version="4.0.0" />
-        <PackageReference Include="Soenneker.Tests.Benchmark" Version="4.0.85" />
+        <PackageReference Include="Soenneker.Tests.Attributes.Local" Version="4.0.2" />
+        <PackageReference Include="Soenneker.Tests.Benchmark" Version="4.0.87" />
         <PackageReference Include="Soenneker.Documents.Audit" Version="4.0.2510" />
         <PackageReference Include="Soenneker.Dtos.IdNamePair" Version="4.0.707" />
-        <PackageReference Include="Soenneker.Utils.Test" Version="4.0.314" />
+        <PackageReference Include="Soenneker.Utils.Test" Version="4.0.315" />
         <PackageReference Include="Soenneker.Tests.Unit" Version="4.0.1115" />
         <PackageReference Include="TUnit" Version="1.37.24" />
     </ItemGroup>
@@ -37,10 +37,5 @@
         <ProjectReference Include="..\..\src\Soenneker.Gen.Adapt\Soenneker.Gen.Adapt.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
         <ProjectReference Include="..\Soenneker.Gen.Adapt.Tests.Types\Soenneker.Gen.Adapt.Tests.Types.csproj" />
     </ItemGroup>
-
-    <ItemGroup>
-        <Content Include="testconfig.json">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
 </Project>
+

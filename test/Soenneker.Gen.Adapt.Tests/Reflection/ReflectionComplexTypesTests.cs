@@ -8,10 +8,6 @@ namespace Soenneker.Gen.Adapt.Tests.Reflection;
 
 public sealed class ReflectionComplexTypesTests : UnitTest
 {
-    public ReflectionComplexTypesTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void AdaptViaReflection_SimpleNestedObject_ShouldMapTopLevelProperties()
     {
@@ -36,7 +32,6 @@ public sealed class ReflectionComplexTypesTests : UnitTest
         // Note: Inner won't be deeply copied since InnerObjectSource is not assignable to InnerObjectDest
         // Reflection adapter only copies assignable properties directly
     }
-
     [Test]
     public void AdaptViaReflection_NestedObject_WithNullInner_ShouldMapCorrectly()
     {
@@ -55,7 +50,6 @@ public sealed class ReflectionComplexTypesTests : UnitTest
         result.Name.Should().Be(source.Name);
         result.Inner.Should().BeNull();
     }
-
     [Test]
     public void AdaptViaReflection_DeepNestedObject_ShouldMapTopLevelProperties()
     {
@@ -86,7 +80,6 @@ public sealed class ReflectionComplexTypesTests : UnitTest
         result.Name.Should().Be(source.Name);
         // Deep nested properties require type-compatible assignments
     }
-
     [Test]
     public void AdaptViaReflection_ComplexWithCollections_TopLevelProperties_ShouldMap()
     {
@@ -131,7 +124,6 @@ public sealed class ReflectionComplexTypesTests : UnitTest
         result.Children[1].Id.Should().Be(2);
         result.Children[1].Name.Should().Be("Child2");
     }
-
     [Test]
     public void AdaptViaReflection_ComplexWithCollections_EmptyCollections_ShouldMap()
     {
@@ -155,7 +147,6 @@ public sealed class ReflectionComplexTypesTests : UnitTest
         // Now Children WILL be adapted recursively!
         result.Children.Should().BeEmpty();
     }
-
     [Test]
     public void AdaptViaReflection_ComplexWithCollections_NullCollections_ShouldMap()
     {
@@ -178,7 +169,6 @@ public sealed class ReflectionComplexTypesTests : UnitTest
         result.Counts.Should().BeNull();
         result.Children.Should().BeNull();
     }
-
     [Test]
     public void AdaptViaReflection_CircularReference_ShouldMapAvailableProperties()
     {
@@ -197,7 +187,6 @@ public sealed class ReflectionComplexTypesTests : UnitTest
         result.Id.Should().Be(source.Id);
         result.Name.Should().Be(source.Name);
     }
-
     [Test]
     public void AdaptViaReflection_InnerObject_Directly_ShouldMap()
     {
@@ -218,7 +207,6 @@ public sealed class ReflectionComplexTypesTests : UnitTest
         result.Value.Should().Be(source.Value);
         result.Timestamp.Should().Be(source.Timestamp);
     }
-
     [Test]
     public void AdaptViaReflection_Level1_Directly_ShouldMap()
     {
@@ -235,7 +223,6 @@ public sealed class ReflectionComplexTypesTests : UnitTest
         result.Should().NotBeNull();
         result.Id.Should().Be(source.Id);
     }
-
     [Test]
     public void AdaptViaReflection_Level3_Directly_ShouldMap()
     {
@@ -254,7 +241,6 @@ public sealed class ReflectionComplexTypesTests : UnitTest
         result.Number.Should().Be(source.Number);
         result.Flag.Should().Be(source.Flag);
     }
-
     [Test]
     public void AdaptViaReflection_ChildItem_Directly_ShouldMap()
     {
@@ -275,7 +261,6 @@ public sealed class ReflectionComplexTypesTests : UnitTest
         result.Name.Should().Be(source.Name);
         result.CreatedAt.Should().Be(source.CreatedAt);
     }
-
     [Test]
     public void AdaptViaReflection_ComplexWithLargeCollections_ShouldMap()
     {
@@ -300,7 +285,6 @@ public sealed class ReflectionComplexTypesTests : UnitTest
         result.Tags[0].Should().Be("Tag0");
         result.Tags[999].Should().Be("Tag999");
     }
-
     [Test]
     public void AdaptViaReflection_ComplexWithDeeplyNestedDictionary_ShouldMap()
     {

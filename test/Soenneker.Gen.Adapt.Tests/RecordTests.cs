@@ -10,10 +10,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class RecordTests : UnitTest
 {
-    public RecordTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_Record_ShouldMapProperties()
     {
@@ -34,7 +30,6 @@ public sealed class RecordTests : UnitTest
         result.LastName.Should().Be("Doe");
         result.Age.Should().Be(30);
     }
-
     [Test]
     public void Adapt_Class_To_Record_ShouldMapProperties()
     {
@@ -55,7 +50,6 @@ public sealed class RecordTests : UnitTest
         result.LastName.Should().Be("Doe");
         result.Age.Should().Be(28);
     }
-
     [Test]
     public void Adapt_Record_EmptyStrings_ShouldMap()
     {
@@ -75,7 +69,6 @@ public sealed class RecordTests : UnitTest
         result.LastName.Should().Be("");
         result.Age.Should().Be(0);
     }
-
     [Test]
     public void Adapt_Record_SpecialCharacters_ShouldMap()
     {
@@ -94,7 +87,6 @@ public sealed class RecordTests : UnitTest
         result.FirstName.Should().Be("François");
         result.LastName.Should().Be("O'Brien-MacDonald");
     }
-
     [Test]
     public void Adapt_Record_VeryOldAge_ShouldMap()
     {
@@ -112,7 +104,6 @@ public sealed class RecordTests : UnitTest
         // Assert
         result.Age.Should().Be(150);
     }
-
     [Test]
     public void Adapt_Record_MultipleInstances_ShouldBeIndependent()
     {

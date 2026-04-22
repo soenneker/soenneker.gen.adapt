@@ -17,7 +17,7 @@ public class BenchmarkRunner : BenchmarkTest
     {
         Summary summary = BenchmarkDotNet.Running.BenchmarkRunner.Run<ComplexListMappingBenchmark>(DefaultConf);
 
-        await summary.OutputSummaryToLog(OutputHelper, CancellationToken);
+        await summary.OutputSummaryToLog();
     }
 
    // [LocalOnly]
@@ -25,7 +25,7 @@ public class BenchmarkRunner : BenchmarkTest
     {
         Summary summary = BenchmarkDotNet.Running.BenchmarkRunner.Run<ComplexListMappingFacetBenchmark>(DefaultConf);
 
-        await summary.OutputSummaryToLog(OutputHelper, CancellationToken);
+        await summary.OutputSummaryToLog();
     }
 
   //  [LocalOnly]
@@ -33,7 +33,7 @@ public class BenchmarkRunner : BenchmarkTest
     {
         Summary summary = BenchmarkDotNet.Running.BenchmarkRunner.Run<LargeListMappingBenchmark>(DefaultConf);
 
-        await summary.OutputSummaryToLog(OutputHelper, CancellationToken);
+        await summary.OutputSummaryToLog();
     }
 
   //  [LocalOnly]
@@ -41,7 +41,7 @@ public class BenchmarkRunner : BenchmarkTest
     {
         Summary summary = BenchmarkDotNet.Running.BenchmarkRunner.Run<SimpleMappingBenchmark>(DefaultConf);
 
-        await summary.OutputSummaryToLog(OutputHelper, CancellationToken);
+        await summary.OutputSummaryToLog();
     }
 
    // [LocalOnly]
@@ -49,7 +49,7 @@ public class BenchmarkRunner : BenchmarkTest
     {
         Summary summary = BenchmarkDotNet.Running.BenchmarkRunner.Run<NestedMappingBenchmark>(DefaultConf);
 
-        await summary.OutputSummaryToLog(OutputHelper, CancellationToken);
+        await summary.OutputSummaryToLog();
     }
 
     //[LocalOnly]
@@ -57,7 +57,7 @@ public class BenchmarkRunner : BenchmarkTest
     {
         Summary summary = BenchmarkDotNet.Running.BenchmarkRunner.Run<NestedFacetMappingBenchmark>(DefaultConf);
 
-        await summary.OutputSummaryToLog(OutputHelper, CancellationToken);
+        await summary.OutputSummaryToLog();
     }
 
     //[LocalOnly]
@@ -65,6 +65,6 @@ public class BenchmarkRunner : BenchmarkTest
     {
         Summary summary = BenchmarkDotNet.Running.BenchmarkRunner.Run<NestedListMappingBenchmark>(DefaultConf);
 
-        await summary.OutputSummaryToLog(OutputHelper, CancellationToken);
+        await summary.OutputSummaryToLog();
     }
 }

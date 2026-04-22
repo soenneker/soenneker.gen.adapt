@@ -6,10 +6,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class StructTests : UnitTest
 {
-    public StructTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_Struct_ShouldMapProperties()
     {
@@ -27,7 +23,6 @@ public sealed class StructTests : UnitTest
         result.X.Should().Be(10);
         result.Y.Should().Be(20);
     }
-
     [Test]
     public void Adapt_ClassWithStructProperty_ShouldMapRecursively()
     {
@@ -47,7 +42,6 @@ public sealed class StructTests : UnitTest
         result.Location.Y.Should().Be(200);
         result.Label.Should().Be("Point A");
     }
-
     [Test]
     public void Adapt_Struct_ZeroValues_ShouldMap()
     {
@@ -61,7 +55,6 @@ public sealed class StructTests : UnitTest
         result.X.Should().Be(0);
         result.Y.Should().Be(0);
     }
-
     [Test]
     public void Adapt_Struct_NegativeValues_ShouldMap()
     {
@@ -75,7 +68,6 @@ public sealed class StructTests : UnitTest
         result.X.Should().Be(-50);
         result.Y.Should().Be(-100);
     }
-
     [Test]
     public void Adapt_Struct_MaxValues_ShouldMap()
     {
@@ -89,7 +81,6 @@ public sealed class StructTests : UnitTest
         result.X.Should().Be(int.MaxValue);
         result.Y.Should().Be(int.MinValue);
     }
-
     [Test]
     public void Adapt_DefaultStruct_ShouldMap()
     {
@@ -103,7 +94,6 @@ public sealed class StructTests : UnitTest
         result.X.Should().Be(0);
         result.Y.Should().Be(0);
     }
-
     [Test]
     public void Adapt_StructWithinClass_MultipleInstances_ShouldMapIndependently()
     {

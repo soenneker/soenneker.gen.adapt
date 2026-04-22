@@ -4,13 +4,8 @@ using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
-[ClassDataSource<Host>(Shared = SharedType.PerTestSession)]
 public sealed class EnumConversionTests : UnitTest
 {
-    public EnumConversionTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_EnumToString_ShouldConvert()
     {
@@ -28,7 +23,6 @@ public sealed class EnumConversionTests : UnitTest
         result.Should().NotBeNull();
         result.Status.Should().Be("Active");
     }
-
     [Test]
     public void Adapt_StringToEnum_ShouldParse()
     {
@@ -45,7 +39,6 @@ public sealed class EnumConversionTests : UnitTest
         result.Should().NotBeNull();
         result.StatusString.Should().Be(TestStatus.Pending);
     }
-
     [Test]
     public void Adapt_EnumToInt_ShouldCast()
     {
@@ -62,7 +55,6 @@ public sealed class EnumConversionTests : UnitTest
         result.Should().NotBeNull();
         result.Status.Should().Be(2);
     }
-
     [Test]
     public void Adapt_IntToEnum_ShouldCast()
     {
@@ -79,7 +71,6 @@ public sealed class EnumConversionTests : UnitTest
         result.Should().NotBeNull();
         result.StatusCode.Should().Be(TestStatus.Pending);
     }
-
     [Test]
     public void Adapt_IntellenumToInt_ShouldExtractValue()
     {
@@ -96,7 +87,6 @@ public sealed class EnumConversionTests : UnitTest
         result.Should().NotBeNull();
         result.UserId.Should().Be(999);
     }
-
     [Test]
     public void Adapt_IntToIntellenum_ShouldCreateFrom()
     {
@@ -114,7 +104,6 @@ public sealed class EnumConversionTests : UnitTest
         result.UserId.Should().NotBeNull();
         result.UserId.Value.Should().Be(777);
     }
-
     [Test]
     public void Adapt_EnumToString_AllValues_ShouldConvert()
     {
@@ -133,7 +122,6 @@ public sealed class EnumConversionTests : UnitTest
         var resultCompleted = sourceCompleted.Adapt<EnumToStringDest>();
         resultCompleted.Status.Should().Be("Completed");
     }
-
     [Test]
     public void Adapt_IntToEnum_AllValues_ShouldCast()
     {
@@ -149,7 +137,6 @@ public sealed class EnumConversionTests : UnitTest
         var source2 = new IntToEnumSource { StatusCode = 2 };
         source2.Adapt<IntToEnumDest>().StatusCode.Should().Be(TestStatus.Completed);
     }
-
     [Test]
     public void Adapt_EnumToInt_AllValues_ShouldCast()
     {
@@ -165,7 +152,6 @@ public sealed class EnumConversionTests : UnitTest
         var sourceCompleted = new EnumToIntSource { Status = TestStatus.Completed };
         sourceCompleted.Adapt<EnumToIntDest>().Status.Should().Be(2);
     }
-
     [Test]
     public void Adapt_IntellenumToInt_ZeroValue_ShouldExtract()
     {
@@ -178,7 +164,6 @@ public sealed class EnumConversionTests : UnitTest
         // Assert
         result.UserId.Should().Be(0);
     }
-
     [Test]
     public void Adapt_IntellenumToInt_NegativeValue_ShouldExtract()
     {
@@ -191,7 +176,6 @@ public sealed class EnumConversionTests : UnitTest
         // Assert
         result.UserId.Should().Be(-42);
     }
-
     [Test]
     public void Adapt_IntellenumToInt_MaxValue_ShouldExtract()
     {

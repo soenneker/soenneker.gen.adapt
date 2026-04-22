@@ -9,10 +9,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class BoundaryTests : UnitTest
 {
-    public BoundaryTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_Int32_MinValue_ShouldMap()
     {
@@ -26,7 +22,6 @@ public sealed class BoundaryTests : UnitTest
         result.Count.Should().Be(int.MinValue);
         result.Count.Should().Be(-2147483648);
     }
-
     [Test]
     public void Adapt_Int32_MaxValue_ShouldMap()
     {
@@ -40,7 +35,6 @@ public sealed class BoundaryTests : UnitTest
         result.Count.Should().Be(int.MaxValue);
         result.Count.Should().Be(2147483647);
     }
-
     [Test]
     public void Adapt_DateTime_MinValue_ShouldMap()
     {
@@ -54,7 +48,6 @@ public sealed class BoundaryTests : UnitTest
         result.CreatedAt.Should().Be(DateTime.MinValue);
         result.CreatedAt.Year.Should().Be(1);
     }
-
     [Test]
     public void Adapt_DateTime_MaxValue_ShouldMap()
     {
@@ -68,7 +61,6 @@ public sealed class BoundaryTests : UnitTest
         result.CreatedAt.Should().Be(DateTime.MaxValue);
         result.CreatedAt.Year.Should().Be(9999);
     }
-
     [Test]
     public void Adapt_DateTimeWithMilliseconds_ShouldPreserve()
     {
@@ -86,7 +78,6 @@ public sealed class BoundaryTests : UnitTest
         result.CreatedAt.Millisecond.Should().Be(123);
         result.CreatedAt.Should().Be(new DateTime(2023, 6, 15, 14, 30, 25, 123));
     }
-
     [Test]
     public void Adapt_DateTimeWithTicks_ShouldPreserve()
     {
@@ -104,7 +95,6 @@ public sealed class BoundaryTests : UnitTest
         // Assert
         result.CreatedAt.Ticks.Should().Be(ticks);
     }
-
     [Test]
     public void Adapt_NullableDateTime_Min_ShouldMap()
     {
@@ -120,7 +110,6 @@ public sealed class BoundaryTests : UnitTest
         result[1].Should().BeNull();
         result[2].Should().Be(DateTime.MaxValue);
     }
-
     [Test]
     public void Adapt_Guid_EmptyAndNewGuid_ShouldMap()
     {
@@ -147,7 +136,6 @@ public sealed class BoundaryTests : UnitTest
         result3.Id.Should().Be(guid3);
         result4.Id.Should().Be(guid4);
     }
-
     [Test]
     public void Adapt_GuidWithAllSameDigits_ShouldMap()
     {
@@ -170,7 +158,6 @@ public sealed class BoundaryTests : UnitTest
         result2.Id.Should().Be(guid2);
         result3.Id.Should().Be(guid3);
     }
-
     [Test]
     public void Adapt_NullableGuid_Min_ShouldMap()
     {
@@ -186,7 +173,6 @@ public sealed class BoundaryTests : UnitTest
         result[1].Should().BeNull();
         result[2].Should().NotBeNull();
     }
-
     [Test]
     public void Adapt_DictionaryWithGuidKeys_ExtremeValues_ShouldMap()
     {
@@ -211,7 +197,6 @@ public sealed class BoundaryTests : UnitTest
         result[key2].Should().Be("max");
         result[key3].Should().Be("min");
     }
-
     [Test]
     public void Adapt_Decimal_MinMaxValues_ShouldMap()
     {
@@ -229,7 +214,6 @@ public sealed class BoundaryTests : UnitTest
         result.Price.Should().Be(decimal.MaxValue);
         result.Discount.Should().Be(decimal.MinValue);
     }
-
     [Test]
     public void Adapt_Decimal_FullPrecision_ShouldMap()
     {
@@ -247,7 +231,6 @@ public sealed class BoundaryTests : UnitTest
         result.Price.Should().Be(79228162514264337593543950335m);
         result.Discount.Should().Be(-79228162514264337593543950335m);
     }
-
     [Test]
     public void Adapt_Decimal_ManyDecimalPlaces_ShouldPreserve()
     {
@@ -265,7 +248,6 @@ public sealed class BoundaryTests : UnitTest
         result.Price.Should().Be(0.0000000000000000000000000001m);
         result.Discount.Should().Be(1.2345678901234567890123456789m);
     }
-
     [Test]
     public void Adapt_DecimalWithTrailingZeros_ShouldPreserve()
     {
@@ -283,7 +265,6 @@ public sealed class BoundaryTests : UnitTest
         result.Price.Should().Be(1.0m);
         result.Discount.Should().Be(10.00m);
     }
-
     [Test]
     public void Adapt_DecimalScientificNotation_ShouldMap()
     {
@@ -301,7 +282,6 @@ public sealed class BoundaryTests : UnitTest
         result.Price.Should().Be(0.000000000123m);
         result.Discount.Should().Be(456000000000000000000m);
     }
-
     [Test]
     public void Adapt_NumbersAtBoundaries_ShouldMap()
     {
@@ -329,7 +309,6 @@ public sealed class BoundaryTests : UnitTest
         results[5].Count.Should().Be(int.MaxValue - 1);
         results[6].Count.Should().Be(int.MaxValue);
     }
-
     [Test]
     public void Adapt_ListOfNegativeNumbers_ShouldMap()
     {
@@ -344,7 +323,6 @@ public sealed class BoundaryTests : UnitTest
         result.Should().AllSatisfy(x => x.Should().BeLessThan(0));
         result[5].Should().Be(int.MinValue);
     }
-
     [Test]
     public void Adapt_HugeList_10000Items_ShouldMapAll()
     {
@@ -360,7 +338,6 @@ public sealed class BoundaryTests : UnitTest
         result[9999].Should().Be(10000);
         result.Sum().Should().Be(50005000);
     }
-
     [Test]
     public void Adapt_HugeDictionary_10000Items_ShouldMapAll()
     {
@@ -379,7 +356,6 @@ public sealed class BoundaryTests : UnitTest
         result["key_0"].Should().Be(0);
         result["key_9999"].Should().Be(9999);
     }
-
     [Test]
     public void Adapt_VeryLongString_1MB_ShouldMap()
     {
@@ -394,7 +370,6 @@ public sealed class BoundaryTests : UnitTest
         result.Name.Length.Should().Be(1024 * 1024);
         result.Name.Should().Be(megabyteString);
     }
-
     [Test]
     public void Adapt_VeryLongPropertyValues_ShouldNotCorrupt()
     {
@@ -412,7 +387,6 @@ public sealed class BoundaryTests : UnitTest
         result.Id.Should().Be(longId);
         result.Name.Should().Be(longName);
     }
-
     [Test]
     public void Adapt_IntToEnum_OutOfRange_ShouldStillCast()
     {
@@ -425,7 +399,6 @@ public sealed class BoundaryTests : UnitTest
         // Assert
         result.StatusCode.Should().Be((TestStatus)99999);
     }
-
     [Test]
     public void Adapt_IntToEnum_NegativeValue_ShouldCast()
     {
@@ -438,7 +411,6 @@ public sealed class BoundaryTests : UnitTest
         // Assert
         result.StatusCode.Should().Be((TestStatus)(-1));
     }
-
     [Test]
     public void Adapt_EmptyGuidList_ShouldMapToEmptyList()
     {
@@ -452,7 +424,6 @@ public sealed class BoundaryTests : UnitTest
         result.Should().BeEmpty();
         result.Should().NotBeSameAs(source);
     }
-
     [Test]
     public void Adapt_EmptyDateTimeList_ShouldMapToEmptyList()
     {
@@ -466,7 +437,6 @@ public sealed class BoundaryTests : UnitTest
         result.Should().BeEmpty();
         result.Should().NotBeSameAs(source);
     }
-
     [Test]
     public void Adapt_EmptyDecimalList_ShouldMapToEmptyList()
     {

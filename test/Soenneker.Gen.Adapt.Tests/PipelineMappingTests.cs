@@ -6,10 +6,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class PipelineMappingTests : UnitTest
 {
-    public PipelineMappingTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_FlowSetupRequest_ToFlowSetup_ShouldGenerateNestedMappers()
     {

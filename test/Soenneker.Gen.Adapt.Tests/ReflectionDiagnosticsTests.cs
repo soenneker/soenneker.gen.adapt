@@ -13,10 +13,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 /// </summary>
 public sealed class ReflectionDiagnosticsTests : UnitTest
 {
-    public ReflectionDiagnosticsTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void AdaptViaReflection_NoParameterlessConstructor_ShouldThrow()
     {
@@ -30,7 +26,6 @@ public sealed class ReflectionDiagnosticsTests : UnitTest
         act.Should().Throw<MissingMethodException>()
             .WithMessage("*Cannot dynamically create an instance*");
     }
-
     [Test]
     public void AdaptViaReflection_Interface_ShouldThrow()
     {
@@ -43,7 +38,6 @@ public sealed class ReflectionDiagnosticsTests : UnitTest
         act.Should().Throw<MissingMethodException>()
             .WithMessage("*Cannot dynamically create an instance*");
     }
-
     [Test]
     public void AdaptViaReflection_NoMatchingProperties_ShouldSucceed()
     {
@@ -58,7 +52,6 @@ public sealed class ReflectionDiagnosticsTests : UnitTest
         result.DifferentName.Should().BeNullOrEmpty(); // Default string value
         result.DifferentValue.Should().Be(0); // Default int value
     }
-
     [Test]
     public void AdaptViaReflection_ReadOnlyProperties_ShouldSucceed()
     {

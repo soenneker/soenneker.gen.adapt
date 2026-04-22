@@ -8,10 +8,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class TemporalTypeTests : UnitTest
 {
-    public TemporalTypeTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_TemporalProperties_ShouldMapCorrectly()
     {
@@ -56,7 +52,6 @@ public sealed class TemporalTypeTests : UnitTest
         result.Nested.Documentation.Should().Be(new Uri("https://docs.example.org/policies"));
         result.Nested.SupportLink.Should().Be(new Uri("https://support.example.org/contact"));
     }
-
     [Test]
     public void Adapt_TemporalNullableProperties_ShouldMapNulls()
     {
@@ -100,7 +95,6 @@ public sealed class TemporalTypeTests : UnitTest
         result.NamedDates["sunset"].Should().BeNull();
         result.Nested.SupportLink.Should().BeNull();
     }
-
     [Test]
     public void Adapt_TemporalCollections_ShouldMapAndConvert()
     {

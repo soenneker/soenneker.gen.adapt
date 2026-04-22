@@ -7,10 +7,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class NestedObjectTests : UnitTest
 {
-    public NestedObjectTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_NestedObject_ShouldMapRecursively()
     {
@@ -37,7 +33,6 @@ public sealed class NestedObjectTests : UnitTest
         result.Child.Name.Should().Be("Child Name");
         result.Child.Count.Should().Be(100);
     }
-
     [Test]
     public void Adapt_DeepNesting_ShouldMapRecursively()
     {
@@ -70,7 +65,6 @@ public sealed class NestedObjectTests : UnitTest
         result.Level1.Child.Name.Should().Be("Deep Child");
         result.Level1.Child.Count.Should().Be(999);
     }
-
     [Test]
     public void Adapt_NestedObject_MultipleChildren_ShouldMapAll()
     {
@@ -111,7 +105,6 @@ public sealed class NestedObjectTests : UnitTest
         result.NestedItems[2].Name.Should().Be("Parent3");
         result.NestedItems[2].Child.Id.Should().Be("c3");
     }
-
     [Test]
     public void Adapt_NestedObjectWithEmptyList_ShouldMap()
     {
@@ -129,7 +122,6 @@ public sealed class NestedObjectTests : UnitTest
         result.NestedItems.Should().NotBeNull();
         result.NestedItems.Should().BeEmpty();
     }
-
     [Test]
     public void Adapt_NestedObjectsInDictionary_ShouldMap()
     {
@@ -164,7 +156,6 @@ public sealed class NestedObjectTests : UnitTest
         result["second"].Name.Should().Be("SecondNested");
         result["second"].Child.Id.Should().Be("2");
     }
-
     [Test]
     public void Adapt_ComplexNestedStructure_ShouldMapAll()
     {

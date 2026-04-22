@@ -8,10 +8,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class ComplexScenarioTests : UnitTest
 {
-    public ComplexScenarioTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_ObjectWithAllPropertyTypes_ShouldMapAll()
     {
@@ -53,7 +49,6 @@ public sealed class ComplexScenarioTests : UnitTest
         result.Items[1].Name.Should().Be("Second");
         result.Items[2].Count.Should().Be(30);
     }
-
     [Test]
     public void Adapt_ChainedAdaptations_ShouldWork()
     {
@@ -70,7 +65,6 @@ public sealed class ComplexScenarioTests : UnitTest
         final.Name.Should().Be("Test Name");
         final.Count.Should().Be(200); // Should have the modified value
     }
-
     [Test]
     public void Adapt_MixedNestingTypes_ShouldHandle()
     {
@@ -89,7 +83,6 @@ public sealed class ComplexScenarioTests : UnitTest
         result.Location.Y.Should().Be(75);
         result.Label.Should().Be("Complex Mix");
     }
-
     [Test]
     public void Adapt_ThreeLevelNesting_WithLists_ShouldMapAll()
     {
@@ -120,7 +113,6 @@ public sealed class ComplexScenarioTests : UnitTest
         result.Level1.Child.Name.Should().Be("LeafLevel");
         result.Level1.Child.Count.Should().Be(777);
     }
-
     [Test]
     public void Adapt_MultiplePropertiesWithSameTargetType_ShouldMapAll()
     {
@@ -161,7 +153,6 @@ public sealed class ComplexScenarioTests : UnitTest
             item.Child.Should().NotBeNull();
         });
     }
-
     [Test]
     public void Adapt_DictionaryOfComplexObjects_ShouldMap()
     {
@@ -183,7 +174,6 @@ public sealed class ComplexScenarioTests : UnitTest
         result[guid1].Id.Should().Be("first");
         result[guid2].Name.Should().Be("Second Item");
     }
-
     [Test]
     public void Adapt_AllPrimitiveTypes_InDictionary_ShouldCopy()
     {
@@ -200,7 +190,6 @@ public sealed class ComplexScenarioTests : UnitTest
         stringResult["x"].Should().Be("y");
         boolResult["flag"].Should().BeTrue();
     }
-
     [Test]
     public void Adapt_EmptyCollectionsInObject_ShouldMapAsEmpty()
     {
@@ -220,7 +209,6 @@ public sealed class ComplexScenarioTests : UnitTest
         result.Tags.Should().BeEmpty();
         result.Items.Should().BeEmpty();
     }
-
     [Test]
     public void Adapt_ObjectGraphWithCircularPotential_ShouldNotInfiniteLoop()
     {

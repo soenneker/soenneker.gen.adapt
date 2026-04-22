@@ -11,13 +11,8 @@ namespace Soenneker.Gen.Adapt.Tests;
 /// - Adapt enum parsing (GenAdapt_EnumParsers) still works for C# enums.
 /// - Adapt mappings work for DTOs that use EnumValue-generated types.
 /// </summary>
-[ClassDataSource<Host>(Shared = SharedType.PerTestSession)]
 public sealed class EnumValuesIntegrationTests : UnitTest
 {
-    public EnumValuesIntegrationTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Both_Generators_Coexist_Adapt_Enum_Parsing_Works()
     {
@@ -31,7 +26,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
         result.StatusString.Should()
               .Be(TestStatus.Active);
     }
-
     [Test]
     public void Both_Generators_Coexist_EnumValues_FromValue_Works()
     {
@@ -43,7 +37,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
         status.Value.Should()
               .Be(1);
     }
-
     [Test]
     public void Adapt_Maps_EnumValue_Type_Same_Type()
     {
@@ -59,7 +52,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
         result.Status.Value.Should()
               .Be(2);
     }
-
     [Test]
     public void Adapt_Maps_EnumValue_Type_Pending()
     {
@@ -72,7 +64,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
         result.Status.Should()
               .Be(TestOrderStatus.Pending);
     }
-
     [Test]
     public void EnumValues_List_And_Adapt_Work_Together()
     {
@@ -85,7 +76,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
                   .Be(status);
         }
     }
-
     [Test]
     public void CSharp_Enum_And_EnumValue_Type_Both_Used_In_Same_Project()
     {
@@ -102,7 +92,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
     }
 
     // --- EnumValue<string> (TestColorCode) ---
-
     [Test]
     public void EnumValue_String_FromValue_Works()
     {
@@ -112,7 +101,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
         color.Value.Should()
              .Be("R");
     }
-
     [Test]
     public void EnumValue_String_FromName_Works()
     {
@@ -122,7 +110,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
         color.Value.Should()
              .Be("B");
     }
-
     [Test]
     public void Adapt_Maps_EnumValue_String_Type_Same_Type()
     {
@@ -137,7 +124,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
         result.Color.Value.Should()
               .Be("G");
     }
-
     [Test]
     public void EnumValue_String_List_And_Adapt_Work_Together()
     {
@@ -151,7 +137,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
     }
 
     // --- Same-type: identity vs copy (HasAccessibleParameterlessConstructor) ---
-
     [Test]
     public void Adapt_EnumValue_same_type_returns_same_reference_TestOrderStatus()
     {
@@ -162,7 +147,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
         result.Status.Should().BeSameAs(source.Status);
         result.Status.Should().Be(TestOrderStatus.Completed);
     }
-
     [Test]
     public void Adapt_EnumValue_same_type_returns_same_reference_TestColorCode()
     {
@@ -173,7 +157,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
         result.Color.Should().BeSameAs(source.Color);
         result.Color.Should().Be(TestColorCode.Green);
     }
-
     [Test]
     public void Adapt_DayOfWeekType_same_type_returns_same_reference()
     {
@@ -184,7 +167,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
         result.Should().BeSameAs(source);
         result.Should().Be(DayOfWeekType.Wednesday);
     }
-
     [Test]
     public void Adapt_DayOfWeekType_via_DTO_returns_same_reference()
     {
@@ -196,7 +178,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
     }
 
     // --- Same-assembly EnumValues (types defined in this test project, Adapt called here) ---
-
     [Test]
     public void SameAssembly_EnumValue_int_TestOrderStatus_Adapt_root_returns_identity()
     {
@@ -207,7 +188,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
         result.Should().BeSameAs(source);
         result.Value.Should().Be(2);
     }
-
     [Test]
     public void SameAssembly_EnumValue_int_TestOrderStatus_Adapt_via_DTO_returns_identity()
     {
@@ -218,7 +198,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
         result.Status.Should().BeSameAs(source.Status);
         result.Status.Should().Be(TestOrderStatus.Pending);
     }
-
     [Test]
     public void SameAssembly_EnumValue_string_TestColorCode_Adapt_root_returns_identity()
     {
@@ -229,7 +208,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
         result.Should().BeSameAs(source);
         result.Value.Should().Be("G");
     }
-
     [Test]
     public void SameAssembly_EnumValue_string_TestColorCode_Adapt_via_DTO_returns_identity()
     {
@@ -240,7 +218,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
         result.Color.Should().BeSameAs(source.Color);
         result.Color.Should().Be(TestColorCode.Red);
     }
-
     [Test]
     public void SameAssembly_All_EnumValue_types_roundtrip_via_Adapt()
     {
@@ -254,7 +231,6 @@ public sealed class EnumValuesIntegrationTests : UnitTest
         new EnumValueTypeSource { Status = order }.Adapt<EnumValueTypeDest>().Status.Should().BeSameAs(order);
         new EnumValueStringTypeSource { Color = color }.Adapt<EnumValueStringTypeDest>().Color.Should().BeSameAs(color);
     }
-
     [Test]
     public void Adapt_type_with_parameterless_ctor_same_type_returns_new_instance()
     {

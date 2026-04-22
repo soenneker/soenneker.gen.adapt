@@ -8,10 +8,6 @@ namespace Soenneker.Gen.Adapt.Tests.Reflection;
 
 public sealed class ReflectionCollectionsTests : UnitTest
 {
-    public ReflectionCollectionsTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void AdaptViaReflection_ListCollections_ShouldMapCorrectly()
     {
@@ -69,7 +65,6 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.NestedIntList.Should().NotBeNull();
         result.NestedIntList.Count.Should().Be(3);
     }
-
     [Test]
     public void AdaptViaReflection_EmptyLists_ShouldMapCorrectly()
     {
@@ -92,7 +87,6 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.DoubleList.Should().BeEmpty();
         result.NestedIntList.Should().BeEmpty();
     }
-
     [Test]
     public void AdaptViaReflection_LargeLists_ShouldMapCorrectly()
     {
@@ -113,7 +107,6 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.IntList.First().Should().Be(1);
         result.IntList.Last().Should().Be(10000);
     }
-
     [Test]
     public void AdaptViaReflection_ArrayCollections_ShouldMapCorrectly()
     {
@@ -146,7 +139,6 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.MultiDimensionalArray.GetLength(0).Should().Be(3);
         result.MultiDimensionalArray.GetLength(1).Should().Be(2);
     }
-
     [Test]
     public void AdaptViaReflection_EmptyArrays_ShouldMapCorrectly()
     {
@@ -167,7 +159,6 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.StringArray.Should().BeEmpty();
         result.DoubleArray.Should().BeEmpty();
     }
-
     [Test]
     public void AdaptViaReflection_DictionaryCollections_ShouldMapCorrectly()
     {
@@ -225,7 +216,6 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.NestedDict.Should().NotBeNull();
         result.NestedDict.Count.Should().Be(2);
     }
-
     [Test]
     public void AdaptViaReflection_EmptyDictionaries_ShouldMapCorrectly()
     {
@@ -244,7 +234,6 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.StringIntDict.Should().BeEmpty();
         result.IntStringDict.Should().BeEmpty();
     }
-
     [Test]
     public void AdaptViaReflection_SetCollections_ShouldMapCorrectly()
     {
@@ -287,7 +276,6 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.IntSortedSet.Should().NotBeNull();
         result.IntSortedSet.Count.Should().Be(5);
     }
-
     [Test]
     public void AdaptViaReflection_IEnumerableCollections_ShouldMapCorrectly()
     {
@@ -312,7 +300,6 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.ReadOnlyIntList.Should().NotBeNull();
         result.ReadOnlyStringCollection.Should().NotBeNull();
     }
-
     [Test]
     public void AdaptViaReflection_NullCollections_ShouldMapNulls()
     {
@@ -335,7 +322,6 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.DoubleList.Should().BeNull();
         result.NestedIntList.Should().BeNull();
     }
-
     [Test]
     public void AdaptViaReflection_ListWithDuplicates_ShouldMapAll()
     {

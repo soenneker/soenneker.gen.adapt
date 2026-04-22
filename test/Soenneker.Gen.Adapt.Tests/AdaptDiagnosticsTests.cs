@@ -11,11 +11,7 @@ namespace Soenneker.Gen.Adapt.Tests;
 /// </summary>
 public sealed class AdaptDiagnosticsTests : UnitTest
 {
-    public AdaptDiagnosticsTests( output) : base(output)
-    {
-    }
-
-    //[Test]
+//[Test]
     //public void Adapt_NoParameterlessConstructor_ShouldGenerateDiagnostic()
     //{
     //    // This should trigger SGA002 diagnostic: "No parameterless constructor available"
@@ -71,7 +67,6 @@ public sealed class AdaptDiagnosticsTests : UnitTest
     //    // This code will never execute because compilation will fail with error SGA003
     //    result.Should().NotBeNull();
     //}
-
     [Test]
     public void Adapt_ValidMapping_ShouldNotGenerateDiagnostic()
     {

@@ -7,10 +7,6 @@ namespace Soenneker.Gen.Adapt.Tests.Reflection;
 
 public sealed class ReflectionAdapterTests : UnitTest
 {
-    public ReflectionAdapterTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void AdaptViaReflection_should_copy_all_properties()
     {
@@ -31,7 +27,6 @@ public sealed class ReflectionAdapterTests : UnitTest
         result.Name.Should().Be(source.Name);
         result.Count.Should().Be(source.Count);
     }
-
     [Test]
     public void AdaptViaReflection_should_work_with_derived_types()
     {
@@ -50,7 +45,6 @@ public sealed class ReflectionAdapterTests : UnitTest
         result.Name.Should().Be(source.Name);
         result.Email.Should().Be(source.Email);
     }
-
     [Test]
     public void AdaptViaReflection_should_handle_string_properties()
     {
@@ -70,7 +64,6 @@ public sealed class ReflectionAdapterTests : UnitTest
         // Note: Child won't be copied since BasicSource is not assignable to BasicDest
         // For nested object mapping, use the regular Adapt<>() method
     }
-
     [Test]
     public void AdaptViaReflection_should_cache_mappers()
     {
@@ -90,7 +83,6 @@ public sealed class ReflectionAdapterTests : UnitTest
         result2.Name.Should().Be("Second");
         result2.Count.Should().Be(20);
     }
-
     [Test]
     public void AdaptViaReflection_should_only_copy_matching_properties()
     {
@@ -111,7 +103,6 @@ public sealed class ReflectionAdapterTests : UnitTest
         result.Name.Should().Be(source.Name);
         // ExtraField doesn't exist on PartialMatchDest, so it's not copied
     }
-
     [Test]
     public void AdaptViaReflection_should_throw_on_null_source()
     {
@@ -122,7 +113,6 @@ public sealed class ReflectionAdapterTests : UnitTest
         Action act = () => source!.AdaptViaReflection<BasicDest>();
         act.Should().Throw<ArgumentNullException>();
     }
-
     [Test]
     public void AdaptViaReflection_reverse_mapping_should_work()
     {

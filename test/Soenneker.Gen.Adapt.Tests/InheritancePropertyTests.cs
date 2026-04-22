@@ -6,10 +6,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class InheritancePropertyTests : UnitTest
 {
-    public InheritancePropertyTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_ClassWithDerivedProperties_ShouldMapToNewHierarchy()
     {

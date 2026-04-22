@@ -10,10 +10,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 /// </summary>
 public sealed class GenericTypeParameterTests : UnitTest
 {
-    public GenericTypeParameterTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_TEntity_To_TDocument_CustomerScenario()
     {
@@ -31,7 +27,6 @@ public sealed class GenericTypeParameterTests : UnitTest
         document.Name.Should().Be("John Doe");
         document.Email.Should().Be("john@example.com");
     }
-
     [Test]
     public void Adapt_TDocument_To_TEntity_GetScenario()
     {
@@ -49,7 +44,6 @@ public sealed class GenericTypeParameterTests : UnitTest
         entity.Name.Should().Be("Jane Smith");
         entity.Email.Should().Be("jane@example.com");
     }
-
     [Test]
     public void Adapt_TEntity_To_TDocument_ProductScenario()
     {
@@ -67,7 +61,6 @@ public sealed class GenericTypeParameterTests : UnitTest
         document.ProductName.Should().Be("Widget");
         document.Price.Should().Be(99.99m);
     }
-
     [Test]
     public void Adapt_RoundTrip_SimulatesYourCreateAndGetMethods()
     {
@@ -88,7 +81,6 @@ public sealed class GenericTypeParameterTests : UnitTest
         retrievedEntity.Name.Should().Be("Bob Johnson");
         retrievedEntity.Email.Should().Be("bob@example.com");
     }
-
     [Test]
     public void Adapt_UpdateWorkflow_SimulatesYourUpdateMethod()
     {
@@ -110,7 +102,6 @@ public sealed class GenericTypeParameterTests : UnitTest
         result.Name.Should().Be("Original Name");
         result.Email.Should().Be("original@example.com");
     }
-
     [Test]
     public void Adapt_MultipleEntityDocumentPairs_AllWork()
     {

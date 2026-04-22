@@ -8,10 +8,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class ComprehensiveTypeTests : UnitTest
 {
-    public ComprehensiveTypeTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_Arrays_ShouldMapCorrectly()
     {
@@ -47,7 +43,6 @@ public sealed class ComprehensiveTypeTests : UnitTest
         result.People[0].FirstName.Should().Be("John");
         result.People[1].Age.Should().Be(25);
     }
-
     [Test]
     public void Adapt_HashSet_ShouldMapCorrectly()
     {
@@ -82,7 +77,6 @@ public sealed class ComprehensiveTypeTests : UnitTest
         result.People[0].FirstName.Should().Be("Alice");
         result.People[0].Age.Should().Be(35);
     }
-
     [Test]
     public void Adapt_AllPrimitiveTypes_ShouldMapCorrectly()
     {
@@ -124,7 +118,6 @@ public sealed class ComprehensiveTypeTests : UnitTest
         result.DateTimeOffsetValue.Should().Be(now);
         result.TimeSpanValue.Should().Be(span);
     }
-
     [Test]
     public void Adapt_EmptyArrays_ShouldMapToEmptyCollections()
     {
@@ -145,7 +138,6 @@ public sealed class ComprehensiveTypeTests : UnitTest
         result.Numbers.Count.Should().Be(0);
         result.People.Length.Should().Be(0);
     }
-
     [Test]
     public void Adapt_LargeArray_ShouldMapAll()
     {
@@ -169,7 +161,6 @@ public sealed class ComprehensiveTypeTests : UnitTest
         result.Numbers[500].Should().Be(500);
         result.Numbers[999].Should().Be(999);
     }
-
     [Test]
     public void Adapt_EmptyHashSet_ShouldMapCorrectly()
     {

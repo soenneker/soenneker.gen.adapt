@@ -8,7 +8,6 @@ public class TestIntellenum
     {
         Value = value;
     }
-
     public static TestIntellenum From(int value)
     {
         return new TestIntellenum(value);

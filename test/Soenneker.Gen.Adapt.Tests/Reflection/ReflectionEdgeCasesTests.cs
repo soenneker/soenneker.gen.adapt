@@ -10,10 +10,6 @@ namespace Soenneker.Gen.Adapt.Tests.Reflection;
 
 public sealed class ReflectionEdgeCasesTests : UnitTest
 {
-    public ReflectionEdgeCasesTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void AdaptViaReflection_NullSource_ShouldThrowArgumentNullException()
     {
@@ -24,7 +20,6 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
         Action act = () => source!.AdaptViaReflection<ReflectionAllPrimitivesDest>();
         act.Should().Throw<ArgumentNullException>();
     }
-
     [Test]
     public void AdaptViaReflection_EmptyObject_ShouldCreateEmptyDestination()
     {
@@ -37,7 +32,6 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
         // Assert
         result.Should().NotBeNull();
     }
-
     [Test]
     public void AdaptViaReflection_SameSourceAndDest_ShouldCopyAllProperties()
     {
@@ -59,7 +53,6 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
         result.Count.Should().Be(source.Count);
         result.Should().NotBeSameAs(source); // Should be a different instance
     }
-
     [Test]
     public void AdaptViaReflection_PropertiesWithDifferentTypes_ShouldOnlyCopyCompatible()
     {
@@ -79,7 +72,6 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
         result.Id.Should().Be(source.Id);
         result.Name.Should().Be(source.Name);
     }
-
     [Test]
     public void AdaptViaReflection_WithReadOnlyProperties_ShouldSkipReadOnly()
     {
@@ -100,7 +92,6 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
         result.Name.Should().Be(source.Name);
         result.Count.Should().Be(source.Count);
     }
-
     [Test]
     public void AdaptViaReflection_MinAndMaxValues_ShouldMapCorrectly()
     {
@@ -136,7 +127,6 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
         result.DoubleValue.Should().Be(double.MinValue);
         result.DecimalValue.Should().Be(decimal.MaxValue);
     }
-
     [Test]
     public void AdaptViaReflection_SpecialFloatingPointValues_ShouldMapCorrectly()
     {
@@ -154,7 +144,6 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
         float.IsNaN(result.FloatValue).Should().BeTrue();
         double.IsPositiveInfinity(result.DoubleValue).Should().BeTrue();
     }
-
     [Test]
     public void AdaptViaReflection_EmptyGuid_ShouldMapCorrectly()
     {
@@ -170,7 +159,6 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
         // Assert
         result.GuidValue.Should().Be(Guid.Empty);
     }
-
     [Test]
     public void AdaptViaReflection_UtcDateTime_ShouldPreserveKind()
     {
@@ -188,7 +176,6 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
         result.DateTimeValue.Should().Be(utcNow);
         result.DateTimeValue.Kind.Should().Be(DateTimeKind.Utc);
     }
-
     [Test]
     public void AdaptViaReflection_VeryLongString_ShouldMapCorrectly()
     {
@@ -206,7 +193,6 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
         result.StringValue.Should().Be(veryLongString);
         result.StringValue.Length.Should().Be(1_000_000);
     }
-
     [Test]
     public void AdaptViaReflection_UnicodeString_ShouldMapCorrectly()
     {
@@ -222,7 +208,6 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
         // Assert
         result.StringValue.Should().Be(source.StringValue);
     }
-
     [Test]
     public void AdaptViaReflection_WhitespaceString_ShouldMapCorrectly()
     {
@@ -238,7 +223,6 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
         // Assert
         result.StringValue.Should().Be(source.StringValue);
     }
-
     [Test]
     public void AdaptViaReflection_CollectionWithNulls_ShouldMapCorrectly()
     {
@@ -265,7 +249,6 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
         result.StringList[1].Should().BeNull();
         result.StringList[2].Should().Be("three");
     }
-
     [Test]
     public void AdaptViaReflection_SinglePropertyObject_ShouldMapCorrectly()
     {
@@ -284,7 +267,6 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
         result.Id.Should().Be(1);
         result.Name.Should().Be("Single");
     }
-
     [Test]
     public void AdaptViaReflection_ManyProperties_ShouldMapAll()
     {
@@ -335,7 +317,6 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
         result.TimeSpanValue.Should().Be(source.TimeSpanValue);
         result.GuidValue.Should().Be(source.GuidValue);
     }
-
     [Test]
     public void AdaptViaReflection_SequentialCalls_DifferentTypes_ShouldMapCorrectly()
     {
@@ -360,7 +341,6 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
         listResult.IntList.Count.Should().Be(3);
         nestedResult.Name.Should().Be("Nested");
     }
-
     [Test]
     public void AdaptViaReflection_TimeSpanValues_EdgeCases_ShouldMapCorrectly()
     {
@@ -376,7 +356,6 @@ public sealed class ReflectionEdgeCasesTests : UnitTest
         // Assert
         result.TimeSpanValue.Should().Be(TimeSpan.MaxValue);
     }
-
     [Test]
     public void AdaptViaReflection_DefaultChar_ShouldMapCorrectly()
     {

@@ -11,11 +11,7 @@ namespace Soenneker.Gen.Adapt.Tests;
 /// </summary>
 public sealed class MixedDiagnosticTests : UnitTest
 {
-    public MixedDiagnosticTests( output) : base(output)
-    {
-    }
-
-    //[Test]
+//[Test]
     public void ValidAdapt_ShouldWork_EvenWithDiagnosticErrors()
     {
         // This test demonstrates that valid Adapt methods are still generated

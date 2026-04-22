@@ -6,10 +6,6 @@ namespace Soenneker.Gen.Adapt.Tests.Reflection;
 
 public sealed class ReflectionGenericTests : UnitTest
 {
-    public ReflectionGenericTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void AdaptViaReflection_GenericWrapper_ConcreteIntType_ShouldMapCorrectly()
     {
@@ -30,7 +26,6 @@ public sealed class ReflectionGenericTests : UnitTest
         result.Name.Should().Be(source.Name);
         result.AdditionalInfo.Should().Be(source.AdditionalInfo);
     }
-
     [Test]
     public void AdaptViaReflection_GenericWrapper_ConcreteStringType_ShouldMapCorrectly()
     {
@@ -51,7 +46,6 @@ public sealed class ReflectionGenericTests : UnitTest
         result.Name.Should().Be(source.Name);
         result.IsActive.Should().Be(source.IsActive);
     }
-
     [Test]
     public void AdaptViaReflection_MultiGeneric_ConcreteType_ShouldMapCorrectly()
     {
@@ -72,7 +66,6 @@ public sealed class ReflectionGenericTests : UnitTest
         result.Value.Should().Be(source.Value);
         result.Description.Should().Be(source.Description);
     }
-
     [Test]
     public void AdaptViaReflection_GenericWrapper_WithNullValue_ShouldMapCorrectly()
     {
@@ -93,7 +86,6 @@ public sealed class ReflectionGenericTests : UnitTest
         result.Name.Should().Be(source.Name);
         result.IsActive.Should().BeFalse();
     }
-
     [Test]
     public void AdaptViaReflection_GenericWrapper_WithDefaultIntValue_ShouldMapCorrectly()
     {
@@ -114,7 +106,6 @@ public sealed class ReflectionGenericTests : UnitTest
         result.Name.Should().Be(source.Name);
         result.AdditionalInfo.Should().BeNull();
     }
-
     [Test]
     public void AdaptViaReflection_MultiGeneric_WithEmptyString_ShouldMapCorrectly()
     {
@@ -135,7 +126,6 @@ public sealed class ReflectionGenericTests : UnitTest
         result.Value.Should().Be(0);
         result.Description.Should().BeEmpty();
     }
-
     [Test]
     public void AdaptViaReflection_ConcreteIntWrapper_LargeNumber_ShouldMapCorrectly()
     {
@@ -155,7 +145,6 @@ public sealed class ReflectionGenericTests : UnitTest
         result.Value.Should().Be(int.MaxValue);
         result.Name.Should().Be(source.Name);
     }
-
     [Test]
     public void AdaptViaReflection_ConcreteIntWrapper_NegativeNumber_ShouldMapCorrectly()
     {
@@ -174,7 +163,6 @@ public sealed class ReflectionGenericTests : UnitTest
         result.Should().NotBeNull();
         result.Value.Should().Be(int.MinValue);
     }
-
     [Test]
     public void AdaptViaReflection_ConcreteStringWrapper_LongString_ShouldMapCorrectly()
     {
@@ -195,7 +183,6 @@ public sealed class ReflectionGenericTests : UnitTest
         result.Value.Should().Be(longString);
         result.Value.Length.Should().Be(10000);
     }
-
     [Test]
     public void AdaptViaReflection_ConcreteStringWrapper_SpecialCharacters_ShouldMapCorrectly()
     {
@@ -214,7 +201,6 @@ public sealed class ReflectionGenericTests : UnitTest
         result.Should().NotBeNull();
         result.Value.Should().Be(source.Value);
     }
-
     [Test]
     public void AdaptViaReflection_MultipleGenericInstances_WithCaching_ShouldMapCorrectly()
     {
@@ -236,7 +222,6 @@ public sealed class ReflectionGenericTests : UnitTest
         result3.Value.Should().Be(3);
         result3.Name.Should().Be("Three");
     }
-
     [Test]
     public void AdaptViaReflection_MultiGeneric_WithNegativeValue_ShouldMapCorrectly()
     {

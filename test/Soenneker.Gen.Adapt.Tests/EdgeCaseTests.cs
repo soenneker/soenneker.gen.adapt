@@ -8,10 +8,6 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class EdgeCaseTests : UnitTest
 {
-    public EdgeCaseTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_EmptyStrings_ShouldMapCorrectly()
     {
@@ -25,7 +21,6 @@ public sealed class EdgeCaseTests : UnitTest
         result.Id.Should().Be("");
         result.Name.Should().Be("");
     }
-
     [Test]
     public void Adapt_Whitespace_ShouldMapAsIs()
     {
@@ -39,7 +34,6 @@ public sealed class EdgeCaseTests : UnitTest
         result.Id.Should().Be("   ");
         result.Name.Should().Be("\t\n");
     }
-
     [Test]
     public void Adapt_SpecialCharacters_ShouldMapCorrectly()
     {
@@ -58,7 +52,6 @@ public sealed class EdgeCaseTests : UnitTest
         result.Id.Should().Be("!@#$%^&*()");
         result.Name.Should().Be("äöüß€£¥");
     }
-
     [Test]
     public void Adapt_UnicodeEmojis_ShouldMapCorrectly()
     {
@@ -72,7 +65,6 @@ public sealed class EdgeCaseTests : UnitTest
         result.Id.Should().Be("🚀");
         result.Name.Should().Be("🎉🎊");
     }
-
     [Test]
     public void Adapt_VeryLongStrings_ShouldMapCorrectly()
     {
@@ -87,7 +79,6 @@ public sealed class EdgeCaseTests : UnitTest
         result.Id.Length.Should().Be(10000);
         result.Name.Length.Should().Be(10000);
     }
-
     [Test]
     public void Adapt_MinMaxValues_Decimal_ShouldMap()
     {
@@ -105,7 +96,6 @@ public sealed class EdgeCaseTests : UnitTest
         result.Price.Should().Be(decimal.MaxValue);
         result.Discount.Should().Be(decimal.MinValue);
     }
-
     [Test]
     public void Adapt_ZeroValues_ShouldMap()
     {
@@ -119,7 +109,6 @@ public sealed class EdgeCaseTests : UnitTest
         result.Price.Should().Be(0m);
         result.Discount.Should().Be(0m);
     }
-
     [Test]
     public void Adapt_NegativeNumbers_ShouldMap()
     {
@@ -132,7 +121,6 @@ public sealed class EdgeCaseTests : UnitTest
         // Assert
         result.Count.Should().Be(-999);
     }
-
     [Test]
     public void Adapt_DefaultGuid_ShouldMap()
     {
@@ -145,7 +133,6 @@ public sealed class EdgeCaseTests : UnitTest
         // Assert
         result.Id.Should().Be(Guid.Empty);
     }
-
     [Test]
     public void Adapt_ListOfGuids_AllDefault_ShouldCopy()
     {
@@ -159,7 +146,6 @@ public sealed class EdgeCaseTests : UnitTest
         result.Count.Should().Be(3);
         result.Should().AllSatisfy(g => g.Should().Be(Guid.Empty));
     }
-
     [Test]
     public void Adapt_VerySmallDecimal_ShouldMap()
     {
@@ -173,7 +159,6 @@ public sealed class EdgeCaseTests : UnitTest
         result.Price.Should().Be(0.000001m);
         result.Discount.Should().Be(0.000000001m);
     }
-
     [Test]
     public void Adapt_MultipleAdaptCalls_ShouldCreateIndependentObjects()
     {
@@ -195,7 +180,6 @@ public sealed class EdgeCaseTests : UnitTest
         result2.Id.Should().Be("test");
         result3.Id.Should().Be("test");
     }
-
     [Test]
     public void Adapt_ListAfterModification_ShouldNotAffectOriginal()
     {
@@ -213,7 +197,6 @@ public sealed class EdgeCaseTests : UnitTest
         source.Should().BeEquivalentTo([1, 2, 3]);
         result.Should().BeEquivalentTo([1, 2, 3, 4, 5]);
     }
-
     [Test]
     public void Adapt_DictionaryAfterModification_ShouldNotAffectOriginal()
     {
@@ -231,7 +214,6 @@ public sealed class EdgeCaseTests : UnitTest
         source["b"].Should().Be(2);
         result["b"].Should().Be(999);
     }
-
     [Test]
     public void Adapt_MixedCasePropertyNames_ShouldMatchExactly()
     {
@@ -243,7 +225,6 @@ public sealed class EdgeCaseTests : UnitTest
         result.Id.Should().Be("ID");
         result.Name.Should().Be("NAME");
     }
-
     [Test]
     public void Adapt_ListOfMixedContent_ShouldCopyAll()
     {

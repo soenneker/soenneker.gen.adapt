@@ -8,13 +8,8 @@ namespace Soenneker.Gen.Adapt.Tests;
 /// NestedCollectionTests, EnumConversionTests, NestedObjectTests, NullableTests,
 /// EdgeCaseTests, StructTests, RecordTests, PerformanceTests, ComplexScenarioTests
 /// </summary>
-[ClassDataSource<Host>(Shared = SharedType.PerTestSession)]
 public sealed class GenAdaptTests : UnitTest
 {
-    public GenAdaptTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Default()
     {

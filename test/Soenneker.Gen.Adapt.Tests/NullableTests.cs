@@ -5,13 +5,8 @@ using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
-[ClassDataSource<Host>(Shared = SharedType.PerTestSession)]
 public sealed class NullableTests : UnitTest
 {
-    public NullableTests( output) : base(output)
-    {
-    }
-
     [Test]
     public void Adapt_NullableProperties_ShouldMapCorrectly()
     {
@@ -32,7 +27,6 @@ public sealed class NullableTests : UnitTest
         result.Count.Should().Be(42);
         result.Status.Should().Be(TestStatus.Active);
     }
-
     [Test]
     public void Adapt_NullableProperties_WithNulls_ShouldMapCorrectly()
     {
@@ -53,7 +47,6 @@ public sealed class NullableTests : UnitTest
         result.Count.Should().BeNull();
         result.Status.Should().BeNull();
     }
-
     [Test]
     public void Adapt_NullableInt_WithValue_ShouldMap()
     {
@@ -67,7 +60,6 @@ public sealed class NullableTests : UnitTest
         result.Count.Should().Be(100);
         result.Count.HasValue.Should().BeTrue();
     }
-
     [Test]
     public void Adapt_NullableInt_WithNull_ShouldMap()
     {
@@ -81,7 +73,6 @@ public sealed class NullableTests : UnitTest
         result.Count.Should().BeNull();
         result.Count.HasValue.Should().BeFalse();
     }
-
     [Test]
     public void Adapt_NullableEnum_WithValue_ShouldMap()
     {
@@ -95,7 +86,6 @@ public sealed class NullableTests : UnitTest
         result.Status.Should().Be(TestStatus.Pending);
         result.Status.HasValue.Should().BeTrue();
     }
-
     [Test]
     public void Adapt_NullableEnum_WithNull_ShouldMap()
     {
@@ -109,7 +99,6 @@ public sealed class NullableTests : UnitTest
         result.Status.Should().BeNull();
         result.Status.HasValue.Should().BeFalse();
     }
-
     [Test]
     public void Adapt_ListWithNullableElements_ShouldCopy()
     {
@@ -127,7 +116,6 @@ public sealed class NullableTests : UnitTest
         result[3].Should().BeNull();
         result[4].Should().Be(5);
     }
-
     [Test]
     public void Adapt_ListWithAllNulls_ShouldCopy()
     {
@@ -143,7 +131,6 @@ public sealed class NullableTests : UnitTest
         result[1].Should().BeNull();
         result[2].Should().BeNull();
     }
-
     [Test]
     public void Adapt_DictionaryWithNullValues_ShouldCopy()
     {
@@ -164,7 +151,6 @@ public sealed class NullableTests : UnitTest
         result["key2"].Should().BeNull();
         result["key3"].Should().BeNull();
     }
-
     [Test]
     public void Adapt_MixedNullableProperties_ShouldMapIndependently()
     {
@@ -185,7 +171,6 @@ public sealed class NullableTests : UnitTest
         result2.Count.Should().Be(42);
         result2.Status.Should().BeNull();
     }
-
     [Test]
     public void OrderWithNullableCustomer_to_PersonRecordDest_should_adapt()
     {
@@ -194,7 +179,6 @@ public sealed class NullableTests : UnitTest
         var clonedCustomer = nullableSource.Customer.Adapt<PersonRecordDest>();
         clonedCustomer.Should().NotBeNull();
     }
-
     [Test]
     public void PersonRecordDest_to_OrderWithNullableCustomer_should_adapt()
     {
@@ -204,7 +188,6 @@ public sealed class NullableTests : UnitTest
 
         clonedCustomer.Should().NotBeNull();
     }
-
     [Test]
     public void OrderWithNullablePerson_to_PersonClass_should_adapt()
     {
