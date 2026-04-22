@@ -2,17 +2,16 @@ using System.Collections.Generic;
 using AwesomeAssertions;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 using Soenneker.Tests.Unit;
-using Xunit;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class DictionaryListValueTests : UnitTest
 {
-    public DictionaryListValueTests(ITestOutputHelper output) : base(output)
+    public DictionaryListValueTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_DictionaryWithListValue_ShouldMapListValues()
     {
         var sharedDocument = new ShipmentDocument { Code = "DOC-1" };
@@ -50,7 +49,7 @@ public sealed class DictionaryListValueTests : UnitTest
         mappedList[0].Tracking.Should().Be("PKG-1");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_DictionaryWithListValue_DirectCall_ShouldMapListValues()
     {
         var sharedDocument = new ShipmentDocument { Code = "DOC-1" };
@@ -81,5 +80,4 @@ public sealed class DictionaryListValueTests : UnitTest
         mappedList[1].Weight.Should().Be(2.25m);
     }
 }
-
 

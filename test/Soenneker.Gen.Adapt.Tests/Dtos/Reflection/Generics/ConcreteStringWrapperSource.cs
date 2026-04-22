@@ -5,4 +5,3 @@ public class ConcreteStringWrapperSource : GenericWrapperSource<string>
     public bool IsActive { get; set; }
 }
 
-

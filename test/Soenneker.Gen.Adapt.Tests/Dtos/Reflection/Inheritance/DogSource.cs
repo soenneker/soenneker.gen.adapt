@@ -8,4 +8,3 @@ public class DogSource : AnimalBaseSource
     public bool IsGoodBoy { get; set; }
 }
 
-

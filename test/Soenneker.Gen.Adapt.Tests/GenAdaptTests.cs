@@ -1,5 +1,4 @@
 using Soenneker.Tests.Unit;
-using Xunit;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
@@ -9,14 +8,14 @@ namespace Soenneker.Gen.Adapt.Tests;
 /// NestedCollectionTests, EnumConversionTests, NestedObjectTests, NullableTests,
 /// EdgeCaseTests, StructTests, RecordTests, PerformanceTests, ComplexScenarioTests
 /// </summary>
-[Collection("Collection")]
+[ClassDataSource<Host>(Shared = SharedType.PerTestSession)]
 public sealed class GenAdaptTests : UnitTest
 {
-    public GenAdaptTests(ITestOutputHelper output) : base(output)
+    public GenAdaptTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Default()
     {
         // Default test to ensure test project builds

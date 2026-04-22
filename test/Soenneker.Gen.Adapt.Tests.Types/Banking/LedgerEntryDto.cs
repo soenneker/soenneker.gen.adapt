@@ -11,4 +11,3 @@ public sealed class LedgerEntryDto
     public DateTime CreatedUtc { get; set; }
 }
 
-

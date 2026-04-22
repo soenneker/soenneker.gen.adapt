@@ -8,4 +8,3 @@ public sealed record FlowSetupRequest
     public int? LagHours { get; set; }
 }
 
-

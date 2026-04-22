@@ -1,7 +1,6 @@
 using AwesomeAssertions;
 using Soenneker.Tests.Unit;
 using Soenneker.Gen.Adapt.Tests.Dtos;
-using Xunit;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
@@ -12,11 +11,11 @@ namespace Soenneker.Gen.Adapt.Tests;
 /// </summary>
 public sealed class MixedDiagnosticTests : UnitTest
 {
-    public MixedDiagnosticTests(ITestOutputHelper output) : base(output)
+    public MixedDiagnosticTests( output) : base(output)
     {
     }
 
-    //[Fact]
+    //[Test]
     public void ValidAdapt_ShouldWork_EvenWithDiagnosticErrors()
     {
         // This test demonstrates that valid Adapt methods are still generated
@@ -32,7 +31,7 @@ public sealed class MixedDiagnosticTests : UnitTest
         result.Value.Should().Be(42);
     }
 
-    //[Fact]
+    //[Test]
     //public void InvalidAdapt_ShouldGenerateDiagnosticError()
     //{
     //    // This test will fail to compile with SGA002 diagnostic error
@@ -47,7 +46,7 @@ public sealed class MixedDiagnosticTests : UnitTest
     //    result.Should().NotBeNull();
     //}
 
-    //[Fact]
+    //[Test]
     //public void AnotherInvalidAdapt_ShouldGenerateDiagnosticError()
     //{
     //    // This test will fail to compile with SGA003 diagnostic error

@@ -6,4 +6,3 @@ public class NestedObjectDto
     public string NestedName { get; set; }
 }
 
-

@@ -1,6 +1,5 @@
 using Soenneker.Tests.Unit;
 using Soenneker.Gen.Adapt.Tests.Dtos;
-using Xunit;
 using AwesomeAssertions;
 using System;
 
@@ -11,11 +10,11 @@ namespace Soenneker.Gen.Adapt.Tests;
 /// </summary>
 public sealed class GenericTypeParameterTests : UnitTest
 {
-    public GenericTypeParameterTests(ITestOutputHelper output) : base(output)
+    public GenericTypeParameterTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_TEntity_To_TDocument_CustomerScenario()
     {
         var entity = new CustomerEntity
@@ -33,7 +32,7 @@ public sealed class GenericTypeParameterTests : UnitTest
         document.Email.Should().Be("john@example.com");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_TDocument_To_TEntity_GetScenario()
     {
         var document = new CustomerDocument
@@ -51,7 +50,7 @@ public sealed class GenericTypeParameterTests : UnitTest
         entity.Email.Should().Be("jane@example.com");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_TEntity_To_TDocument_ProductScenario()
     {
         var entity = new ProductEntity
@@ -69,7 +68,7 @@ public sealed class GenericTypeParameterTests : UnitTest
         document.Price.Should().Be(99.99m);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_RoundTrip_SimulatesYourCreateAndGetMethods()
     {
         var entityToCreate = new CustomerEntity
@@ -90,7 +89,7 @@ public sealed class GenericTypeParameterTests : UnitTest
         retrievedEntity.Email.Should().Be("bob@example.com");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_UpdateWorkflow_SimulatesYourUpdateMethod()
     {
         var entity = new CustomerEntity
@@ -112,7 +111,7 @@ public sealed class GenericTypeParameterTests : UnitTest
         result.Email.Should().Be("original@example.com");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_MultipleEntityDocumentPairs_AllWork()
     {
         var customerEntity = new CustomerEntity { Name = "Customer1", Email = "c1@test.com" };

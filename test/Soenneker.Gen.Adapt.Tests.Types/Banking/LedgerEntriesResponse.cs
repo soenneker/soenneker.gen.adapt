@@ -5,4 +5,3 @@ public sealed class LedgerEntriesResponse
     public List<LedgerEntryResponse> Entries { get; set; } = new();
 }
 
-

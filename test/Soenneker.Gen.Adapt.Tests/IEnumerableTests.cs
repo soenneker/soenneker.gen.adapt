@@ -1,19 +1,18 @@
 using Soenneker.Tests.Unit;
 using System.Collections.Generic;
 using System.Linq;
-using Xunit;
 using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
-[Collection("Collection")]
+[ClassDataSource<Host>(Shared = SharedType.PerTestSession)]
 public sealed class IEnumerableTests : UnitTest
 {
-    public IEnumerableTests(ITestOutputHelper output) : base(output)
+    public IEnumerableTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IEnumerable_Int_ShouldMaterialize()
     {
         // Arrange
@@ -27,7 +26,7 @@ public sealed class IEnumerableTests : UnitTest
         result.Should().BeEquivalentTo([1, 2, 3, 4, 5]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IEnumerable_String_ShouldMaterialize()
     {
         // Arrange
@@ -41,7 +40,7 @@ public sealed class IEnumerableTests : UnitTest
         result.Should().BeEquivalentTo(new[] { "a", "b", "c" });
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IEnumerable_Empty_ShouldReturnEmpty()
     {
         // Arrange
@@ -55,7 +54,7 @@ public sealed class IEnumerableTests : UnitTest
         result.Should().BeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IEnumerable_FromLinq_ShouldMaterialize()
     {
         // Arrange
@@ -69,7 +68,7 @@ public sealed class IEnumerableTests : UnitTest
         result.Should().BeEquivalentTo([4, 8, 12, 16, 20]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IEnumerable_ComplexLinqQuery_ShouldMaterialize()
     {
         // Arrange
@@ -83,7 +82,7 @@ public sealed class IEnumerableTests : UnitTest
         result.Should().BeEquivalentTo([10, 9, 8, 7, 6]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IEnumerable_SelectMany_ShouldMaterialize()
     {
         // Arrange
@@ -97,7 +96,7 @@ public sealed class IEnumerableTests : UnitTest
         result.Should().BeEquivalentTo([1, 2, 3, 4, 5, 6]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IEnumerable_Distinct_ShouldMaterialize()
     {
         // Arrange
@@ -110,7 +109,7 @@ public sealed class IEnumerableTests : UnitTest
         result.Should().BeEquivalentTo([1, 2, 3, 4]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IEnumerable_WithNull_ShouldMaterialize()
     {
         // Arrange
@@ -126,7 +125,7 @@ public sealed class IEnumerableTests : UnitTest
         result.ElementAt(2).Should().Be("c");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IEnumerable_SingleElement_ShouldMaterialize()
     {
         // Arrange
@@ -140,7 +139,7 @@ public sealed class IEnumerableTests : UnitTest
         result.First().Should().Be("only");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IEnumerable_GroupBy_ShouldMaterialize()
     {
         // Arrange
@@ -155,7 +154,7 @@ public sealed class IEnumerableTests : UnitTest
         result.Count().Should().Be(6);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IEnumerable_Zip_ShouldMaterialize()
     {
         // Arrange
@@ -170,7 +169,7 @@ public sealed class IEnumerableTests : UnitTest
         result.Should().BeEquivalentTo([11, 22, 33]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IEnumerable_Concat_ShouldMaterialize()
     {
         // Arrange
@@ -183,7 +182,7 @@ public sealed class IEnumerableTests : UnitTest
         result.Should().BeEquivalentTo([1, 2, 3, 4, 5, 6]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IEnumerable_Skip_Take_ShouldMaterialize()
     {
         // Arrange

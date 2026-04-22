@@ -7,4 +7,3 @@ public class InvalidDestNoProps
     public int DifferentValue { get; set; }
 }
 
-

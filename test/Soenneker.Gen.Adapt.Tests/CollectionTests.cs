@@ -4,20 +4,19 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using Soenneker.Gen.Adapt.Tests.Dtos;
-using Xunit;
 using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class CollectionTests : UnitTest
 {
-    public CollectionTests(ITestOutputHelper output) : base(output)
+    public CollectionTests( output) : base(output)
     {
     }
 
     // ========== List Tests ==========
 
-    [Fact]
+    [Test]
     public void Adapt_ListToList_SameElementType_Int_ShouldConvert()
     {
         // Arrange
@@ -31,7 +30,7 @@ public sealed class CollectionTests : UnitTest
         result.Should().BeEquivalentTo([1, 2, 3, 4, 5]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ListToList_SameElementType_String_ShouldConvert()
     {
         // Arrange
@@ -45,7 +44,7 @@ public sealed class CollectionTests : UnitTest
         result.Should().BeEquivalentTo(new[] { "1", "2" });
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ListToList_DifferentElementTypes_ShouldMapEachElement()
     {
         // Arrange
@@ -72,7 +71,7 @@ public sealed class CollectionTests : UnitTest
         result.Items[1].Name.Should().Be("Second");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_EmptyList_ShouldReturnEmptyList()
     {
         // Arrange
@@ -86,7 +85,7 @@ public sealed class CollectionTests : UnitTest
         result.Should().BeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void Adapt_NullAndEmptyLists_ShouldPreserveNullAndEmpty()
     {
         // Arrange
@@ -109,7 +108,7 @@ public sealed class CollectionTests : UnitTest
         emptyResult.Should().BeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void Adapt_List_WithDuplicates_ShouldCopy()
     {
         // Arrange
@@ -124,7 +123,7 @@ public sealed class CollectionTests : UnitTest
         result.Should().BeEquivalentTo([1, 2, 2, 3, 3, 3]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_List_LargeCollection_ShouldCopy()
     {
         // Arrange
@@ -140,7 +139,7 @@ public sealed class CollectionTests : UnitTest
         result[999].Should().Be(1000);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_List_Guid_ShouldCopy()
     {
         // Arrange
@@ -158,7 +157,7 @@ public sealed class CollectionTests : UnitTest
         result[1].Should().Be(guid2);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_List_DateTime_ShouldCopy()
     {
         // Arrange
@@ -176,7 +175,7 @@ public sealed class CollectionTests : UnitTest
         result[1].Should().Be(tomorrow);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_List_Decimal_ShouldCopy()
     {
         // Arrange
@@ -190,8 +189,7 @@ public sealed class CollectionTests : UnitTest
         result.Should().BeEquivalentTo([1.5m, 2.75m, 3.99m]);
     }
 
-
-    [Fact]
+    [Test]
     public void Adapt_List_To_Collection()
     {
         // Arrange
@@ -205,8 +203,7 @@ public sealed class CollectionTests : UnitTest
         result.Should().BeEquivalentTo([1.5m, 2.75m, 3.99m]);
     }
 
-
-    [Fact]
+    [Test]
     public void Adapt_List_Long_ShouldCopy()
     {
         // Arrange
@@ -220,7 +217,7 @@ public sealed class CollectionTests : UnitTest
         result.Should().BeEquivalentTo([1000000000L, 2000000000L, 3000000000L]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_List_Bool_ShouldCopy()
     {
         // Arrange
@@ -234,7 +231,7 @@ public sealed class CollectionTests : UnitTest
         result.Should().BeEquivalentTo([true, false, true, true]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_List_MaintainsOrder_ShouldCopy()
     {
         // Arrange
@@ -249,7 +246,7 @@ public sealed class CollectionTests : UnitTest
         source.Should().NotBeSameAs(result);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_MultipleLists_ShouldMapAllCorrectly()
     {
         // Arrange
@@ -282,7 +279,7 @@ public sealed class CollectionTests : UnitTest
         result.Items[0].Id.Should().Be("1");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_SingleElementList_ShouldCopy()
     {
         // Arrange
@@ -296,7 +293,7 @@ public sealed class CollectionTests : UnitTest
         result[0].Should().Be("only");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ListWithNullElements_ShouldCopyNulls()
     {
         // Arrange
@@ -312,7 +309,7 @@ public sealed class CollectionTests : UnitTest
         result[2].Should().Be("c");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_List_Double_ShouldCopy()
     {
         // Arrange
@@ -325,7 +322,7 @@ public sealed class CollectionTests : UnitTest
         result.Should().BeEquivalentTo([1.1, 2.2, 3.3]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_List_Float_ShouldCopy()
     {
         // Arrange
@@ -338,7 +335,7 @@ public sealed class CollectionTests : UnitTest
         result.Should().BeEquivalentTo([1.1f, 2.2f, 3.3f]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_List_Byte_ShouldCopy()
     {
         // Arrange
@@ -351,7 +348,7 @@ public sealed class CollectionTests : UnitTest
         result.Should().BeEquivalentTo(new byte[] { 0, 128, 255 });
     }
 
-    [Fact]
+    [Test]
     public void Adapt_List_Short_ShouldCopy()
     {
         // Arrange
@@ -364,7 +361,7 @@ public sealed class CollectionTests : UnitTest
         result.Should().BeEquivalentTo(new short[] { -100, 0, 100 });
     }
 
-    [Fact]
+    [Test]
     public void Adapt_List_UInt_ShouldCopy()
     {
         // Arrange
@@ -377,7 +374,7 @@ public sealed class CollectionTests : UnitTest
         result.Should().BeEquivalentTo(new uint[] { 0, 100, uint.MaxValue });
     }
 
-    [Fact]
+    [Test]
     public void Adapt_List_Char_ShouldCopy()
     {
         // Arrange

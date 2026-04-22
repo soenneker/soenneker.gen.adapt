@@ -2,18 +2,17 @@ using Soenneker.Tests.Unit;
 using System;
 using System.Collections.Generic;
 using Soenneker.Gen.Adapt.Tests.Dtos;
-using Xunit;
 using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class ComplexScenarioTests : UnitTest
 {
-    public ComplexScenarioTests(ITestOutputHelper output) : base(output)
+    public ComplexScenarioTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ObjectWithAllPropertyTypes_ShouldMapAll()
     {
         // Arrange - test mapping multiple different property types in one go
@@ -55,7 +54,7 @@ public sealed class ComplexScenarioTests : UnitTest
         result.Items[2].Count.Should().Be(30);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ChainedAdaptations_ShouldWork()
     {
         // Arrange
@@ -72,7 +71,7 @@ public sealed class ComplexScenarioTests : UnitTest
         final.Count.Should().Be(200); // Should have the modified value
     }
 
-    [Fact]
+    [Test]
     public void Adapt_MixedNestingTypes_ShouldHandle()
     {
         // Arrange - mix of structs, classes, lists
@@ -91,7 +90,7 @@ public sealed class ComplexScenarioTests : UnitTest
         result.Label.Should().Be("Complex Mix");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ThreeLevelNesting_WithLists_ShouldMapAll()
     {
         // Arrange
@@ -122,7 +121,7 @@ public sealed class ComplexScenarioTests : UnitTest
         result.Level1.Child.Count.Should().Be(777);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_MultiplePropertiesWithSameTargetType_ShouldMapAll()
     {
         // Testing multiple properties that need the same type conversion
@@ -163,7 +162,7 @@ public sealed class ComplexScenarioTests : UnitTest
         });
     }
 
-    [Fact]
+    [Test]
     public void Adapt_DictionaryOfComplexObjects_ShouldMap()
     {
         // Arrange
@@ -185,7 +184,7 @@ public sealed class ComplexScenarioTests : UnitTest
         result[guid2].Name.Should().Be("Second Item");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_AllPrimitiveTypes_InDictionary_ShouldCopy()
     {
         // Test Dictionary<string, object> scenario (using actual typed dictionaries)
@@ -202,7 +201,7 @@ public sealed class ComplexScenarioTests : UnitTest
         boolResult["flag"].Should().BeTrue();
     }
 
-    [Fact]
+    [Test]
     public void Adapt_EmptyCollectionsInObject_ShouldMapAsEmpty()
     {
         // Arrange
@@ -222,7 +221,7 @@ public sealed class ComplexScenarioTests : UnitTest
         result.Items.Should().BeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ObjectGraphWithCircularPotential_ShouldNotInfiniteLoop()
     {
         // Testing that we don't follow references infinitely

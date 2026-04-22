@@ -1,17 +1,16 @@
 using Soenneker.Tests.Unit;
 using Soenneker.Gen.Adapt.Tests.Dtos;
-using Xunit;
 using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class EntitiesManagerTests : UnitTest
 {
-    public EntitiesManagerTests(ITestOutputHelper output) : base(output)
+    public EntitiesManagerTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Create_should_create()
     {
         var entitiesManager = new EntitiesManager();

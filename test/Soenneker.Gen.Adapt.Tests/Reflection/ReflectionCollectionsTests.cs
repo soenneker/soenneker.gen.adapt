@@ -3,17 +3,16 @@ using System.Linq;
 using AwesomeAssertions;
 using Soenneker.Gen.Adapt.Tests.Dtos.Reflection.Collections;
 using Soenneker.Tests.Unit;
-using Xunit;
 
 namespace Soenneker.Gen.Adapt.Tests.Reflection;
 
 public sealed class ReflectionCollectionsTests : UnitTest
 {
-    public ReflectionCollectionsTests(ITestOutputHelper output) : base(output)
+    public ReflectionCollectionsTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_ListCollections_ShouldMapCorrectly()
     {
         // Arrange
@@ -71,7 +70,7 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.NestedIntList.Count.Should().Be(3);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_EmptyLists_ShouldMapCorrectly()
     {
         // Arrange
@@ -94,7 +93,7 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.NestedIntList.Should().BeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_LargeLists_ShouldMapCorrectly()
     {
         // Arrange
@@ -115,7 +114,7 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.IntList.Last().Should().Be(10000);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_ArrayCollections_ShouldMapCorrectly()
     {
         // Arrange
@@ -148,7 +147,7 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.MultiDimensionalArray.GetLength(1).Should().Be(2);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_EmptyArrays_ShouldMapCorrectly()
     {
         // Arrange
@@ -169,7 +168,7 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.DoubleArray.Should().BeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_DictionaryCollections_ShouldMapCorrectly()
     {
         // Arrange
@@ -227,7 +226,7 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.NestedDict.Count.Should().Be(2);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_EmptyDictionaries_ShouldMapCorrectly()
     {
         // Arrange
@@ -246,7 +245,7 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.IntStringDict.Should().BeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_SetCollections_ShouldMapCorrectly()
     {
         // Arrange
@@ -289,7 +288,7 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.IntSortedSet.Count.Should().Be(5);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_IEnumerableCollections_ShouldMapCorrectly()
     {
         // Arrange
@@ -314,7 +313,7 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.ReadOnlyStringCollection.Should().NotBeNull();
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_NullCollections_ShouldMapNulls()
     {
         // Arrange
@@ -337,7 +336,7 @@ public sealed class ReflectionCollectionsTests : UnitTest
         result.NestedIntList.Should().BeNull();
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_ListWithDuplicates_ShouldMapAll()
     {
         // Arrange

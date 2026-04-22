@@ -2,18 +2,17 @@ using Soenneker.Tests.Unit;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 using System;
 using System.Collections.Generic;
-using Xunit;
 using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class ComprehensiveTypeTests : UnitTest
 {
-    public ComprehensiveTypeTests(ITestOutputHelper output) : base(output)
+    public ComprehensiveTypeTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Arrays_ShouldMapCorrectly()
     {
         // Arrange
@@ -49,7 +48,7 @@ public sealed class ComprehensiveTypeTests : UnitTest
         result.People[1].Age.Should().Be(25);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_HashSet_ShouldMapCorrectly()
     {
         // Arrange
@@ -84,7 +83,7 @@ public sealed class ComprehensiveTypeTests : UnitTest
         result.People[0].Age.Should().Be(35);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_AllPrimitiveTypes_ShouldMapCorrectly()
     {
         // Arrange
@@ -126,7 +125,7 @@ public sealed class ComprehensiveTypeTests : UnitTest
         result.TimeSpanValue.Should().Be(span);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_EmptyArrays_ShouldMapToEmptyCollections()
     {
         // Arrange
@@ -147,7 +146,7 @@ public sealed class ComprehensiveTypeTests : UnitTest
         result.People.Length.Should().Be(0);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_LargeArray_ShouldMapAll()
     {
         // Arrange
@@ -171,7 +170,7 @@ public sealed class ComprehensiveTypeTests : UnitTest
         result.Numbers[999].Should().Be(999);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_EmptyHashSet_ShouldMapCorrectly()
     {
         // Arrange

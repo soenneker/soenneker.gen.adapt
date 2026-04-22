@@ -6,4 +6,3 @@ public sealed class OutboundProfile : BaseOutbound
 {
 }
 
-

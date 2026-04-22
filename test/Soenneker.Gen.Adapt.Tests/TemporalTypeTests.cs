@@ -2,18 +2,17 @@ using Soenneker.Tests.Unit;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 using System;
 using System.Collections.Generic;
-using Xunit;
 using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class TemporalTypeTests : UnitTest
 {
-    public TemporalTypeTests(ITestOutputHelper output) : base(output)
+    public TemporalTypeTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_TemporalProperties_ShouldMapCorrectly()
     {
         // Arrange
@@ -58,7 +57,7 @@ public sealed class TemporalTypeTests : UnitTest
         result.Nested.SupportLink.Should().Be(new Uri("https://support.example.org/contact"));
     }
 
-    [Fact]
+    [Test]
     public void Adapt_TemporalNullableProperties_ShouldMapNulls()
     {
         // Arrange
@@ -102,7 +101,7 @@ public sealed class TemporalTypeTests : UnitTest
         result.Nested.SupportLink.Should().BeNull();
     }
 
-    [Fact]
+    [Test]
     public void Adapt_TemporalCollections_ShouldMapAndConvert()
     {
         // Arrange

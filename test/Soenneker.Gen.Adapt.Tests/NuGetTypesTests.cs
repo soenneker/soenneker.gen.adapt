@@ -1,5 +1,4 @@
 using Soenneker.Tests.Unit;
-using Xunit;
 using Soenneker.Documents.Audit;
 using AwesomeAssertions;
 using Soenneker.Dtos.IdNamePair;
@@ -8,11 +7,11 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class NuGetTypesTests : UnitTest
 {
-    public NuGetTypesTests(ITestOutputHelper output) : base(output)
+    public NuGetTypesTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Document_should_Adapt()
     {
         var document = new AuditDocument();
@@ -23,7 +22,7 @@ public sealed class NuGetTypesTests : UnitTest
         newDoc.Id.Should().Be(document.Id);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Document_to_IdNamePair_should_adapt()
     {
         var document = AutoFaker.Generate<AuditDocument>();
@@ -34,7 +33,7 @@ public sealed class NuGetTypesTests : UnitTest
         idNamePair.Id.Should().Be(document.Id);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IdNamePair_to_Document_should_adapt()
     {
         var idNamePair = AutoFaker.Generate<IdNamePair>();

@@ -5,4 +5,3 @@ public class ConcreteKeyValueSource : MultiGenericSource<string, int>
     public string Description { get; set; }
 }
 
-

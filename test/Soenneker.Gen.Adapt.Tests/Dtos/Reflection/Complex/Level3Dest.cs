@@ -6,4 +6,3 @@ public class Level3Dest
     public bool Flag { get; set; }
 }
 
-

@@ -2,17 +2,16 @@ using System;
 using AwesomeAssertions;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 using Soenneker.Tests.Unit;
-using Xunit;
 
 namespace Soenneker.Gen.Adapt.Tests.Reflection;
 
 public sealed class ReflectionAdapterTests : UnitTest
 {
-    public ReflectionAdapterTests(ITestOutputHelper output) : base(output)
+    public ReflectionAdapterTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_should_copy_all_properties()
     {
         // Arrange
@@ -33,7 +32,7 @@ public sealed class ReflectionAdapterTests : UnitTest
         result.Count.Should().Be(source.Count);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_should_work_with_derived_types()
     {
         // Arrange
@@ -52,7 +51,7 @@ public sealed class ReflectionAdapterTests : UnitTest
         result.Email.Should().Be(source.Email);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_should_handle_string_properties()
     {
         // Arrange
@@ -72,7 +71,7 @@ public sealed class ReflectionAdapterTests : UnitTest
         // For nested object mapping, use the regular Adapt<>() method
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_should_cache_mappers()
     {
         // Arrange
@@ -92,7 +91,7 @@ public sealed class ReflectionAdapterTests : UnitTest
         result2.Count.Should().Be(20);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_should_only_copy_matching_properties()
     {
         // Arrange
@@ -113,7 +112,7 @@ public sealed class ReflectionAdapterTests : UnitTest
         // ExtraField doesn't exist on PartialMatchDest, so it's not copied
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_should_throw_on_null_source()
     {
         // Arrange
@@ -124,7 +123,7 @@ public sealed class ReflectionAdapterTests : UnitTest
         act.Should().Throw<ArgumentNullException>();
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_reverse_mapping_should_work()
     {
         // Arrange

@@ -7,4 +7,3 @@ public class NoMatchingPropsDest
     public int DifferentValue { get; set; }
 }
 
-

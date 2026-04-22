@@ -7,4 +7,3 @@ public class ValidDestination
     public int Value { get; set; }
 }
 
-

@@ -8,4 +8,3 @@ public class LinkProfile
     public List<Uri> Mirrors { get; set; } = [];
 }
 
-

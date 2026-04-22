@@ -7,4 +7,3 @@ public class ValidSource
     public int Value { get; set; }
 }
 
-

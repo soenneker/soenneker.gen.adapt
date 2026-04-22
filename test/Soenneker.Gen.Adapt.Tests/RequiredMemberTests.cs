@@ -1,18 +1,17 @@
 using Soenneker.Tests.Unit;
 using System;
 using Soenneker.Gen.Adapt.Tests.Dtos;
-using Xunit;
 using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class RequiredMemberTests : UnitTest
 {
-    public RequiredMemberTests(ITestOutputHelper output) : base(output)
+    public RequiredMemberTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_RequiredMembers_ShouldUseObjectInitializer()
     {
         // Arrange
@@ -33,7 +32,7 @@ public sealed class RequiredMemberTests : UnitTest
         result.Count.Should().Be(42);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_InitOnlyProperties_ShouldUseObjectInitializer()
     {
         // Arrange
@@ -54,7 +53,7 @@ public sealed class RequiredMemberTests : UnitTest
         result.Count.Should().Be(100);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_RegularProperties_ShouldUseObjectInitializer()
     {
         // Arrange
@@ -75,7 +74,7 @@ public sealed class RequiredMemberTests : UnitTest
         result.Count.Should().Be(200);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ShouldAlwaysUseObjectInitializers_ForConsistency()
     {
         // This test documents the expected behavior: all mappings should use object initializers
@@ -109,7 +108,7 @@ public sealed class RequiredMemberTests : UnitTest
         regularResult.Count.Should().Be(300);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_RequiredMembersWithMissingSource_ShouldProvideDefaults()
     {
         // Arrange
@@ -130,7 +129,7 @@ public sealed class RequiredMemberTests : UnitTest
         result.Count.Should().Be(0); // Default value for int
     }
 
-    [Fact]
+    [Test]
     public void Adapt_RequiredMembersWithNullSource_ShouldHandleGracefully()
     {
         // Arrange

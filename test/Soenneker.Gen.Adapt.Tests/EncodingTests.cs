@@ -3,18 +3,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Soenneker.Gen.Adapt.Tests.Dtos;
-using Xunit;
 using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class EncodingTests : UnitTest
 {
-    public EncodingTests(ITestOutputHelper output) : base(output)
+    public EncodingTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Unicode_MultipleLanguages_ShouldMap()
     {
         // Arrange
@@ -33,7 +32,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("مرحبا שלום 你好 こんにちは");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_UnicodeEmojis_ShouldMapCorrectly()
     {
         // Arrange
@@ -47,7 +46,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("🎉🎊");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringWithSurrogatesPairs_ShouldMap()
     {
         // Arrange
@@ -66,7 +65,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("𝐇𝐞𝐥𝐥𝐨");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringWithCombiningCharacters_ShouldMap()
     {
         // Arrange
@@ -85,7 +84,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("n\u0303");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringWithBidiControlCharacters_ShouldMap()
     {
         // Arrange
@@ -104,7 +103,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("\u202Ahello\u202C");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ZeroWidthCharacters_ShouldMap()
     {
         // Arrange
@@ -123,7 +122,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("invisible\uFEFF");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringWithNullCharacter_ShouldMap()
     {
         // Arrange
@@ -142,7 +141,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("\0\0\0");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_AllEscapeSequences_ShouldMap()
     {
         // Arrange
@@ -161,7 +160,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("\\\'\"\0");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringWithNonPrintableCharacters_ShouldMap()
     {
         // Arrange
@@ -180,7 +179,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("\u001B[31mRed\u001B[0m");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringLooksLikeEscapeSequence_ShouldMapLiterally()
     {
         // Arrange
@@ -199,7 +198,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("\\u0041");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringWithXmlEscapeCharacters_ShouldMap()
     {
         // Arrange
@@ -218,7 +217,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("&amp;&lt;&gt;&quot;&#39;");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringWithJsonEscapeCharacters_ShouldMap()
     {
         // Arrange
@@ -237,7 +236,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("Line1\nLine2\tTabbed");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringWithSqlInjectionAttempt_ShouldMapSafely()
     {
         // Arrange
@@ -256,7 +255,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("1' OR '1'='1");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringWithScriptTags_ShouldMap()
     {
         // Arrange
@@ -275,7 +274,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("<img src=x onerror=alert(1)>");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringWithPathTraversal_ShouldMap()
     {
         // Arrange
@@ -294,7 +293,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("..\\..\\windows\\system32");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringWithFormatSpecifiers_ShouldMapLiterally()
     {
         // Arrange
@@ -313,7 +312,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("%s %d %f");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringWithRegexMetacharacters_ShouldMap()
     {
         // Arrange
@@ -332,7 +331,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("\\d+\\.\\w*");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringWithUrlEncodedCharacters_ShouldMap()
     {
         // Arrange
@@ -351,7 +350,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("hello%20world");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringWithBase64_ShouldMap()
     {
         // Arrange
@@ -370,7 +369,7 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be("QmFzZTY0IGVuY29kZWQgc3RyaW5n");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringWithOnlyWhitespace_VariousTypes_ShouldMap()
     {
         // Arrange
@@ -392,7 +391,7 @@ public sealed class EncodingTests : UnitTest
         results[2].Id.Should().Be(" \t\n\r ");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringWithRepeatingPattern_ShouldMap()
     {
         // Arrange
@@ -414,7 +413,7 @@ public sealed class EncodingTests : UnitTest
         result.Id.Should().Be(repeated);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_UTF8_AllValidCodePoints_ShouldMap()
     {
         // Arrange
@@ -437,13 +436,4 @@ public sealed class EncodingTests : UnitTest
         result.Name.Should().Be(text);
     }
 }
-
-
-
-
-
-
-
-
-
 

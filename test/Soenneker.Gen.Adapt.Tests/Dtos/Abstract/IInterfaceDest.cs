@@ -5,4 +5,3 @@ public interface IInterfaceDest
     string Name { get; set; }
 }
 
-

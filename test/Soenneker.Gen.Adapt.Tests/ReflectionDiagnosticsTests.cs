@@ -3,7 +3,6 @@ using AwesomeAssertions;
 using Soenneker.Tests.Unit;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 using Soenneker.Gen.Adapt.Tests.Dtos.Abstract;
-using Xunit;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
@@ -14,11 +13,11 @@ namespace Soenneker.Gen.Adapt.Tests;
 /// </summary>
 public sealed class ReflectionDiagnosticsTests : UnitTest
 {
-    public ReflectionDiagnosticsTests(ITestOutputHelper output) : base(output)
+    public ReflectionDiagnosticsTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_NoParameterlessConstructor_ShouldThrow()
     {
         // This should trigger SGA002 diagnostic: "No parameterless constructor available"
@@ -32,7 +31,7 @@ public sealed class ReflectionDiagnosticsTests : UnitTest
             .WithMessage("*Cannot dynamically create an instance*");
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_Interface_ShouldThrow()
     {
         var source = new DiagnosticTestSource { Name = "test", Value = 42 };
@@ -45,7 +44,7 @@ public sealed class ReflectionDiagnosticsTests : UnitTest
             .WithMessage("*Cannot dynamically create an instance*");
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_NoMatchingProperties_ShouldSucceed()
     {
         var source = new DiagnosticTestSource { Name = "test", Value = 42 };
@@ -60,7 +59,7 @@ public sealed class ReflectionDiagnosticsTests : UnitTest
         result.DifferentValue.Should().Be(0); // Default int value
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_ReadOnlyProperties_ShouldSucceed()
     {
         var source = new DiagnosticTestSource { Name = "test", Value = 42 };

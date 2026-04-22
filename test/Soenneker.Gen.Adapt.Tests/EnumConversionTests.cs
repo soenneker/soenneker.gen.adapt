@@ -1,18 +1,17 @@
 using Soenneker.Tests.Unit;
 using Soenneker.Gen.Adapt.Tests.Dtos;
-using Xunit;
 using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
-[Collection("Collection")]
+[ClassDataSource<Host>(Shared = SharedType.PerTestSession)]
 public sealed class EnumConversionTests : UnitTest
 {
-    public EnumConversionTests(ITestOutputHelper output) : base(output)
+    public EnumConversionTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_EnumToString_ShouldConvert()
     {
         // Arrange
@@ -30,7 +29,7 @@ public sealed class EnumConversionTests : UnitTest
         result.Status.Should().Be("Active");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringToEnum_ShouldParse()
     {
         // Arrange
@@ -47,7 +46,7 @@ public sealed class EnumConversionTests : UnitTest
         result.StatusString.Should().Be(TestStatus.Pending);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_EnumToInt_ShouldCast()
     {
         // Arrange
@@ -64,7 +63,7 @@ public sealed class EnumConversionTests : UnitTest
         result.Status.Should().Be(2);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IntToEnum_ShouldCast()
     {
         // Arrange
@@ -81,7 +80,7 @@ public sealed class EnumConversionTests : UnitTest
         result.StatusCode.Should().Be(TestStatus.Pending);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IntellenumToInt_ShouldExtractValue()
     {
         // Arrange
@@ -98,7 +97,7 @@ public sealed class EnumConversionTests : UnitTest
         result.UserId.Should().Be(999);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IntToIntellenum_ShouldCreateFrom()
     {
         // Arrange
@@ -116,7 +115,7 @@ public sealed class EnumConversionTests : UnitTest
         result.UserId.Value.Should().Be(777);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_EnumToString_AllValues_ShouldConvert()
     {
         // Test Active
@@ -135,7 +134,7 @@ public sealed class EnumConversionTests : UnitTest
         resultCompleted.Status.Should().Be("Completed");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IntToEnum_AllValues_ShouldCast()
     {
         // Test 0 -> Active
@@ -151,7 +150,7 @@ public sealed class EnumConversionTests : UnitTest
         source2.Adapt<IntToEnumDest>().StatusCode.Should().Be(TestStatus.Completed);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_EnumToInt_AllValues_ShouldCast()
     {
         // Test Active -> 0
@@ -167,7 +166,7 @@ public sealed class EnumConversionTests : UnitTest
         sourceCompleted.Adapt<EnumToIntDest>().Status.Should().Be(2);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IntellenumToInt_ZeroValue_ShouldExtract()
     {
         // Arrange
@@ -180,7 +179,7 @@ public sealed class EnumConversionTests : UnitTest
         result.UserId.Should().Be(0);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IntellenumToInt_NegativeValue_ShouldExtract()
     {
         // Arrange
@@ -193,7 +192,7 @@ public sealed class EnumConversionTests : UnitTest
         result.UserId.Should().Be(-42);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IntellenumToInt_MaxValue_ShouldExtract()
     {
         // Arrange

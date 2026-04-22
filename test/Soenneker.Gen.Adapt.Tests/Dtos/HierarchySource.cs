@@ -7,4 +7,3 @@ public sealed class HierarchySource
     public GammaSource Third { get; set; } = null!;
 }
 
-

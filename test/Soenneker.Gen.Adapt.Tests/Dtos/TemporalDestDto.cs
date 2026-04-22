@@ -19,4 +19,3 @@ public class TemporalDestDto
     public TemporalNestedDestDto Nested { get; set; } = new();
 }
 
-

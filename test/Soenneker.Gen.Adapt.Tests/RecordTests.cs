@@ -4,18 +4,17 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Soenneker.Tests.Unit;
 using Soenneker.Gen.Adapt.Tests.Dtos;
-using Xunit;
 using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class RecordTests : UnitTest
 {
-    public RecordTests(ITestOutputHelper output) : base(output)
+    public RecordTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Record_ShouldMapProperties()
     {
         // Arrange  
@@ -36,7 +35,7 @@ public sealed class RecordTests : UnitTest
         result.Age.Should().Be(30);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Class_To_Record_ShouldMapProperties()
     {
         // Arrange
@@ -57,7 +56,7 @@ public sealed class RecordTests : UnitTest
         result.Age.Should().Be(28);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Record_EmptyStrings_ShouldMap()
     {
         // Arrange
@@ -77,7 +76,7 @@ public sealed class RecordTests : UnitTest
         result.Age.Should().Be(0);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Record_SpecialCharacters_ShouldMap()
     {
         // Arrange
@@ -96,7 +95,7 @@ public sealed class RecordTests : UnitTest
         result.LastName.Should().Be("O'Brien-MacDonald");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Record_VeryOldAge_ShouldMap()
     {
         // Arrange
@@ -114,7 +113,7 @@ public sealed class RecordTests : UnitTest
         result.Age.Should().Be(150);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Record_MultipleInstances_ShouldBeIndependent()
     {
         // Arrange

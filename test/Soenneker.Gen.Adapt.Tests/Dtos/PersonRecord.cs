@@ -7,5 +7,3 @@ public record PersonRecord
     public int Age { get; init; }
 }
 
-
-

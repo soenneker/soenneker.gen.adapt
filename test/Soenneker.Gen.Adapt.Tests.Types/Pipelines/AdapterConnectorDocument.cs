@@ -7,4 +7,3 @@ public sealed class AdapterConnectorDocument
     public string? Endpoint { get; set; }
 }
 
-

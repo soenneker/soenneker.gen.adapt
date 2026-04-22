@@ -1,18 +1,17 @@
 using Soenneker.Tests.Unit;
 using System.Collections.Generic;
 using Soenneker.Gen.Adapt.Tests.Dtos;
-using Xunit;
 using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class NestedObjectTests : UnitTest
 {
-    public NestedObjectTests(ITestOutputHelper output) : base(output)
+    public NestedObjectTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_NestedObject_ShouldMapRecursively()
     {
         // Arrange
@@ -39,7 +38,7 @@ public sealed class NestedObjectTests : UnitTest
         result.Child.Count.Should().Be(100);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_DeepNesting_ShouldMapRecursively()
     {
         // Arrange
@@ -72,7 +71,7 @@ public sealed class NestedObjectTests : UnitTest
         result.Level1.Child.Count.Should().Be(999);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_NestedObject_MultipleChildren_ShouldMapAll()
     {
         // Arrange
@@ -113,7 +112,7 @@ public sealed class NestedObjectTests : UnitTest
         result.NestedItems[2].Child.Id.Should().Be("c3");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_NestedObjectWithEmptyList_ShouldMap()
     {
         // Arrange
@@ -131,7 +130,7 @@ public sealed class NestedObjectTests : UnitTest
         result.NestedItems.Should().BeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void Adapt_NestedObjectsInDictionary_ShouldMap()
     {
         // Arrange - using Dictionary with nested complex objects
@@ -166,7 +165,7 @@ public sealed class NestedObjectTests : UnitTest
         result["second"].Child.Id.Should().Be("2");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ComplexNestedStructure_ShouldMapAll()
     {
         // Arrange

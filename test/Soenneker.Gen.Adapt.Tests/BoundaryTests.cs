@@ -3,18 +3,17 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Soenneker.Gen.Adapt.Tests.Dtos;
-using Xunit;
 using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class BoundaryTests : UnitTest
 {
-    public BoundaryTests(ITestOutputHelper output) : base(output)
+    public BoundaryTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Int32_MinValue_ShouldMap()
     {
         // Arrange
@@ -28,7 +27,7 @@ public sealed class BoundaryTests : UnitTest
         result.Count.Should().Be(-2147483648);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Int32_MaxValue_ShouldMap()
     {
         // Arrange
@@ -42,7 +41,7 @@ public sealed class BoundaryTests : UnitTest
         result.Count.Should().Be(2147483647);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_DateTime_MinValue_ShouldMap()
     {
         // Arrange
@@ -56,7 +55,7 @@ public sealed class BoundaryTests : UnitTest
         result.CreatedAt.Year.Should().Be(1);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_DateTime_MaxValue_ShouldMap()
     {
         // Arrange
@@ -70,7 +69,7 @@ public sealed class BoundaryTests : UnitTest
         result.CreatedAt.Year.Should().Be(9999);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_DateTimeWithMilliseconds_ShouldPreserve()
     {
         // Arrange
@@ -88,7 +87,7 @@ public sealed class BoundaryTests : UnitTest
         result.CreatedAt.Should().Be(new DateTime(2023, 6, 15, 14, 30, 25, 123));
     }
 
-    [Fact]
+    [Test]
     public void Adapt_DateTimeWithTicks_ShouldPreserve()
     {
         // Arrange
@@ -106,7 +105,7 @@ public sealed class BoundaryTests : UnitTest
         result.CreatedAt.Ticks.Should().Be(ticks);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_NullableDateTime_Min_ShouldMap()
     {
         // Arrange
@@ -122,7 +121,7 @@ public sealed class BoundaryTests : UnitTest
         result[2].Should().Be(DateTime.MaxValue);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Guid_EmptyAndNewGuid_ShouldMap()
     {
         // Arrange
@@ -149,7 +148,7 @@ public sealed class BoundaryTests : UnitTest
         result4.Id.Should().Be(guid4);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_GuidWithAllSameDigits_ShouldMap()
     {
         // Arrange
@@ -172,7 +171,7 @@ public sealed class BoundaryTests : UnitTest
         result3.Id.Should().Be(guid3);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_NullableGuid_Min_ShouldMap()
     {
         // Arrange
@@ -188,7 +187,7 @@ public sealed class BoundaryTests : UnitTest
         result[2].Should().NotBeNull();
     }
 
-    [Fact]
+    [Test]
     public void Adapt_DictionaryWithGuidKeys_ExtremeValues_ShouldMap()
     {
         // Arrange
@@ -213,7 +212,7 @@ public sealed class BoundaryTests : UnitTest
         result[key3].Should().Be("min");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Decimal_MinMaxValues_ShouldMap()
     {
         // Arrange
@@ -231,7 +230,7 @@ public sealed class BoundaryTests : UnitTest
         result.Discount.Should().Be(decimal.MinValue);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Decimal_FullPrecision_ShouldMap()
     {
         // Arrange
@@ -249,7 +248,7 @@ public sealed class BoundaryTests : UnitTest
         result.Discount.Should().Be(-79228162514264337593543950335m);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Decimal_ManyDecimalPlaces_ShouldPreserve()
     {
         // Arrange
@@ -267,7 +266,7 @@ public sealed class BoundaryTests : UnitTest
         result.Discount.Should().Be(1.2345678901234567890123456789m);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_DecimalWithTrailingZeros_ShouldPreserve()
     {
         // Arrange
@@ -285,7 +284,7 @@ public sealed class BoundaryTests : UnitTest
         result.Discount.Should().Be(10.00m);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_DecimalScientificNotation_ShouldMap()
     {
         // Arrange
@@ -303,7 +302,7 @@ public sealed class BoundaryTests : UnitTest
         result.Discount.Should().Be(456000000000000000000m);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_NumbersAtBoundaries_ShouldMap()
     {
         // Arrange
@@ -331,7 +330,7 @@ public sealed class BoundaryTests : UnitTest
         results[6].Count.Should().Be(int.MaxValue);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ListOfNegativeNumbers_ShouldMap()
     {
         // Arrange
@@ -346,7 +345,7 @@ public sealed class BoundaryTests : UnitTest
         result[5].Should().Be(int.MinValue);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_HugeList_10000Items_ShouldMapAll()
     {
         // Arrange
@@ -362,7 +361,7 @@ public sealed class BoundaryTests : UnitTest
         result.Sum().Should().Be(50005000);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_HugeDictionary_10000Items_ShouldMapAll()
     {
         // Arrange
@@ -381,7 +380,7 @@ public sealed class BoundaryTests : UnitTest
         result["key_9999"].Should().Be(9999);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_VeryLongString_1MB_ShouldMap()
     {
         // Arrange
@@ -396,7 +395,7 @@ public sealed class BoundaryTests : UnitTest
         result.Name.Should().Be(megabyteString);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_VeryLongPropertyValues_ShouldNotCorrupt()
     {
         // Arrange
@@ -414,7 +413,7 @@ public sealed class BoundaryTests : UnitTest
         result.Name.Should().Be(longName);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IntToEnum_OutOfRange_ShouldStillCast()
     {
         // Arrange
@@ -427,7 +426,7 @@ public sealed class BoundaryTests : UnitTest
         result.StatusCode.Should().Be((TestStatus)99999);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IntToEnum_NegativeValue_ShouldCast()
     {
         // Arrange
@@ -440,7 +439,7 @@ public sealed class BoundaryTests : UnitTest
         result.StatusCode.Should().Be((TestStatus)(-1));
     }
 
-    [Fact]
+    [Test]
     public void Adapt_EmptyGuidList_ShouldMapToEmptyList()
     {
         // Arrange
@@ -454,7 +453,7 @@ public sealed class BoundaryTests : UnitTest
         result.Should().NotBeSameAs(source);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_EmptyDateTimeList_ShouldMapToEmptyList()
     {
         // Arrange
@@ -468,7 +467,7 @@ public sealed class BoundaryTests : UnitTest
         result.Should().NotBeSameAs(source);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_EmptyDecimalList_ShouldMapToEmptyList()
     {
         // Arrange

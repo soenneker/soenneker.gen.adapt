@@ -7,4 +7,3 @@ public sealed class AdapterIntegrationDefinitionDocument
     public Dictionary<string, AdapterConnectorDocument> Connectors { get; set; } = new();
 }
 
-

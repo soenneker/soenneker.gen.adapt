@@ -6,4 +6,3 @@ public sealed class PackageEntity
     public decimal Weight { get; set; }
 }
 
-

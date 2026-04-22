@@ -12,4 +12,3 @@ public class TemporalSchedule
     public TemporalScheduleMetadata Metadata { get; set; } = new();
 }
 
-

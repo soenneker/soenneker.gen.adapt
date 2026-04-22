@@ -1,17 +1,16 @@
 using Soenneker.Gen.Adapt.Tests.Dtos;
 using Soenneker.Tests.Unit;
-using Xunit;
 using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class InheritancePropertyTests : UnitTest
 {
-    public InheritancePropertyTests(ITestOutputHelper output) : base(output)
+    public InheritancePropertyTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ClassWithDerivedProperties_ShouldMapToNewHierarchy()
     {
         var source = new HierarchySource

@@ -1,17 +1,16 @@
 using Soenneker.Tests.Unit;
 using Soenneker.Gen.Adapt.Tests.Dtos;
-using Xunit;
 using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class StructTests : UnitTest
 {
-    public StructTests(ITestOutputHelper output) : base(output)
+    public StructTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Struct_ShouldMapProperties()
     {
         // Arrange
@@ -29,7 +28,7 @@ public sealed class StructTests : UnitTest
         result.Y.Should().Be(20);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ClassWithStructProperty_ShouldMapRecursively()
     {
         // Arrange
@@ -49,7 +48,7 @@ public sealed class StructTests : UnitTest
         result.Label.Should().Be("Point A");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Struct_ZeroValues_ShouldMap()
     {
         // Arrange
@@ -63,7 +62,7 @@ public sealed class StructTests : UnitTest
         result.Y.Should().Be(0);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Struct_NegativeValues_ShouldMap()
     {
         // Arrange
@@ -77,7 +76,7 @@ public sealed class StructTests : UnitTest
         result.Y.Should().Be(-100);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_Struct_MaxValues_ShouldMap()
     {
         // Arrange
@@ -91,7 +90,7 @@ public sealed class StructTests : UnitTest
         result.Y.Should().Be(int.MinValue);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_DefaultStruct_ShouldMap()
     {
         // Arrange
@@ -105,7 +104,7 @@ public sealed class StructTests : UnitTest
         result.Y.Should().Be(0);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StructWithinClass_MultipleInstances_ShouldMapIndependently()
     {
         // Arrange

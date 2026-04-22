@@ -1,6 +1,5 @@
 using Soenneker.Tests.Unit;
 using Soenneker.Gen.Adapt.Tests.Dtos;
-using Xunit;
 using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
@@ -12,11 +11,11 @@ namespace Soenneker.Gen.Adapt.Tests;
 /// </summary>
 public sealed class SimpleArrayTests : UnitTest
 {
-    public SimpleArrayTests(ITestOutputHelper output) : base(output)
+    public SimpleArrayTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IntArray_ShouldMapCorrectly()
     {
         // Arrange
@@ -37,7 +36,7 @@ public sealed class SimpleArrayTests : UnitTest
         result.IntArray.Should().Equal([1, 2, 3, 4, 5]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_StringArray_ShouldMapCorrectly()
     {
         // Arrange
@@ -58,7 +57,7 @@ public sealed class SimpleArrayTests : UnitTest
         result.StringArray.Should().Equal(["alpha", "beta", "gamma", "delta"]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_DoubleArray_ShouldMapCorrectly()
     {
         // Arrange
@@ -79,7 +78,7 @@ public sealed class SimpleArrayTests : UnitTest
         result.DoubleArray.Should().Equal([1.1, 2.2, 3.3, 4.4, 5.5]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_BoolArray_ShouldMapCorrectly()
     {
         // Arrange
@@ -101,7 +100,7 @@ public sealed class SimpleArrayTests : UnitTest
         result.BoolArray.Should().Equal([true, false, true, false, true]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_CharArray_ShouldMapCorrectly()
     {
         // Arrange
@@ -122,7 +121,7 @@ public sealed class SimpleArrayTests : UnitTest
         result.CharArray.Should().Equal(['A', 'B', 'C', 'D', 'E']);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ByteArray_ShouldMapCorrectly()
     {
         // Arrange
@@ -143,7 +142,7 @@ public sealed class SimpleArrayTests : UnitTest
         result.ByteArray.Should().Equal([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_EmptyArrays_ShouldMapToEmptyArrays()
     {
         // Arrange
@@ -176,7 +175,7 @@ public sealed class SimpleArrayTests : UnitTest
         result.ByteArray.Length.Should().Be(0);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_SingleElementArrays_ShouldMapCorrectly()
     {
         // Arrange
@@ -209,7 +208,7 @@ public sealed class SimpleArrayTests : UnitTest
         result.ByteArray[0].Should().Be(255);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_NullableIntArray_ShouldMapCorrectly()
     {
         // Arrange
@@ -232,7 +231,7 @@ public sealed class SimpleArrayTests : UnitTest
         result.NullableIntArray[4].Should().Be(5);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_NullableStringArray_ShouldMapCorrectly()
     {
         // Arrange
@@ -255,7 +254,7 @@ public sealed class SimpleArrayTests : UnitTest
         result.NullableStringArray[4].Should().Be("fifth");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ArrayToCollection_ShouldMapCorrectly()
     {
         // Arrange
@@ -276,7 +275,7 @@ public sealed class SimpleArrayTests : UnitTest
         result.IntArray.Should().Equal([10, 20, 30, 40, 50]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_CollectionToArray_ShouldMapCorrectly()
     {
         // Arrange
@@ -297,7 +296,7 @@ public sealed class SimpleArrayTests : UnitTest
         result.IntArray.Should().Equal([100, 200, 300, 400, 500]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_LargeArray_ShouldMapAllElements()
     {
         // Arrange
@@ -322,7 +321,7 @@ public sealed class SimpleArrayTests : UnitTest
         result.IntArray[999].Should().Be(999);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ArrayWithNegativeValues_ShouldMapCorrectly()
     {
         // Arrange
@@ -344,7 +343,7 @@ public sealed class SimpleArrayTests : UnitTest
         result.IntArray.Should().Equal([-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ArrayWithDecimalValues_ShouldMapCorrectly()
     {
         // Arrange
@@ -366,7 +365,7 @@ public sealed class SimpleArrayTests : UnitTest
         result.DoubleArray.Should().Equal([-3.14, -2.71, -1.41, 0.0, 1.41, 2.71, 3.14]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ArrayWithSpecialCharacters_ShouldMapCorrectly()
     {
         // Arrange

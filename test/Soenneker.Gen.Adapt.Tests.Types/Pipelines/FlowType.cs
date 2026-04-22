@@ -6,4 +6,3 @@ public enum FlowType
     Outbound = 1
 }
 
-

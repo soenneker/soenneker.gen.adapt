@@ -5,4 +5,3 @@ public class ConcreteIntWrapperDest : GenericWrapperDest<int>
     public string AdditionalInfo { get; set; }
 }
 
-

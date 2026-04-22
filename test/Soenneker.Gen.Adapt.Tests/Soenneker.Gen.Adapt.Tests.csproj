@@ -1,15 +1,11 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net10.0</TargetFramework>
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
-        <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
-        <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
         <CompilerGeneratedFilesOutputPath>$(BaseIntermediateOutputPath)Generated</CompilerGeneratedFilesOutputPath>
-        <TestingPlatformShowTestsFailure>true</TestingPlatformShowTestsFailure>
     </PropertyGroup>
 
     <ItemGroup>
@@ -28,13 +24,13 @@
         <PackageReference Include="Mapster" Version="10.0.7" />
         <PackageReference Include="Riok.Mapperly" Version="4.3.1" />
         <PackageReference Include="Soenneker.Enums.DayOfWeek" Version="4.0.738" />
-        <PackageReference Include="Soenneker.Facts.Local" Version="4.0.616" />
+        <PackageReference Include="Soenneker.Tests.Attributes.Local" Version="4.0.0" />
         <PackageReference Include="Soenneker.Tests.Benchmark" Version="4.0.85" />
         <PackageReference Include="Soenneker.Documents.Audit" Version="4.0.2510" />
         <PackageReference Include="Soenneker.Dtos.IdNamePair" Version="4.0.707" />
         <PackageReference Include="Soenneker.Utils.Test" Version="4.0.314" />
-        <PackageReference Include="Soenneker.Tests.Unit" Version="4.0.1111" />
-        <PackageReference Include="xUnit.v3" Version="3.2.2" />
+        <PackageReference Include="Soenneker.Tests.Unit" Version="4.0.1115" />
+        <PackageReference Include="TUnit" Version="1.37.24" />
     </ItemGroup>
 
     <ItemGroup>
@@ -47,5 +43,4 @@
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
-
 </Project>

@@ -6,4 +6,3 @@ public class SportCarSource : CarSource
     public double TopSpeed { get; set; }
 }
 
-

@@ -4,17 +4,16 @@ using AwesomeAssertions;
 using Soenneker.Gen.Adapt.Tests.Types.Banking;
 using Soenneker.Gen.Adapt.Tests.Types.Pipelines;
 using Soenneker.Tests.Unit;
-using Xunit;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class IntegrationDefinitionTests : UnitTest
 {
-    public IntegrationDefinitionTests(ITestOutputHelper output) : base(output)
+    public IntegrationDefinitionTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IntegrationDefinition_WithNestedConnectors_ShouldMap_AllMembers()
     {
         var source = new AdapterIntegrationDefinition
@@ -53,7 +52,7 @@ public sealed class IntegrationDefinitionTests : UnitTest
         result.Connectors!["alpha"].Endpoint.Should().Be("https://alpha");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_List_FromRazorInferredTypes_ShouldMapEntries()
     {
         var response = new LedgerEntriesResponse

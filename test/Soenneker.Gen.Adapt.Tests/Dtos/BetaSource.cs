@@ -7,4 +7,3 @@ public sealed class BetaSource : SharedBaseSource
     public string Description { get; set; } = null!;
 }
 
-

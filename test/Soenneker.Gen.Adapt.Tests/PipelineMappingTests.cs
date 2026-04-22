@@ -1,5 +1,4 @@
 using Soenneker.Tests.Unit;
-using Xunit;
 using AwesomeAssertions;
 using Soenneker.Gen.Adapt.Tests.Types.Pipelines;
 
@@ -7,11 +6,11 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class PipelineMappingTests : UnitTest
 {
-    public PipelineMappingTests(ITestOutputHelper output) : base(output)
+    public PipelineMappingTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_FlowSetupRequest_ToFlowSetup_ShouldGenerateNestedMappers()
     {
         var source = new FlowSetupRequest

@@ -1,18 +1,17 @@
 using Soenneker.Tests.Unit;
 using System.Collections.Generic;
 using Soenneker.Gen.Adapt.Tests.Dtos;
-using Xunit;
 using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class NestedCollectionTests : UnitTest
 {
-    public NestedCollectionTests(ITestOutputHelper output) : base(output)
+    public NestedCollectionTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ListOfLists_Int_ShouldCopy()
     {
         // Arrange
@@ -36,7 +35,7 @@ public sealed class NestedCollectionTests : UnitTest
         source[0].Should().BeSameAs(result[0]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ListOfLists_String_ShouldCopy()
     {
         // Arrange
@@ -56,7 +55,7 @@ public sealed class NestedCollectionTests : UnitTest
         result[1].Should().BeEquivalentTo(new[] { "c", "d" });
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ListOfDictionaries_ShouldCopy()
     {
         // Arrange
@@ -76,7 +75,7 @@ public sealed class NestedCollectionTests : UnitTest
         result[1]["d"].Should().Be(4);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_DictionaryOfLists_ShouldCopy()
     {
         // Arrange
@@ -106,7 +105,7 @@ public sealed class NestedCollectionTests : UnitTest
         result["evens"].Should().BeEquivalentTo([2, 4, 6]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ListOfNestedObjects_ShouldMapWithManualLoop()
     {
         // Arrange
@@ -141,7 +140,7 @@ public sealed class NestedCollectionTests : UnitTest
         result.NestedItems[1].Child.Id.Should().Be("2");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ListOfLists_Empty_ShouldCopy()
     {
         // Arrange
@@ -155,7 +154,7 @@ public sealed class NestedCollectionTests : UnitTest
         result.Should().BeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ListOfLists_WithEmptyInnerLists_ShouldCopy()
     {
         // Arrange
@@ -176,7 +175,7 @@ public sealed class NestedCollectionTests : UnitTest
         result[2].Should().BeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void Adapt_DictionaryOfDictionaries_ShouldCopy()
     {
         // Arrange
@@ -196,7 +195,7 @@ public sealed class NestedCollectionTests : UnitTest
         result["group2"]["c"].Should().Be(3);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ListOfLists_DifferentSizes_ShouldCopy()
     {
         // Arrange
@@ -217,7 +216,7 @@ public sealed class NestedCollectionTests : UnitTest
         result[2].Count.Should().Be(2);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_TripleNestedLists_ShouldCopy()
     {
         // Arrange
@@ -246,7 +245,7 @@ public sealed class NestedCollectionTests : UnitTest
         result[1][0].Should().BeEquivalentTo([5, 6]);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ListOfDictionaryOfList_ShouldCopy()
     {
         // Arrange

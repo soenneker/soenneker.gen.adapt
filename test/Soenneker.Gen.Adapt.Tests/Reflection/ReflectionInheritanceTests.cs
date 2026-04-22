@@ -1,17 +1,16 @@
 using AwesomeAssertions;
 using Soenneker.Gen.Adapt.Tests.Dtos.Reflection.Inheritance;
 using Soenneker.Tests.Unit;
-using Xunit;
 
 namespace Soenneker.Gen.Adapt.Tests.Reflection;
 
 public sealed class ReflectionInheritanceTests : UnitTest
 {
-    public ReflectionInheritanceTests(ITestOutputHelper output) : base(output)
+    public ReflectionInheritanceTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_DogDerivedClass_ShouldMapAllProperties()
     {
         // Arrange
@@ -34,7 +33,7 @@ public sealed class ReflectionInheritanceTests : UnitTest
         result.IsGoodBoy.Should().Be(source.IsGoodBoy);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_CatDerivedClass_ShouldMapAllProperties()
     {
         // Arrange
@@ -57,7 +56,7 @@ public sealed class ReflectionInheritanceTests : UnitTest
         result.LikesLasagna.Should().Be(source.LikesLasagna);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_VehicleBaseClass_ShouldMapBaseProperties()
     {
         // Arrange
@@ -82,7 +81,7 @@ public sealed class ReflectionInheritanceTests : UnitTest
         result.HasSunroof.Should().Be(source.HasSunroof);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_MultiLevelInheritance_ShouldMapAllLevels()
     {
         // Arrange
@@ -114,7 +113,7 @@ public sealed class ReflectionInheritanceTests : UnitTest
         result.TopSpeed.Should().Be(source.TopSpeed);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_InterfaceImplementation_ShouldMapAllProperties()
     {
         // Arrange
@@ -135,7 +134,7 @@ public sealed class ReflectionInheritanceTests : UnitTest
         result.Description.Should().Be(source.Description);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_BaseVehicle_ToBaseCar_ShouldMapCommonProperties()
     {
         // Arrange - Create a Car but reference it as Vehicle
@@ -159,7 +158,7 @@ public sealed class ReflectionInheritanceTests : UnitTest
         result.NumberOfDoors.Should().Be(source.NumberOfDoors);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_DifferentDerivedTypes_ShouldMapCorrectly()
     {
         // Arrange - Dog and Cat have same base but different derived properties
@@ -177,7 +176,7 @@ public sealed class ReflectionInheritanceTests : UnitTest
         catResult.LivesRemaining.Should().Be(9);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_SportCar_WithDefaultValues_ShouldMap()
     {
         // Arrange
@@ -202,7 +201,7 @@ public sealed class ReflectionInheritanceTests : UnitTest
         result.TopSpeed.Should().Be(0);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_Car_ToVehicle_ShouldMapBaseProperties()
     {
         // Arrange
@@ -225,7 +224,7 @@ public sealed class ReflectionInheritanceTests : UnitTest
         result.Year.Should().Be(source.Year);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_InterfaceImplementation_WithEmptyStrings_ShouldMap()
     {
         // Arrange
@@ -246,7 +245,7 @@ public sealed class ReflectionInheritanceTests : UnitTest
         result.Description.Should().BeEmpty();
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_MultipleDogs_WithCaching_ShouldMapCorrectly()
     {
         // Arrange

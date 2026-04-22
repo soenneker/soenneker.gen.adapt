@@ -2,17 +2,16 @@ using System;
 using AwesomeAssertions;
 using Soenneker.Gen.Adapt.Tests.Dtos.Reflection.Primitives;
 using Soenneker.Tests.Unit;
-using Xunit;
 
 namespace Soenneker.Gen.Adapt.Tests.Reflection;
 
 public sealed class ReflectionPrimitivesTests : UnitTest
 {
-    public ReflectionPrimitivesTests(ITestOutputHelper output) : base(output)
+    public ReflectionPrimitivesTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_AllPrimitiveTypes_ShouldMapCorrectly()
     {
         // Arrange
@@ -63,7 +62,7 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         result.GuidValue.Should().Be(source.GuidValue);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_AllPrimitiveTypes_WithDefaultValues_ShouldMapCorrectly()
     {
         // Arrange
@@ -101,7 +100,7 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         result.GuidValue.Should().Be(Guid.Empty);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_NullablePrimitives_WithValues_ShouldMapCorrectly()
     {
         // Arrange
@@ -130,7 +129,7 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         result.GuidValue.Should().Be(source.GuidValue);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_NullablePrimitives_WithNullValues_ShouldMapCorrectly()
     {
         // Arrange
@@ -159,7 +158,7 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         result.GuidValue.Should().BeNull();
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_MixedNullable_ShouldMapCorrectly()
     {
         // Arrange
@@ -184,7 +183,7 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         result.NullableDateTime.Should().Be(source.NullableDateTime);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_MixedNullable_WithNullValues_ShouldMapCorrectly()
     {
         // Arrange
@@ -209,7 +208,7 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         result.NullableDateTime.Should().BeNull();
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_StringProperties_WithSpecialCharacters_ShouldMapCorrectly()
     {
         // Arrange
@@ -225,7 +224,7 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         result.StringValue.Should().Be(source.StringValue);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_DateTimeEdgeCases_ShouldMapCorrectly()
     {
         // Arrange - Test Min, Max, and UTC values
@@ -241,7 +240,7 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         result.DateTimeValue.Should().Be(DateTime.MaxValue);
     }
 
-    [Fact]
+    [Test]
     public void AdaptViaReflection_GuidValues_MultipleTimes_ShouldBeDifferent()
     {
         // Arrange

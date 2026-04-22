@@ -8,4 +8,3 @@ public class TemporalScheduleMetadata
     public TimeOnly LastUpdatedTime { get; set; }
 }
 
-

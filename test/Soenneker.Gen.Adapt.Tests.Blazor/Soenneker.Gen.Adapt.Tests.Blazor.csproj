@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk.BlazorWebAssembly">
-
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
@@ -20,5 +19,4 @@
         <ProjectReference Include="..\..\src\Soenneker.Gen.Adapt\Soenneker.Gen.Adapt.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
         <ProjectReference Include="..\Soenneker.Gen.Adapt.Tests.Types\Soenneker.Gen.Adapt.Tests.Types.csproj" />
     </ItemGroup>
-
 </Project>

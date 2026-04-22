@@ -1,18 +1,17 @@
 using Soenneker.Tests.Unit;
 using Soenneker.Gen.Adapt.Tests.Types;
 using Soenneker.Gen.Adapt.Tests.Dtos;
-using Xunit;
 using AwesomeAssertions;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class ExternalProjectTests : UnitTest
 {
-    public ExternalProjectTests(ITestOutputHelper output) : base(output)
+    public ExternalProjectTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_FromExternalProjectDto_ToBasicDest_ShouldMapCorrectly()
     {
         // Arrange
@@ -29,7 +28,7 @@ public sealed class ExternalProjectTests : UnitTest
         result.Id.Should().Be("external-123");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_FromBasicSource_ToExternalProjectDto_ShouldMapCorrectly()
     {
         // Arrange
@@ -48,7 +47,7 @@ public sealed class ExternalProjectTests : UnitTest
         result.Id.Should().Be("internal-456");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ExternalProjectDto_RoundTrip_ShouldPreserveData()
     {
         // Arrange
@@ -66,7 +65,7 @@ public sealed class ExternalProjectTests : UnitTest
         result.Id.Should().Be("roundtrip-789");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ExternalProjectDto_WithNullId_ShouldMapNull()
     {
         // Arrange
@@ -83,7 +82,7 @@ public sealed class ExternalProjectTests : UnitTest
         result.Id.Should().BeNull();
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ExternalProjectDto_WithEmptyId_ShouldMapEmpty()
     {
         // Arrange

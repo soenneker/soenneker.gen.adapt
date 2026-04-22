@@ -12,4 +12,3 @@ public class TemporalScheduleViewModel
     public TemporalScheduleMetadataViewModel Metadata { get; set; } = new();
 }
 
-

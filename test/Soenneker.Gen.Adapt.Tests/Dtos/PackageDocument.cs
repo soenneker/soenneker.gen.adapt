@@ -6,4 +6,3 @@ public sealed class PackageDocument
     public decimal Weight { get; set; }
 }
 
-

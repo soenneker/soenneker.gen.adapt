@@ -1,7 +1,6 @@
 using Soenneker.Tests.Unit;
 using Soenneker.Gen.Adapt.Tests.Dtos;
 using System.Collections.Generic;
-using Xunit;
 using AwesomeAssertions;
 using Soenneker.Gen.Adapt.Tests.Dtos.Abstract;
 
@@ -9,11 +8,11 @@ namespace Soenneker.Gen.Adapt.Tests;
 
 public sealed class InterfaceCollectionTests : UnitTest
 {
-    public InterfaceCollectionTests(ITestOutputHelper output) : base(output)
+    public InterfaceCollectionTests( output) : base(output)
     {
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ListOfInterfaces_ShouldMapToListOfClasses()
     {
         // Arrange
@@ -57,7 +56,7 @@ public sealed class InterfaceCollectionTests : UnitTest
         result.Products[1].Price.Should().Be(149.99m);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IReadOnlyListOfInterfaces_ShouldMapToList()
     {
         // Arrange
@@ -92,7 +91,7 @@ public sealed class InterfaceCollectionTests : UnitTest
         result.Products[0].Price.Should().Be(199.99m);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_EmptyListOfInterfaces_ShouldMapToEmptyList()
     {
         // Arrange
@@ -113,7 +112,7 @@ public sealed class InterfaceCollectionTests : UnitTest
         result.Products.Count.Should().Be(0);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ListOfInterfacesWithManyItems_ShouldMapAll()
     {
         // Arrange
@@ -144,7 +143,7 @@ public sealed class InterfaceCollectionTests : UnitTest
         result.People[99].Age.Should().Be(99);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_ListOfInterfaces_ShouldCreateIndependentCopies()
     {
         // Arrange
@@ -165,7 +164,7 @@ public sealed class InterfaceCollectionTests : UnitTest
         result.People[0].FirstName.Should().Be("Original"); // Should be unchanged
     }
 
-    [Fact]
+    [Test]
     public void Adapt_DictionaryWithInterfaceValues_ShouldMapValueTypes()
     {
         // Arrange
@@ -202,7 +201,7 @@ public sealed class InterfaceCollectionTests : UnitTest
         result.ProductsById["prod2"].Name.Should().Be("Product 2");
     }
 
-    [Fact]
+    [Test]
     public void Adapt_IReadOnlyDictionaryWithInterfaceValues_ShouldMap()
     {
         // Arrange
@@ -226,7 +225,7 @@ public sealed class InterfaceCollectionTests : UnitTest
         result.ProductsById["key1"].Price.Should().Be(50m);
     }
 
-    [Fact]
+    [Test]
     public void Adapt_DictionaryOfInterfaces_ShouldCreateIndependentCopies()
     {
         // Arrange

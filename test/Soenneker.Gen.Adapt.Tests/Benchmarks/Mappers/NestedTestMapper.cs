@@ -13,4 +13,3 @@ public partial class NestedTestMapper
     public partial NestedFacetDestComparison MapToNestedFacetDest(NestedSource1 source);
 }
 
-

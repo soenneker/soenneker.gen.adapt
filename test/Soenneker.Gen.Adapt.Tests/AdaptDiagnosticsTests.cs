@@ -1,7 +1,6 @@
 using AwesomeAssertions;
 using Soenneker.Tests.Unit;
 using Soenneker.Gen.Adapt.Tests.Dtos;
-using Xunit;
 
 namespace Soenneker.Gen.Adapt.Tests;
 
@@ -12,11 +11,11 @@ namespace Soenneker.Gen.Adapt.Tests;
 /// </summary>
 public sealed class AdaptDiagnosticsTests : UnitTest
 {
-    public AdaptDiagnosticsTests(ITestOutputHelper output) : base(output)
+    public AdaptDiagnosticsTests( output) : base(output)
     {
     }
 
-    //[Fact]
+    //[Test]
     //public void Adapt_NoParameterlessConstructor_ShouldGenerateDiagnostic()
     //{
     //    // This should trigger SGA002 diagnostic: "No parameterless constructor available"
@@ -31,7 +30,7 @@ public sealed class AdaptDiagnosticsTests : UnitTest
     //    result.Should().NotBeNull();
     //}
 
-    //[Fact]
+    //[Test]
     //public void Adapt_Interface_ShouldGenerateDiagnostic()
     //{
     //    var source = new DiagnosticTestSource { Name = "test", Value = 42 };
@@ -45,7 +44,7 @@ public sealed class AdaptDiagnosticsTests : UnitTest
     //    result.Should().NotBeNull();
     //}
 
-    //[Fact]
+    //[Test]
     //public void Adapt_NoMatchingProperties_ShouldGenerateDiagnostic()
     //{
     //    var source = new DiagnosticTestSource { Name = "test", Value = 42 };
@@ -59,7 +58,7 @@ public sealed class AdaptDiagnosticsTests : UnitTest
     //    result.Should().NotBeNull();
     //}
 
-    //[Fact]
+    //[Test]
     //public void Adapt_ReadOnlyProperties_ShouldGenerateDiagnostic()
     //{
     //    var source = new DiagnosticTestSource { Name = "test", Value = 42 };
@@ -73,7 +72,7 @@ public sealed class AdaptDiagnosticsTests : UnitTest
     //    result.Should().NotBeNull();
     //}
 
-    [Fact]
+    [Test]
     public void Adapt_ValidMapping_ShouldNotGenerateDiagnostic()
     {
         // Use a valid source type that has matching properties with BasicDest
