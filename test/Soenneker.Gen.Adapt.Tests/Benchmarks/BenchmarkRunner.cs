@@ -1,9 +1,3 @@
-using BenchmarkDotNet.Reports;
-using Soenneker.Benchmarking.Extensions.Summary;
-using Soenneker.Tests.Benchmark;
-using System.Threading.Tasks;
-using Soenneker.Tests.Attributes.Local;
-
 namespace Soenneker.Gen.Adapt.Tests.Benchmarks;
 
 public class BenchmarkRunner : BenchmarkTest
@@ -68,3 +62,6 @@ public class BenchmarkRunner : BenchmarkTest
         await summary.OutputSummaryToLog();
     }
 }
+
+
+
