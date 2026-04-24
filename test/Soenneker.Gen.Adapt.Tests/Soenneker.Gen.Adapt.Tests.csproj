@@ -24,7 +24,7 @@
         <PackageReference Include="Mapster" Version="10.0.7" />
         <PackageReference Include="Riok.Mapperly" Version="4.3.1" />
         <PackageReference Include="Soenneker.Enums.DayOfWeek" Version="4.0.740" />
-        <PackageReference Include="Soenneker.Tests.Attributes.Local" Version="4.0.4" />
+        <PackageReference Include="Soenneker.Tests.Attributes.Local" Version="4.0.6" />
         <PackageReference Include="Soenneker.Tests.Benchmark" Version="4.0.87" />
         <PackageReference Include="Soenneker.Documents.Audit" Version="4.0.2517" />
         <PackageReference Include="Soenneker.Dtos.IdNamePair" Version="4.0.710" />
