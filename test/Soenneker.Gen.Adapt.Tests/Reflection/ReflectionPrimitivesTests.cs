@@ -158,6 +158,10 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         {
             NonNullableInt = 100,
             NullableInt = 200,
+            NullableToNonNullableInt = 300,
+            NullableToNonNullableDecimal = 71.17m,
+            NonNullableToNullableInt = 400,
+            NonNullableToNullableDecimal = 82.28m,
             NonNullableString = "Test",
             NonNullableDateTime = new DateTime(2024, 1, 1),
             NullableDateTime = new DateTime(2024, 12, 31)
@@ -170,6 +174,10 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         result.Should().NotBeNull();
         result.NonNullableInt.Should().Be(source.NonNullableInt);
         result.NullableInt.Should().Be(source.NullableInt);
+        result.NullableToNonNullableInt.Should().Be(source.NullableToNonNullableInt);
+        result.NullableToNonNullableDecimal.Should().Be(source.NullableToNonNullableDecimal);
+        result.NonNullableToNullableInt.Should().Be(source.NonNullableToNullableInt);
+        result.NonNullableToNullableDecimal.Should().Be(source.NonNullableToNullableDecimal);
         result.NonNullableString.Should().Be(source.NonNullableString);
         result.NonNullableDateTime.Should().Be(source.NonNullableDateTime);
         result.NullableDateTime.Should().Be(source.NullableDateTime);
@@ -182,6 +190,10 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         {
             NonNullableInt = 0,
             NullableInt = null,
+            NullableToNonNullableInt = null,
+            NullableToNonNullableDecimal = null,
+            NonNullableToNullableInt = 400,
+            NonNullableToNullableDecimal = 82.28m,
             NonNullableString = null,
             NonNullableDateTime = DateTime.MinValue,
             NullableDateTime = null
@@ -194,9 +206,37 @@ public sealed class ReflectionPrimitivesTests : UnitTest
         result.Should().NotBeNull();
         result.NonNullableInt.Should().Be(0);
         result.NullableInt.Should().BeNull();
+        result.NullableToNonNullableInt.Should().Be(0);
+        result.NullableToNonNullableDecimal.Should().Be(0M);
+        result.NonNullableToNullableInt.Should().Be(source.NonNullableToNullableInt);
+        result.NonNullableToNullableDecimal.Should().Be(source.NonNullableToNullableDecimal);
         result.NonNullableString.Should().BeNull();
         result.NonNullableDateTime.Should().Be(DateTime.MinValue);
         result.NullableDateTime.Should().BeNull();
+    }
+
+    [Test]
+    public void Adapt_MixedNullable_ShouldMapCorrectly()
+    {
+        var source = new MixedNullableSource
+        {
+            NonNullableInt = 100,
+            NullableInt = 200,
+            NullableToNonNullableInt = 300,
+            NullableToNonNullableDecimal = 71.17m,
+            NonNullableToNullableInt = 400,
+            NonNullableToNullableDecimal = 82.28m,
+            NonNullableString = "Test",
+            NonNullableDateTime = new DateTime(2024, 1, 1),
+            NullableDateTime = new DateTime(2024, 12, 31)
+        };
+
+        var result = source.Adapt<MixedNullableDest>();
+
+        result.NullableToNonNullableInt.Should().Be(300);
+        result.NullableToNonNullableDecimal.Should().Be(71.17m);
+        result.NonNullableToNullableInt.Should().Be(400);
+        result.NonNullableToNullableDecimal.Should().Be(82.28m);
     }
     [Test]
     public void AdaptViaReflection_StringProperties_WithSpecialCharacters_ShouldMapCorrectly()

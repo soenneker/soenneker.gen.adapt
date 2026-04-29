@@ -175,7 +175,7 @@ internal static class TypeResolver
 
             if (current is INamedTypeSymbol named)
             {
-                foreach (ISymbol member in named.GetMembers(memberName))
+                foreach (ISymbol member in GetMembersIncludingInherited(named, memberName))
                 {
                     if (member is IPropertySymbol property)
                     {
@@ -185,6 +185,11 @@ internal static class TypeResolver
                     if (member is IFieldSymbol field)
                     {
                         next = field.Type;
+                        break;
+                    }
+                    if (member is IMethodSymbol { MethodKind: MethodKind.Ordinary } method)
+                    {
+                        next = UnwrapAwaitable(method.ReturnType);
                         break;
                     }
                 }
@@ -197,6 +202,34 @@ internal static class TypeResolver
         }
 
         return current as INamedTypeSymbol;
+    }
+
+    private static IEnumerable<ISymbol> GetMembersIncludingInherited(INamedTypeSymbol type, string memberName)
+    {
+        for (INamedTypeSymbol? current = type; current is not null; current = current.BaseType)
+        {
+            foreach (ISymbol member in current.GetMembers(memberName))
+                yield return member;
+        }
+
+        foreach (INamedTypeSymbol iface in type.AllInterfaces)
+        {
+            foreach (ISymbol member in iface.GetMembers(memberName))
+                yield return member;
+        }
+    }
+
+    private static ITypeSymbol UnwrapAwaitable(ITypeSymbol type)
+    {
+        if (type is INamedTypeSymbol named &&
+            named.IsGenericType &&
+            named.TypeArguments.Length == 1 &&
+            (named.Name == "Task" || named.Name == "ValueTask"))
+        {
+            return named.TypeArguments[0];
+        }
+
+        return type;
     }
     
     private static bool TryGetFrameworkType(Compilation compilation, string typeName, out INamedTypeSymbol? result)

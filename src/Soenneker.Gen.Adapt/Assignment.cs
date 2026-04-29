@@ -44,12 +44,18 @@ internal static class Assignment
         if (Types.IsString(srcType) && Types.IsGuid(dstType))
             return null; // Handle Guid.TryParse specially in mapper
 
-        // Nullable<T> handling (pass-through for identical inner)
+        // Nullable<T> handling
         if (Types.IsNullableOf(srcType, out ITypeSymbol? sInner) && Types.IsNullableOf(dstType, out ITypeSymbol? dInner))
         {
             if (SymbolEqualityComparer.Default.Equals(sInner!, dInner!))
                 return srcExpr; // same nullable type
         }
+
+        if (Types.IsNullableOf(srcType, out sInner) && SymbolEqualityComparer.Default.Equals(sInner!, dstType))
+            return srcExpr + ".GetValueOrDefault()";
+
+        if (Types.IsNullableOf(dstType, out dInner) && SymbolEqualityComparer.Default.Equals(srcType, dInner!))
+            return srcExpr;
 
         // Intellenum-like: class with public int Value -> int
         if (srcType is INamedTypeSymbol cls1 && Types.HasIntValueProp(cls1) && Types.IsInt(dstType))
@@ -98,6 +104,12 @@ internal static class Assignment
 
         if (Types.IsNullableOf(srcType, out ITypeSymbol? sInner) && Types.IsNullableOf(dstType, out ITypeSymbol? dInner) &&
             SymbolEqualityComparer.Default.Equals(sInner!, dInner!))
+            return true;
+
+        if (Types.IsNullableOf(srcType, out sInner) && SymbolEqualityComparer.Default.Equals(sInner!, dstType))
+            return true;
+
+        if (Types.IsNullableOf(dstType, out dInner) && SymbolEqualityComparer.Default.Equals(srcType, dInner!))
             return true;
 
         if (srcType is INamedTypeSymbol cls1 && Types.HasIntValueProp(cls1) && Types.IsInt(dstType))

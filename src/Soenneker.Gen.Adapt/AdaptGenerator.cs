@@ -24,6 +24,12 @@ public sealed class AdaptGenerator : IIncrementalGenerator
     private static readonly Regex _varDeclarationRegex =
         new(@"var\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=", RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
+    private static readonly Regex _injectDeclarationRegex =
+        new(@"@inject\s+([a-zA-Z_][a-zA-Z0-9_\.]*(?:<.+?>)?)\s+([a-zA-Z_][a-zA-Z0-9_]*)", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+    private static readonly Regex _assignmentMethodCallRegex =
+        new(@"=\s*(?:await\s+)?([a-zA-Z_][a-zA-Z0-9_\.]*)\s*\(", RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
     private static readonly Regex _nullableDeclarationRegex =
         new(@"([a-zA-Z_][a-zA-Z0-9_\.]*(?:<.+?>)?(?:\[\])?)\?\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*=",
             RegexOptions.Compiled | RegexOptions.CultureInvariant);
@@ -177,7 +183,72 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             if (s.StartsWith("await ", StringComparison.Ordinal))
                 s = s.Substring("await ".Length).TrimStart();
 
+            s = s.Replace("?.", ".")
+                 .Replace("!.", ".")
+                 .TrimEnd('?', '!');
+
+            s = UnwrapParenthesizedAwait(s);
+            s = RemoveInvocationArguments(s);
+
             return s;
+        }
+
+        static string UnwrapParenthesizedAwait(string expr)
+        {
+            string s = expr.Trim();
+            if (!s.StartsWith("(await ", StringComparison.Ordinal))
+                return s;
+
+            var depth = 0;
+            for (var i = 0; i < s.Length; i++)
+            {
+                if (s[i] == '(')
+                    depth++;
+                else if (s[i] == ')')
+                {
+                    depth--;
+                    if (depth == 0)
+                    {
+                        string inner = s.Substring("(await ".Length, i - "(await ".Length).Trim();
+                        string suffix = i + 1 < s.Length ? s.Substring(i + 1) : string.Empty;
+                        return inner + suffix;
+                    }
+                }
+            }
+
+            return s;
+        }
+
+        static string RemoveInvocationArguments(string expr)
+        {
+            if (string.IsNullOrWhiteSpace(expr))
+                return expr;
+
+            var sb = new System.Text.StringBuilder(expr.Length);
+            for (var i = 0; i < expr.Length; i++)
+            {
+                char c = expr[i];
+                if (c != '(')
+                {
+                    sb.Append(c);
+                    continue;
+                }
+
+                var depth = 1;
+                i++;
+                while (i < expr.Length && depth > 0)
+                {
+                    if (expr[i] == '(')
+                        depth++;
+                    else if (expr[i] == ')')
+                        depth--;
+                    i++;
+                }
+
+                i--;
+            }
+
+            return sb.ToString();
         }
 
         static string MaybeUnwrapAwaitable(string typeName)
@@ -260,6 +331,28 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             list.Add(new DeclarationInfo(typeName, lineIndex, position));
         }
 
+        MatchCollection injectMatches = _injectDeclarationRegex.Matches(content);
+        foreach (Match injectMatch in injectMatches)
+        {
+            if (injectMatch.Groups.Count < 3)
+                continue;
+
+            string typeName = StripModifiers(injectMatch.Groups[1].Value.Trim());
+            string propertyName = injectMatch.Groups[2].Value.Trim();
+
+            if (typeName.Contains("<"))
+            {
+                typeName = ExtractCleanGenericType(typeName);
+            }
+
+            int injectLineIndex = sourceText.Lines.GetLineFromPosition(injectMatch.Index).LineNumber;
+            int propertyPosition = content.IndexOf(propertyName, injectMatch.Index, StringComparison.Ordinal);
+            if (!string.IsNullOrEmpty(typeName) && !IsKeyword(typeName))
+            {
+                AddDeclaration(propertyName, typeName, injectLineIndex, propertyPosition);
+            }
+        }
+
         for (var lineIndex = 0; lineIndex < lines.Length; lineIndex++)
         {
             string rawLine = lines[lineIndex];
@@ -336,6 +429,40 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                             // For Adapt calls, we'll handle this in the second pass
                             // For now, just store the variable name and continue
                             continue;
+                        }
+
+                        Match methodCallMatch = _assignmentMethodCallRegex.Match(multiLine);
+                        if (methodCallMatch.Success)
+                        {
+                            string methodExpression = NormalizeExpression(methodCallMatch.Groups[1].Value);
+                            int dotIndex = methodExpression.LastIndexOf('.');
+                            if (dotIndex > 0 && dotIndex < methodExpression.Length - 1)
+                            {
+                                string receiverName = methodExpression.Substring(0, dotIndex);
+                                string methodName = methodExpression.Substring(dotIndex + 1);
+                                string? receiverType = ResolveDeclarationType(receiverName, lineIndex, lineStartPositions[lineIndex]);
+
+                                if (!string.IsNullOrEmpty(receiverType))
+                                {
+                                    typeName = MaybeUnwrapAwaitable(receiverType + "." + methodName);
+                                }
+                                else
+                                {
+                                    continue;
+                                }
+                            }
+                            else
+                            {
+                                string? methodReturnType = ResolveMethodReturnType(methodExpression);
+                                if (!string.IsNullOrEmpty(methodReturnType))
+                                {
+                                    typeName = MaybeUnwrapAwaitable(methodReturnType);
+                                }
+                                else
+                                {
+                                    continue;
+                                }
+                            }
                         }
                         else
                         {
@@ -482,6 +609,68 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             return candidate.Value.TypeName;
         }
 
+        string? ResolveMethodReturnType(string methodName)
+        {
+            if (string.IsNullOrWhiteSpace(methodName))
+                return null;
+
+            Regex asyncRegex = GetAsyncMethodRegex(methodName);
+            Match asyncMatch = asyncRegex.Match(content);
+            if (asyncMatch.Success)
+                return ExtractCleanGenericType(asyncMatch.Groups[1].Value.Trim());
+
+            Regex methodRegex = GetMethodRegex(methodName);
+            Match methodMatch = methodRegex.Match(content);
+            if (methodMatch.Success)
+            {
+                string sourceType = methodMatch.Groups[1].Value.Trim().Replace(" ", "");
+                if (sourceType.Contains("<"))
+                    sourceType = ExtractCleanGenericType(sourceType);
+
+                return MaybeUnwrapAwaitable(sourceType);
+            }
+
+            return null;
+        }
+
+        string? ResolveAssignedInvocationType(string varName, int adaptPosition)
+        {
+            if (string.IsNullOrWhiteSpace(varName))
+                return null;
+
+            var assignmentRegex = new Regex(
+                $@"\bvar\s+{Regex.Escape(varName)}\s*=\s*(?:await\s+)?([a-zA-Z_][a-zA-Z0-9_\.]*)\s*\(",
+                RegexOptions.Compiled | RegexOptions.CultureInvariant);
+
+            MatchCollection assignmentMatches = assignmentRegex.Matches(content);
+            Match? candidate = null;
+
+            foreach (Match assignmentMatch in assignmentMatches)
+            {
+                if (adaptPosition >= 0 && assignmentMatch.Index > adaptPosition)
+                    break;
+
+                candidate = assignmentMatch;
+            }
+
+            if (candidate is null || !candidate.Success)
+                return null;
+
+            string methodExpression = NormalizeExpression(candidate.Groups[1].Value);
+            int dotIndex = methodExpression.LastIndexOf('.');
+            if (dotIndex > 0 && dotIndex < methodExpression.Length - 1)
+            {
+                string receiverName = methodExpression.Substring(0, dotIndex);
+                string methodName = methodExpression.Substring(dotIndex + 1);
+                string? receiverType = ResolveDeclarationType(receiverName, int.MaxValue, int.MaxValue);
+
+                if (!string.IsNullOrEmpty(receiverType))
+                    return MaybeUnwrapAwaitable(receiverType + "." + methodName);
+            }
+
+            return ResolveMethodReturnType(methodExpression);
+        }
+
         // Pass 2: Find all .Adapt<DestType>() calls (but skip comments)
         // First, remove all comment lines to avoid false matches
         string contentWithoutComments = _lineCommentRegex.Replace(content, match => new string(' ', match.Length));
@@ -496,7 +685,9 @@ public sealed class AdaptGenerator : IIncrementalGenerator
         {
             if (match.Groups.Count >= 3)
             {
-                string expression = NormalizeExpression(match.Groups[1].Value);
+                int expressionAdaptPos = contentWithoutComments.IndexOf(AdaptToken, match.Index);
+                string extractedExpression = expressionAdaptPos >= 0 ? ExtractExpressionBeforeAdapt(contentWithoutComments, expressionAdaptPos) : string.Empty;
+                string expression = NormalizeExpression(!string.IsNullOrWhiteSpace(extractedExpression) ? extractedExpression : match.Groups[1].Value);
                 string destType = match.Groups[2].Value.Trim();
 
                 if (!string.IsNullOrEmpty(destType) && !string.IsNullOrEmpty(expression))
@@ -556,7 +747,9 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 if (rawExpr.EndsWith("TypeAdapter") || rawExpr.Contains("Mapster.TypeAdapter"))
                     continue;
 
-                string expression = NormalizeExpression(rawExpr);
+                int broadAdaptPos = contentWithoutComments.IndexOf(AdaptToken, match.Index);
+                string extractedExpression = broadAdaptPos >= 0 ? ExtractExpressionBeforeAdapt(contentWithoutComments, broadAdaptPos) : string.Empty;
+                string expression = NormalizeExpression(!string.IsNullOrWhiteSpace(extractedExpression) ? extractedExpression : rawExpr);
                 string destType = match.Groups[2].Value.Trim();
 
                 if (!string.IsNullOrEmpty(destType) && !string.IsNullOrEmpty(expression))
@@ -631,6 +824,8 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                     string varName = parts[0];
 
                     string? baseTypeName = ResolveDeclarationType(varName, adaptLineNumber, adaptCharIndex);
+                    baseTypeName ??= ResolveAssignedInvocationType(varName, adaptCharIndex);
+
                     if (!string.IsNullOrEmpty(baseTypeName))
                     {
                         baseTypeName = MaybeUnwrapAwaitable(baseTypeName);
@@ -676,30 +871,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                     if (methodName.StartsWith("await ", StringComparison.Ordinal))
                         methodName = methodName.Substring("await ".Length).Trim();
 
-                    // Allow attributes and common modifiers before the return type, and capture fully-qualified/generic types
-                    Regex methodRegex = GetMethodRegex(methodName);
-                    Match methodMatch = methodRegex.Match(content);
-                    if (methodMatch.Success)
-                    {
-                        sourceType = methodMatch.Groups[1].Value.Trim().Replace(" ", "");
-                        if (sourceType.Contains("<"))
-                        {
-                            sourceType = ExtractCleanGenericType(sourceType);
-                        }
-
-                        // Unwrap Task<T>/ValueTask<T> if present (common in async patterns)
-                        sourceType = MaybeUnwrapAwaitable(sourceType);
-                    }
-                    else
-                    {
-                        // Try explicit async return patterns: Task<T>/ValueTask<T>
-                        Regex asyncRegex = GetAsyncMethodRegex(methodName);
-                        Match asyncMatch = asyncRegex.Match(content);
-                        if (asyncMatch.Success)
-                        {
-                            sourceType = ExtractCleanGenericType(asyncMatch.Groups[1].Value.Trim());
-                        }
-                    }
+                    sourceType = ResolveMethodReturnType(methodName);
                 }
             }
 
@@ -787,8 +959,16 @@ public sealed class AdaptGenerator : IIncrementalGenerator
             return newMatch.Groups[1].Value.Trim();
         }
 
+        // Pattern 2: (await service.Get()).Value.Adapt
+        var awaitedMemberPattern = @"(\(\s*await\s+.+?\)\s*(?:(?:\?\.|\.)[a-zA-Z_][\w]*(?:\([^)]*\))?)*[?!]?)\s*$";
+        Match awaitedMemberMatch = Regex.Match(segment, awaitedMemberPattern, RegexOptions.Singleline);
+        if (awaitedMemberMatch.Success)
+        {
+            return awaitedMemberMatch.Groups[1].Value.Trim();
+        }
+
         // Pattern 2: identifier (variable, property access, method call)
-        var identPattern = @"([a-zA-Z_][\w\.]*(?:\([^)]*\))?)\s*$";
+        var identPattern = @"([a-zA-Z_][\w]*(?:\([^)]*\))?(?:(?:\?\.|\.)[a-zA-Z_][\w]*(?:\([^)]*\))?)*[?!]?)\s*$";
         Match identMatch = Regex.Match(segment, identPattern);
         if (identMatch.Success)
         {
@@ -878,7 +1058,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
     {
         return _methodLookupRegexCache.GetOrAdd(methodName, static name =>
             new Regex(
-                $@"(?:\[.*?\]\s*)*(?:(?:private|public|protected|internal|static|virtual|override|sealed|partial|readonly|new|required|unsafe|async)\s+)*((?:global::)?[a-zA-Z_][a-zA-Z0-9_<>,\.\[\]]*(?:<[^>]*>)?)\s+{Regex.Escape(name)}\s*\(",
+                $@"(?:^|[\r\n])\s*(?:\[.*?\]\s*)*(?:(?:private|public|protected|internal|static|virtual|override|sealed|partial|readonly|new|required|unsafe|async)\s+)*((?:global::)?[a-zA-Z_][a-zA-Z0-9_<>,\.\[\]\s]*(?:\?)?)\s+{Regex.Escape(name)}\s*\(",
                 RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant));
     }
 
@@ -886,7 +1066,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
     {
         return _asyncMethodLookupRegexCache.GetOrAdd(methodName, static name =>
             new Regex(
-                $@"(?:\[.*?\]\s*)*(?:(?:private|public|protected|internal|static|virtual|override|sealed|partial|readonly|new|required|unsafe|async)\s+)*(?:(?:System\.Threading\.Tasks\.)?(?:Task|ValueTask))\s*<\s*([a-zA-Z_][a-zA-Z0-9_<>,\.\s]*)\s*>\s+{Regex.Escape(name)}\s*\(",
+                $@"(?:^|[\r\n])\s*(?:\[.*?\]\s*)*(?:(?:private|public|protected|internal|static|virtual|override|sealed|partial|readonly|new|required|unsafe|async)\s+)*(?:(?:System\.Threading\.Tasks\.)?(?:Task|ValueTask))\s*<\s*(.+?)\s*>\s+{Regex.Escape(name)}\s*\(",
                 RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant));
     }
 

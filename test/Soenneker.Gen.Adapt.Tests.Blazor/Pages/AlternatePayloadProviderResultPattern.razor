@@ -1,0 +1,16 @@
+@page "/alternate-payload-provider-result-pattern"
+@rendermode InteractiveWebAssembly
+
+@inject IAdvancedValueProvider AdvancedValueProvider
+
+<PageTitle>Alternate Payload Provider Result Pattern Test</PageTitle>
+
+@code {
+    private PayloadValueDto? _payloadValueDto;
+
+    private async Task TestAlternatePayloadProviderResultPattern()
+    {
+        var result = await AdvancedValueProvider.GetPayload("payload-1");
+        _payloadValueDto = result.Payload?.Adapt<PayloadValueDto>();
+    }
+}

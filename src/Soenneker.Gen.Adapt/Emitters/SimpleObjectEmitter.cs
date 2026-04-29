@@ -480,6 +480,12 @@ internal static class SimpleObjectEmitter
                 return expr; // same nullable type
         }
 
+        if (Types.IsNullableOf(fromType, out fromInner) && SymbolEqualityComparer.Default.Equals(fromInner!, toType))
+            return expr + ".GetValueOrDefault()";
+
+        if (Types.IsNullableOf(toType, out toInner) && SymbolEqualityComparer.Default.Equals(fromType, toInner!))
+            return expr;
+
         // Handle user-defined type conversions
         if (fromType is INamedTypeSymbol fromNamed && toType is INamedTypeSymbol toNamed &&
             (fromNamed.TypeKind == TypeKind.Class || fromNamed.TypeKind == TypeKind.Struct) &&

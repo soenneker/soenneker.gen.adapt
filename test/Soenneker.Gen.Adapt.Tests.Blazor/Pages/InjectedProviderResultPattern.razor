@@ -1,0 +1,17 @@
+@page "/injected-provider-result-pattern"
+@rendermode InteractiveWebAssembly
+
+@inject IWidgetValueProvider WidgetValueProvider
+
+<PageTitle>Injected Provider Result Pattern Test</PageTitle>
+
+@code {
+    private WidgetValueDto? _widgetValueDto;
+
+    private async Task TestInjectedProviderResultPattern()
+    {
+        // ReSharper disable once SuggestVarOrType_Elsewhere
+        var result = await WidgetValueProvider.Get("widget-1");
+        _widgetValueDto = result.Value?.Adapt<WidgetValueDto>();
+    }
+}

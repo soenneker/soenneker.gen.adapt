@@ -1,0 +1,15 @@
+@page "/inline-awaited-provider-result-pattern"
+@rendermode InteractiveWebAssembly
+
+@inject IAdvancedValueProvider AdvancedValueProvider
+
+<PageTitle>Inline Awaited Provider Result Pattern Test</PageTitle>
+
+@code {
+    private InlineValueDto? _inlineValueDto;
+
+    private async Task TestInlineAwaitedProviderResultPattern()
+    {
+        _inlineValueDto = (await AdvancedValueProvider.GetInline("inline-1")).Value?.Adapt<InlineValueDto>();
+    }
+}

@@ -1,0 +1,16 @@
+@page "/helper-provider-result-pattern"
+@rendermode InteractiveWebAssembly
+
+@inject IAdvancedValueProvider AdvancedValueProvider
+
+<PageTitle>Helper Provider Result Pattern Test</PageTitle>
+
+@code {
+    private HelperValueDto? _helperValueDto;
+
+    private async Task TestHelperProviderResultPattern()
+    {
+        var result = await AdvancedValueProvider.GetHelper("helper-1");
+        _helperValueDto = result.Value!.Adapt<HelperValueDto>();
+    }
+}

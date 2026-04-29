@@ -5,4 +5,7 @@
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
     </PropertyGroup>
+    <ItemGroup>
+      <PackageReference Include="Soenneker.Dtos.Results.Operation" Version="4.0.39" />
+    </ItemGroup>
 </Project>
