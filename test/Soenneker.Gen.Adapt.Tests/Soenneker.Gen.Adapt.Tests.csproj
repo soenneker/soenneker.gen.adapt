@@ -20,7 +20,7 @@
 
     <ItemGroup>
         <PackageReference Include="AutoMapper" Version="16.1.1" />
-        <PackageReference Include="Facet.Extensions" Version="6.5.4" />
+        <PackageReference Include="Facet.Extensions" Version="6.5.5" />
         <PackageReference Include="Mapster" Version="10.0.7" />
         <PackageReference Include="Riok.Mapperly" Version="4.3.1" />
         <PackageReference Include="Soenneker.Enums.DayOfWeek" Version="4.0.741" />
@@ -30,7 +30,7 @@
         <PackageReference Include="Soenneker.Dtos.IdNamePair" Version="4.0.710" />
         <PackageReference Include="Soenneker.Utils.Test" Version="4.0.316" />
         <PackageReference Include="Soenneker.Tests.Unit" Version="4.0.1138" />
-        <PackageReference Include="TUnit" Version="1.43.11" />
+        <PackageReference Include="TUnit" Version="1.43.41" />
     </ItemGroup>
 
     <ItemGroup>
