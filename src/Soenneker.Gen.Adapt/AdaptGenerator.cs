@@ -10,6 +10,9 @@ using System.Text.RegularExpressions;
 
 namespace Soenneker.Gen.Adapt;
 
+/// <summary>
+/// Represents the adapt generator.
+/// </summary>
 [Generator]
 public sealed class AdaptGenerator : IIncrementalGenerator
 {
@@ -93,6 +96,10 @@ public sealed class AdaptGenerator : IIncrementalGenerator
     private static readonly ConcurrentDictionary<string, Regex> _methodLookupRegexCache = new(StringComparer.Ordinal);
     private static readonly ConcurrentDictionary<string, Regex> _asyncMethodLookupRegexCache = new(StringComparer.Ordinal);
 
+    /// <summary>
+    /// Executes the initialize operation.
+    /// </summary>
+    /// <param name="context">The context.</param>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Find all Adapt invocations early to cut down on semantic model work for other calls
