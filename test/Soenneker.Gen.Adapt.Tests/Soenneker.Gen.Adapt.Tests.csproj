@@ -26,7 +26,7 @@
         <PackageReference Include="Soenneker.Enums.DayOfWeek" Version="4.0.749" />
         <PackageReference Include="Soenneker.Tests.Attributes.Local" Version="4.0.52" />
         <PackageReference Include="Soenneker.Tests.Benchmark" Version="4.0.125" />
-        <PackageReference Include="Soenneker.Documents.Audit" Version="4.0.2543" />
+        <PackageReference Include="Soenneker.Documents.Audit" Version="4.0.2544" />
         <PackageReference Include="Soenneker.Dtos.IdNamePair" Version="4.0.715" />
         <PackageReference Include="Soenneker.Utils.Test" Version="4.0.321" />
         <PackageReference Include="Soenneker.Tests.Unit" Version="4.0.1204" />
