@@ -95,6 +95,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
     private static readonly ConcurrentDictionary<string, Regex> _fieldLookupRegexCache = new(StringComparer.Ordinal);
     private static readonly ConcurrentDictionary<string, Regex> _methodLookupRegexCache = new(StringComparer.Ordinal);
     private static readonly ConcurrentDictionary<string, Regex> _asyncMethodLookupRegexCache = new(StringComparer.Ordinal);
+    private const int _dynamicRegexCacheLimit = 256;
 
     /// <summary>
     /// Executes the initialize operation.
@@ -103,7 +104,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Find all Adapt invocations early to cut down on semantic model work for other calls
-        IncrementalValuesProvider<(InvocationExpressionSyntax invocation, SemanticModel semanticModel)> adaptInvocations =
+        IncrementalValuesProvider<InvocationExpressionSyntax> adaptInvocations =
             context.SyntaxProvider.CreateSyntaxProvider(
                 static (node, _) => node is InvocationExpressionSyntax
                 {
@@ -112,7 +113,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                         Name: SimpleNameSyntax simpleName
                     }
                 } && simpleName.Identifier.ValueText == "Adapt",
-                static (ctx, _) => ((InvocationExpressionSyntax)ctx.Node, ctx.SemanticModel));
+                static (ctx, _) => (InvocationExpressionSyntax)ctx.Node);
 
         // Also scan .razor files for Adapt calls
         // NOTE: Razor compilation happens after source generation, so we need to pre-scan
@@ -126,14 +127,14 @@ public sealed class AdaptGenerator : IIncrementalGenerator
         IncrementalValuesProvider<string> razorAdaptCalls = razorFiles.SelectMany(static (pair, _) => ExtractAdaptCallsFromRazor(pair.path, pair.content));
 
         // Combine everything with compilation
-        IncrementalValueProvider<(Compilation, ImmutableArray<(InvocationExpressionSyntax, SemanticModel)>, ImmutableArray<string>)> allData =
+        IncrementalValueProvider<(Compilation, ImmutableArray<InvocationExpressionSyntax>, ImmutableArray<string>)> allData =
             context.CompilationProvider.Combine(adaptInvocations.Collect()).Combine(razorAdaptCalls.Collect())
                 .Select(static (pair, _) => (pair.Left.Left, pair.Left.Right, pair.Right));
 
         context.RegisterSourceOutput(allData, static (spc, pack) =>
         {
             Compilation compilation = pack.Item1;
-            ImmutableArray<(InvocationExpressionSyntax, SemanticModel)> invocations = pack.Item2;
+            ImmutableArray<InvocationExpressionSyntax> invocations = pack.Item2;
             ImmutableArray<string> razorCalls = pack.Item3;
 
             try
@@ -1048,33 +1049,42 @@ public sealed class AdaptGenerator : IIncrementalGenerator
 
     private static Regex GetPropertyLookupRegex(string propertyName)
     {
-        return _propertyLookupRegexCache.GetOrAdd(propertyName, static name =>
+        return GetOrCreateBounded(_propertyLookupRegexCache, propertyName, static name =>
             new Regex(
                 $@"(?:(?:\[.*?\]\s*)*(?:(?:private|public|protected|internal|static|virtual|override|sealed|partial|readonly|new|required|unsafe)\s+)+)?([a-zA-Z_][a-zA-Z0-9_<>,\.\[\]]*(?:\?)?)\s+{Regex.Escape(name)}\s*\{{\s*get",
-                RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant));
+                RegexOptions.Singleline | RegexOptions.CultureInvariant));
     }
 
     private static Regex GetFieldLookupRegex(string fieldName)
     {
-        return _fieldLookupRegexCache.GetOrAdd(fieldName, static name =>
+        return GetOrCreateBounded(_fieldLookupRegexCache, fieldName, static name =>
             new Regex($@"(?:(?:private|public|protected|internal|readonly|static)\s+)*([a-zA-Z_][a-zA-Z0-9_\.]*(?:<[^<>]+>)?(?:\?)?)\s+{Regex.Escape(name)}\s*[;=]",
-                RegexOptions.Compiled | RegexOptions.CultureInvariant));
+                RegexOptions.CultureInvariant));
     }
 
     private static Regex GetMethodRegex(string methodName)
     {
-        return _methodLookupRegexCache.GetOrAdd(methodName, static name =>
+        return GetOrCreateBounded(_methodLookupRegexCache, methodName, static name =>
             new Regex(
                 $@"(?:^|[\r\n])\s*(?:\[.*?\]\s*)*(?:(?:private|public|protected|internal|static|virtual|override|sealed|partial|readonly|new|required|unsafe|async)\s+)*((?:global::)?[a-zA-Z_][a-zA-Z0-9_<>,\.\[\]\s]*(?:\?)?)\s+{Regex.Escape(name)}\s*\(",
-                RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant));
+                RegexOptions.Singleline | RegexOptions.CultureInvariant));
     }
 
     private static Regex GetAsyncMethodRegex(string methodName)
     {
-        return _asyncMethodLookupRegexCache.GetOrAdd(methodName, static name =>
+        return GetOrCreateBounded(_asyncMethodLookupRegexCache, methodName, static name =>
             new Regex(
                 $@"(?:^|[\r\n])\s*(?:\[.*?\]\s*)*(?:(?:private|public|protected|internal|static|virtual|override|sealed|partial|readonly|new|required|unsafe|async)\s+)*(?:(?:System\.Threading\.Tasks\.)?(?:Task|ValueTask))\s*<\s*(.+?)\s*>\s+{Regex.Escape(name)}\s*\(",
-                RegexOptions.Singleline | RegexOptions.Compiled | RegexOptions.CultureInvariant));
+                RegexOptions.Singleline | RegexOptions.CultureInvariant));
+    }
+
+    private static Regex GetOrCreateBounded(ConcurrentDictionary<string, Regex> cache, string key, Func<string, Regex> factory)
+    {
+        if (cache.TryGetValue(key, out Regex? existing))
+            return existing;
+
+        Regex created = factory(key);
+        return cache.Count < _dynamicRegexCacheLimit ? cache.GetOrAdd(key, created) : created;
     }
 
     private readonly struct DeclarationInfo

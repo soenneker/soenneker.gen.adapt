@@ -32,7 +32,7 @@ internal static class Emitter
     /// Generates mapping code by discovering types from Adapt() invocations.
     /// </summary>
     public static void Generate(SourceProductionContext context, Compilation compilation,
-        ImmutableArray<(InvocationExpressionSyntax, SemanticModel)> invocations, ImmutableArray<string> razorCalls = default)
+        ImmutableArray<InvocationExpressionSyntax> invocations, ImmutableArray<string> razorCalls = default)
     {
         // Get the namespace from the compilation (use assembly name as fallback)
         string targetNamespace = GetTargetNamespace(compilation);
@@ -88,7 +88,7 @@ internal static class Emitter
         EmitCollections(context, targetNamespace);
     }
 
-    private static void ProcessInvocations(ImmutableArray<(InvocationExpressionSyntax, SemanticModel)> invocations, ImmutableArray<string> razorCalls,
+    private static void ProcessInvocations(ImmutableArray<InvocationExpressionSyntax> invocations, ImmutableArray<string> razorCalls,
         Compilation compilation, List<TypePair> typePairs, HashSet<(INamedTypeSymbol Source, INamedTypeSymbol Destination)> pairSet,
         HashSet<INamedTypeSymbol> allTypes, HashSet<INamedTypeSymbol> enums,
         List<(InvocationExpressionSyntax invocation, SemanticModel model, INamedTypeSymbol destType)> deferredCalls, SourceProductionContext context)
@@ -101,8 +101,9 @@ internal static class Emitter
         var failedToResolveSourceError = 0;
         var nonAdaptInvocations = new List<string>();
 
-        foreach ((InvocationExpressionSyntax invocation, SemanticModel model) in invocations)
+        foreach (InvocationExpressionSyntax invocation in invocations)
         {
+            SemanticModel model = compilation.GetSemanticModel(invocation.SyntaxTree);
             // Get the source type (the type the Adapt method is called on)
             INamedTypeSymbol? sourceType = null;
             INamedTypeSymbol? destType = null;
@@ -359,7 +360,7 @@ internal static class Emitter
         Add(context, "Adapt.ReflectionAdapter.g.cs", sb);
     }
 
-    private static void ReportDiagnosticInfo(SourceProductionContext context, ImmutableArray<(InvocationExpressionSyntax, SemanticModel)> invocations,
+    private static void ReportDiagnosticInfo(SourceProductionContext context, ImmutableArray<InvocationExpressionSyntax> invocations,
         ImmutableArray<string> razorCalls, List<TypePair> typePairs, Compilation compilation, string targetNamespace)
     {
         // Diagnostic: Report how many invocations were found
