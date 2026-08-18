@@ -23,7 +23,7 @@
         <PackageReference Include="Facet.Extensions" Version="6.6.8" />
         <PackageReference Include="Mapster" Version="10.0.11" />
         <PackageReference Include="Riok.Mapperly" Version="4.3.1" />
-        <PackageReference Include="Soenneker.Enums.DayOfWeek" Version="4.0.757" />
+        <PackageReference Include="Soenneker.Enums.DayOfWeek" Version="4.0.759" />
         <PackageReference Include="Soenneker.Tests.Attributes.Local" Version="4.0.76" />
         <PackageReference Include="Soenneker.Tests.Benchmark" Version="4.0.142" />
         <PackageReference Include="Soenneker.Documents.Audit" Version="4.0.2562" />
