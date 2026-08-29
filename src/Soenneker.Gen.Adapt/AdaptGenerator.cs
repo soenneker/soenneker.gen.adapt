@@ -98,9 +98,9 @@ public sealed class AdaptGenerator : IIncrementalGenerator
     private const int _dynamicRegexCacheLimit = 256;
 
     /// <summary>
-    /// Executes the initialize operation.
+    /// Initializes the adapt generator so it is ready for use.
     /// </summary>
-    /// <param name="context">The context.</param>
+    /// <param name="context">HTTP context containing the Authorization header.</param>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Find all Adapt invocations early to cut down on semantic model work for other calls
