@@ -100,7 +100,7 @@ public sealed class AdaptGenerator : IIncrementalGenerator
     /// <summary>
     /// Initializes the adapt generator so it is ready for use.
     /// </summary>
-    /// <param name="context">HTTP context containing the Authorization header.</param>
+    /// <param name="context">The initialization context used to register the generator's syntax and source-output pipelines.</param>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
         // Find all Adapt invocations early to cut down on semantic model work for other calls

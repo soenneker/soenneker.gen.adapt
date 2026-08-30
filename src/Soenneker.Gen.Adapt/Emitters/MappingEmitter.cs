@@ -76,6 +76,9 @@ internal static class MappingEmitter
             sb.AppendLine("\t\t[MethodImpl(MethodImplOptions.AggressiveInlining)]");
             sb.Append("\t\tpublic static TDest Adapt<TDest>(this ").Append(srcType).AppendLine(" source)");
             sb.AppendLine("\t\t{");
+            sb.Append("\t\t\tif (typeof(TDest) != typeof(").Append(dType).AppendLine("))");
+            sb.AppendLine("\t\t\t\tthrow new NotSupportedException(\"Unsupported Adapt target type: \" + typeof(TDest).FullName);");
+            sb.AppendLine();
             if (sourceIsList || sourceIsDict || sourceIsIEnum)
             {
                 sb.AppendLine("\t\t\tvar r = Adapt(source);");
