@@ -9,6 +9,8 @@ namespace Soenneker.Gen.Adapt;
 
 internal static class TypeResolver
 {
+    private static readonly char[] _memberSeparators = ['.'];
+
     // Regexes here run inside the generator; caching avoids per-file regex construction/allocation.
     private static readonly Regex _lineCommentRegex = new Regex(@"//.*$", RegexOptions.Multiline | RegexOptions.Compiled | RegexOptions.CultureInvariant);
 
@@ -158,7 +160,7 @@ internal static class TypeResolver
 
     private static INamedTypeSymbol? ResolvePropertyPathType(Compilation compilation, string typeName)
     {
-        string[] segments = typeName.Split(new[] { '.' }, System.StringSplitOptions.RemoveEmptyEntries);
+        string[] segments = typeName.Split(_memberSeparators, System.StringSplitOptions.RemoveEmptyEntries);
         if (segments.Length < 2)
             return null;
 

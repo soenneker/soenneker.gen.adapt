@@ -863,10 +863,10 @@ public sealed class AdaptGenerator : IIncrementalGenerator
 
                             for (var i = 1; i < parts.Length - 1; i++)
                             {
-                                pathBuilder.Append(".");
+                                pathBuilder.Append('.');
                                 pathBuilder.Append(parts[i]);
                             }
-                            pathBuilder.Append(".");
+                            pathBuilder.Append('.');
                             pathBuilder.Append(parts[parts.Length - 1]);
                             sourceType = pathBuilder.ToString();
                         }

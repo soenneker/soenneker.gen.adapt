@@ -88,7 +88,7 @@ internal static class SimpleObjectEmitter
         for (var i = 0; i < simpleMappings.Count; i++)
         {
             (string propName, string value) = simpleMappings[i];
-            sb.Append(indent).Append("\t").Append(propName).Append(" = ").Append(value);
+            sb.Append(indent).Append('\t').Append(propName).Append(" = ").Append(value);
             if (i < simpleMappings.Count - 1)
                 sb.AppendLine(",");
             else
@@ -372,13 +372,13 @@ internal static class SimpleObjectEmitter
                 {
                     sb.Append(indent).Append("if (source.").Append(sp.Name).AppendLine(" is not null)");
                     sb.Append(indent).AppendLine("{");
-                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = Map_").Append(srcSanLocal).Append("_To_").Append(dstSanLocal).Append("(")
+                    sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = Map_").Append(srcSanLocal).Append("_To_").Append(dstSanLocal).Append('(')
                         .Append("source.").Append(sp.Name).AppendLine(");");
                     sb.Append(indent).AppendLine("}");
                 }
                 else // Struct
                 {
-                    sb.Append(indent).Append("target.").Append(dp.Name).Append(" = Map_").Append(srcSanLocal).Append("_To_").Append(dstSanLocal).Append("(")
+                    sb.Append(indent).Append("target.").Append(dp.Name).Append(" = Map_").Append(srcSanLocal).Append("_To_").Append(dstSanLocal).Append('(')
                         .Append("source.").Append(sp.Name).AppendLine(");");
                 }
 
