@@ -23,13 +23,13 @@
         <PackageReference Include="Facet.Extensions" Version="6.6.8" />
         <PackageReference Include="Mapster" Version="10.0.12" />
         <PackageReference Include="Riok.Mapperly" Version="4.3.1" />
-        <PackageReference Include="Soenneker.Enums.DayOfWeek" Version="4.0.765" />
+        <PackageReference Include="Soenneker.Enums.DayOfWeek" Version="4.0.766" />
         <PackageReference Include="Soenneker.Tests.Attributes.Local" Version="4.0.94" />
-        <PackageReference Include="Soenneker.Tests.Benchmark" Version="4.0.151" />
-        <PackageReference Include="Soenneker.Documents.Audit" Version="4.0.2583" />
+        <PackageReference Include="Soenneker.Tests.Benchmark" Version="4.0.152" />
+        <PackageReference Include="Soenneker.Documents.Audit" Version="4.0.2584" />
         <PackageReference Include="Soenneker.Dtos.IdNamePair" Version="4.0.724" />
         <PackageReference Include="Soenneker.Utils.Test" Version="4.0.327" />
-        <PackageReference Include="Soenneker.Tests.Unit" Version="4.0.1304" />
+        <PackageReference Include="Soenneker.Tests.Unit" Version="4.0.1305" />
         <PackageReference Include="TUnit" Version="1.66.0" />
     </ItemGroup>
 
