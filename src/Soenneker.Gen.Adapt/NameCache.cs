@@ -41,10 +41,8 @@ internal sealed class NameCache
     public string Sanitized(ISymbol s)
     {
         if (_san.TryGetValue(s, out string? v)) return v;
-        string fq = FullyQualified(s);
-        v = Sanitize(fq);
-        _san[s] = v;
-        return v;
+        FullyQualified(s);
+        return _san[s];
     }
 
     public string ShortName(ISymbol s)

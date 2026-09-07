@@ -9,6 +9,26 @@ namespace Soenneker.Gen.Adapt;
 
 internal static class TypeResolver
 {
+    private static readonly (string SimpleName, string FullName)[] _commonTypes =
+    {
+        ("List", "System.Collections.Generic.List`1"),
+        ("Dictionary", "System.Collections.Generic.Dictionary`2"),
+        ("HashSet", "System.Collections.Generic.HashSet`1"),
+        ("IEnumerable", "System.Collections.Generic.IEnumerable`1"),
+        ("IList", "System.Collections.Generic.IList`1"),
+        ("ICollection", "System.Collections.Generic.ICollection`1"),
+        ("IDictionary", "System.Collections.Generic.IDictionary`2"),
+        ("IReadOnlyList", "System.Collections.Generic.IReadOnlyList`1"),
+        ("IReadOnlyCollection", "System.Collections.Generic.IReadOnlyCollection`1"),
+        ("IReadOnlyDictionary", "System.Collections.Generic.IReadOnlyDictionary`2"),
+        ("ISet", "System.Collections.Generic.ISet`1"),
+    };
+
+    private static readonly HashSet<string> _keywords = new()
+    {
+        "abstract", "as", "base", "bool", "break", "byte", "case", "catch", "char", "checked", "class", "const", "continue", "decimal", "default", "delegate", "do", "double", "else", "enum", "event", "explicit", "extern", "false", "finally", "fixed", "float", "for", "foreach", "goto", "if", "implicit", "in", "int", "interface", "internal", "is", "lock", "long", "namespace", "new", "null", "object", "operator", "out", "override", "params", "private", "protected", "public", "readonly", "ref", "return", "sbyte", "sealed", "short", "sizeof", "stackalloc", "static", "string", "struct", "switch", "this", "throw", "true", "try", "typeof", "uint", "ulong", "unchecked", "unsafe", "ushort", "using", "virtual", "void", "volatile", "while"
+    };
+
     private static readonly char[] _memberSeparators = ['.'];
 
     // Regexes here run inside the generator; caching avoids per-file regex construction/allocation.
@@ -239,22 +259,7 @@ internal static class TypeResolver
         result = null;
         
         // Common framework types that might be referenced by simple name
-        var commonTypes = new[]
-        {
-            ("List", "System.Collections.Generic.List`1"),
-            ("Dictionary", "System.Collections.Generic.Dictionary`2"),
-            ("HashSet", "System.Collections.Generic.HashSet`1"),
-            ("IEnumerable", "System.Collections.Generic.IEnumerable`1"),
-            ("IList", "System.Collections.Generic.IList`1"),
-            ("ICollection", "System.Collections.Generic.ICollection`1"),
-            ("IDictionary", "System.Collections.Generic.IDictionary`2"),
-            ("IReadOnlyList", "System.Collections.Generic.IReadOnlyList`1"),
-            ("IReadOnlyCollection", "System.Collections.Generic.IReadOnlyCollection`1"),
-            ("IReadOnlyDictionary", "System.Collections.Generic.IReadOnlyDictionary`2"),
-            ("ISet", "System.Collections.Generic.ISet`1"),
-        };
-        
-        foreach ((string simpleName, string fullName) in commonTypes)
+        foreach ((string simpleName, string fullName) in _commonTypes)
         {
             if (typeName == simpleName)
             {
@@ -467,12 +472,7 @@ internal static class TypeResolver
 
     private static bool IsKeyword(string typeName)
     {
-        var keywords = new HashSet<string>
-        {
-            "abstract", "as", "base", "bool", "break", "byte", "case", "catch", "char", "checked", "class", "const", "continue", "decimal", "default", "delegate", "do", "double", "else", "enum", "event", "explicit", "extern", "false", "finally", "fixed", "float", "for", "foreach", "goto", "if", "implicit", "in", "int", "interface", "internal", "is", "lock", "long", "namespace", "new", "null", "object", "operator", "out", "override", "params", "private", "protected", "public", "readonly", "ref", "return", "sbyte", "sealed", "short", "sizeof", "stackalloc", "static", "string", "struct", "switch", "this", "throw", "true", "try", "typeof", "uint", "ulong", "unchecked", "unsafe", "ushort", "using", "virtual", "void", "volatile", "while"
-        };
-        
-        return keywords.Contains(typeName.ToLower());
+        return _keywords.Contains(typeName.ToLower());
     }
 
     private static string ExtractSourceTypeFromExpression(string expression)

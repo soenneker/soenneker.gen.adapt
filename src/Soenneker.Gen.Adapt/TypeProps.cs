@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.Runtime.CompilerServices;
+using Microsoft.CodeAnalysis;
 using Soenneker.Gen.Adapt.Dtos;
 using System.Collections.Generic;
 
@@ -6,6 +7,8 @@ namespace Soenneker.Gen.Adapt;
 
 internal sealed class TypeProps
 {
+    private static readonly ConditionalWeakTable<INamedTypeSymbol, TypeProps> _cache = new();
+
     private readonly Dictionary<string, Prop> _readable; // by name
     public readonly List<Prop> Settable;
 
@@ -15,7 +18,9 @@ internal sealed class TypeProps
         Settable = settable;
     }
 
-    public static TypeProps Build(INamedTypeSymbol type)
+    public static TypeProps Build(INamedTypeSymbol type) => _cache.GetValue(type, static symbol => BuildCore(symbol));
+
+    private static TypeProps BuildCore(INamedTypeSymbol type)
     {
         var readable = new Dictionary<string, Prop>(32);
         var settable = new List<Prop>(32);
@@ -41,10 +46,9 @@ internal sealed class TypeProps
                 // Treat init-only as settable too
                 bool hasSet = p.SetMethod is not null;
                 bool isInit = p.SetMethod?.IsInitOnly ?? false;
-                if ((hasSet || isInit) && !settableNames.Contains(p.Name))
+                if ((hasSet || isInit) && settableNames.Add(p.Name))
                 {
                     settable.Add(new Prop(p.Name, p.Type));
-                    settableNames.Add(p.Name);
                 }
             }
 

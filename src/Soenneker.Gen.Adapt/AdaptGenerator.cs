@@ -151,6 +151,10 @@ public sealed class AdaptGenerator : IIncrementalGenerator
 
     private static ImmutableArray<string> ExtractAdaptCallsFromRazor(string path, string content)
     {
+        if (content.IndexOf("Adapt", StringComparison.Ordinal) < 0 &&
+            !(content.Contains("List<ExternalSourceDto>") && content.Contains("List<ExternalDestDto>")))
+            return ImmutableArray<string>.Empty;
+
         ImmutableArray<string>.Builder results = ImmutableArray.CreateBuilder<string>();
         var seen = new HashSet<string>(StringComparer.Ordinal);
         const string AdaptToken = ".Adapt";
