@@ -39,6 +39,21 @@ internal static class ListEmitter
             return;
         }
 
+        if (source.TypeKind == TypeKind.Interface)
+        {
+            string elementType = Types.ShortName(sElem);
+            // Only specialize the exact List type: a subclass can reimplement
+            // IEnumerable/IList with different enumeration or indexing behavior.
+            sb.Append(indent).Append("if (source.GetType() == typeof(List<").Append(elementType).AppendLine(">))");
+            sb.Append(indent).AppendLine("{");
+            EmitSpanMapping(sb, "CollectionsMarshal.AsSpan((List<" + elementType + ">)source)", dstType, sElem, dElem, names, indent + "\t");
+            sb.Append(indent).AppendLine("}");
+            sb.Append(indent).Append("if (source is ").Append(elementType).AppendLine("[] __sourceArray)");
+            sb.Append(indent).AppendLine("{");
+            EmitSpanMapping(sb, "new ReadOnlySpan<" + elementType + ">(__sourceArray)", dstType, sElem, dElem, names, indent + "\t");
+            sb.Append(indent).AppendLine("}");
+        }
+
         if (srcIsList)
         {
             sb.Append(indent).Append("var src = CollectionsMarshal.AsSpan(source);").AppendLine();
@@ -113,7 +128,11 @@ internal static class ListEmitter
         }
         else
         {
-            sb.Append(indent).Append("var target = new ").Append(dstType).AppendLine("();");
+            string elementType = Types.ShortName(sElem);
+            sb.Append(indent).Append("int __capacity = source is IReadOnlyCollection<").Append(elementType)
+                .AppendLine("> __readOnlyCollection ? __readOnlyCollection.Count : 0;");
+            sb.Append(indent).AppendLine("if (__capacity == 0) System.Linq.Enumerable.TryGetNonEnumeratedCount(source, out __capacity);");
+            sb.Append(indent).Append("var target = new ").Append(dstType).AppendLine("(__capacity);");
             sb.Append(indent).Append("foreach (var item in source)").AppendLine();
             sb.Append(indent).AppendLine("{");
             if (SymbolEqualityComparer.Default.Equals(sElem, dElem))
@@ -132,5 +151,28 @@ internal static class ListEmitter
         }
 
         sb.Append(indent).AppendLine("return target;");
+    }
+
+    private static void EmitSpanMapping(StringBuilder sb, string sourceExpression, string destinationType, ITypeSymbol sourceElement,
+        ITypeSymbol destinationElement, NameCache names, string indent)
+    {
+        sb.Append(indent).Append("var __sourceSpan = ").Append(sourceExpression).AppendLine(";");
+        sb.Append(indent).Append("var __spanResult = new ").Append(destinationType).AppendLine("(__sourceSpan.Length);");
+        sb.Append(indent).AppendLine("CollectionsMarshal.SetCount(__spanResult, __sourceSpan.Length);");
+        sb.Append(indent).AppendLine("var __destinationSpan = CollectionsMarshal.AsSpan(__spanResult);");
+        if (SymbolEqualityComparer.Default.Equals(sourceElement, destinationElement))
+        {
+            sb.Append(indent).AppendLine("__sourceSpan.CopyTo(__destinationSpan);");
+        }
+        else
+        {
+            sb.Append(indent).AppendLine("for (int __index = 0; __index < __sourceSpan.Length; __index++)");
+            sb.Append(indent).AppendLine("{");
+            sb.Append(indent).AppendLine("\tref readonly var __item = ref __sourceSpan[__index];");
+            sb.Append(indent).Append("\t__destinationSpan[__index] = ")
+                .Append(CollectionMappingHelper.GetConversionExpression("__item", sourceElement, destinationElement, names)).AppendLine(";");
+            sb.Append(indent).AppendLine("}");
+        }
+        sb.Append(indent).AppendLine("return __spanResult;");
     }
 }

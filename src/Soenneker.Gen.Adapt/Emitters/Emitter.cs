@@ -50,9 +50,6 @@ internal static class Emitter
         // Try to resolve deferred calls by tracing back through syntax
         ProcessDeferredCalls(deferredCalls, typePairs, pairSet, allTypes);
 
-        // Always generate reflection-based adapter for flexibility
-        EmitReflectionAdapter(context, targetNamespace);
-
         // Report diagnostic information
         ReportDiagnosticInfo(context, invocations, razorCalls, typePairs, compilation, targetNamespace);
 
@@ -83,9 +80,6 @@ internal static class Emitter
 
         // Emit source mappers
         EmitSourceMappers(context, compilation, map, enumList, nameCache, targetNamespace, referencedPairs);
-
-        // Collections
-        EmitCollections(context, targetNamespace);
     }
 
     private static void ProcessInvocations(ImmutableArray<InvocationExpressionSyntax> invocations, ImmutableArray<string> razorCalls,
@@ -100,10 +94,15 @@ internal static class Emitter
         var failedToResolveSource = 0;
         var failedToResolveSourceError = 0;
         var nonAdaptInvocations = new List<string>();
+        var semanticModels = new Dictionary<SyntaxTree, SemanticModel>();
 
         foreach (InvocationExpressionSyntax invocation in invocations)
         {
-            SemanticModel model = compilation.GetSemanticModel(invocation.SyntaxTree);
+            if (!semanticModels.TryGetValue(invocation.SyntaxTree, out SemanticModel? model))
+            {
+                model = compilation.GetSemanticModel(invocation.SyntaxTree);
+                semanticModels.Add(invocation.SyntaxTree, model);
+            }
             // Get the source type (the type the Adapt method is called on)
             INamedTypeSymbol? sourceType = null;
             INamedTypeSymbol? destType = null;
@@ -353,7 +352,7 @@ internal static class Emitter
         }
     }
 
-    private static void EmitReflectionAdapter(SourceProductionContext context, string targetNamespace)
+    internal static void EmitReflectionAdapter(SourceProductionContext context, string targetNamespace)
     {
         var sb = new StringBuilder(2048);
         ReflectionEmitter.EmitReflectionAdapter(sb, targetNamespace);
@@ -392,7 +391,7 @@ internal static class Emitter
             if (destinations.Count == 0)
                 continue;
 
-            var sb = new StringBuilder(16_384);
+            var sb = new StringBuilder(4096);
             MappingEmitter.EmitSourceMapperAndDispatcher(sb, source, destinations, enumList, nameCache, targetNamespace, compilation.Assembly, referencedPairs);
 
             string sanitized = nameCache.Sanitized(source);
@@ -405,7 +404,7 @@ internal static class Emitter
         }
     }
 
-    private static void EmitCollections(SourceProductionContext context, string targetNamespace)
+    internal static void EmitCollections(SourceProductionContext context, string targetNamespace)
     {
         var sb = new StringBuilder(2048);
         CollectionsEmitter.Emit(sb, targetNamespace);
@@ -447,7 +446,7 @@ internal static class Emitter
         allTypes.Add(destination);
     }
 
-    private static string GetTargetNamespace(Compilation compilation)
+    internal static string GetTargetNamespace(Compilation compilation)
     {
         // Use the assembly name as the namespace
         // Dots are valid in namespaces, so we keep them

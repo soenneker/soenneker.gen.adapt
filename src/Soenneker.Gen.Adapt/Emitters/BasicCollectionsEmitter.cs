@@ -48,9 +48,7 @@ internal static class BasicCollectionsEmitter
         sb.AppendLine("\t\t\t}");
         sb.AppendLine("\t\t\telse");
         sb.AppendLine("\t\t\t{");
-        sb.AppendLine("\t\t\t\tvar list = new List<TElement>();");
-        sb.AppendLine("\t\t\t\tforeach (var item in source) list.Add(item);");
-        sb.AppendLine("\t\t\t\treturn list;");
+        sb.AppendLine("\t\t\t\treturn new List<TElement>(source);");
         sb.AppendLine("\t\t\t}");
         sb.AppendLine("\t\t}");
         sb.AppendLine();
@@ -75,9 +73,7 @@ internal static class BasicCollectionsEmitter
         sb.AppendLine("\t\tpublic static IList<TElement> Adapt<TElement>(this IList<TElement> source)");
         sb.AppendLine("\t\t{");
         sb.AppendLine("\t\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
-        sb.AppendLine("\t\t\tvar result = new List<TElement>(source.Count);");
-        sb.AppendLine("\t\t\tfor (int i = 0; i < source.Count; i++) result.Add(source[i]);");
-        sb.AppendLine("\t\t\treturn result;");
+        sb.AppendLine("\t\t\treturn new List<TElement>(source);");
         sb.AppendLine("\t\t}");
         sb.AppendLine();
 
@@ -88,9 +84,7 @@ internal static class BasicCollectionsEmitter
         sb.AppendLine("\t\tpublic static ICollection<TElement> Adapt<TElement>(this ICollection<TElement> source)");
         sb.AppendLine("\t\t{");
         sb.AppendLine("\t\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
-        sb.AppendLine("\t\t\tvar result = new List<TElement>(source.Count);");
-        sb.AppendLine("\t\t\tforeach (var item in source) result.Add(item);");
-        sb.AppendLine("\t\t\treturn result;");
+        sb.AppendLine("\t\t\treturn new List<TElement>(source);");
         sb.AppendLine("\t\t}");
         sb.AppendLine();
 
@@ -101,8 +95,12 @@ internal static class BasicCollectionsEmitter
         sb.AppendLine("\t\tpublic static IReadOnlyList<TElement> Adapt<TElement>(this IReadOnlyList<TElement> source)");
         sb.AppendLine("\t\t{");
         sb.AppendLine("\t\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
-        sb.AppendLine("\t\t\tvar result = new List<TElement>(source.Count);");
-        sb.AppendLine("\t\t\tfor (int i = 0; i < source.Count; i++) result.Add(source[i]);");
+        sb.AppendLine("\t\t\tif (source is ICollection<TElement> collection) return new List<TElement>(collection);");
+        sb.AppendLine("\t\t\tint count = source.Count;");
+        sb.AppendLine("\t\t\tvar result = new List<TElement>(count);");
+        sb.AppendLine("\t\t\tCollectionsMarshal.SetCount(result, count);");
+        sb.AppendLine("\t\t\tvar span = CollectionsMarshal.AsSpan(result);");
+        sb.AppendLine("\t\t\tfor (int i = 0; i < count; i++) span[i] = source[i];");
         sb.AppendLine("\t\t\treturn result;");
         sb.AppendLine("\t\t}");
         sb.AppendLine();
@@ -114,6 +112,7 @@ internal static class BasicCollectionsEmitter
         sb.AppendLine("\t\tpublic static IReadOnlyCollection<TElement> Adapt<TElement>(this IReadOnlyCollection<TElement> source)");
         sb.AppendLine("\t\t{");
         sb.AppendLine("\t\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
+        sb.AppendLine("\t\t\tif (source is ICollection<TElement> collection) return new List<TElement>(collection);");
         sb.AppendLine("\t\t\tvar result = new List<TElement>(source.Count);");
         sb.AppendLine("\t\t\tforeach (var item in source) result.Add(item);");
         sb.AppendLine("\t\t\treturn result;");

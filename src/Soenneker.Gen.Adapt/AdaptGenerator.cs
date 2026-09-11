@@ -97,12 +97,17 @@ public sealed class AdaptGenerator : IIncrementalGenerator
     private static readonly ConcurrentDictionary<string, Regex> _asyncMethodLookupRegexCache = new(StringComparer.Ordinal);
     private const int _dynamicRegexCacheLimit = 256;
 
-    /// <summary>
-    /// Initializes the adapt generator so it is ready for use.
-    /// </summary>
-    /// <param name="context">The initialization context used to register the generator's syntax and source-output pipelines.</param>
     public void Initialize(IncrementalGeneratorInitializationContext context)
     {
+        // These sources depend only on the namespace, not on mapping discovery.
+        // Cache source emission across edits.
+        var targetNamespace = context.CompilationProvider.Select(static (compilation, _) => Emitter.GetTargetNamespace(compilation))
+            .WithTrackingName("HelperNamespace");
+        context.RegisterSourceOutput(targetNamespace, static (spc, ns) =>
+        {
+            Emitter.EmitReflectionAdapter(spc, ns);
+            Emitter.EmitCollections(spc, ns);
+        });
         // Find all Adapt invocations early to cut down on semantic model work for other calls
         IncrementalValuesProvider<InvocationExpressionSyntax> adaptInvocations =
             context.SyntaxProvider.CreateSyntaxProvider(
@@ -110,9 +115,9 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 {
                     Expression: MemberAccessExpressionSyntax
                     {
-                        Name: SimpleNameSyntax simpleName
+                        Name: GenericNameSyntax { TypeArgumentList.Arguments.Count: 1 } genericName
                     }
-                } && simpleName.Identifier.ValueText == "Adapt",
+                } && genericName.Identifier.ValueText == "Adapt",
                 static (ctx, _) => (InvocationExpressionSyntax)ctx.Node);
 
         // Also scan .razor files for Adapt calls

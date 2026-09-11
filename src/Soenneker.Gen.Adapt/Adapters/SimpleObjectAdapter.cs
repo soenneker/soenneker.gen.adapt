@@ -285,6 +285,19 @@ internal static class SimpleObjectAdapter
         if (!processed.Add((src, dst)))
             return;
 
+        // An enumerable has no Item property to discover its element mapping from.
+        // Register the element pair directly for every supported collection shape.
+        if ((Types.IsAnyList(src, out ITypeSymbol? sourceElement) || Types.IsIEnumerable(src, out sourceElement)) &&
+            Types.IsAnyList(dst, out ITypeSymbol? destinationElement) &&
+            sourceElement is INamedTypeSymbol sourceNamed && destinationElement is INamedTypeSymbol destinationNamed &&
+            sourceNamed.TypeKind is TypeKind.Class or TypeKind.Struct && destinationNamed.TypeKind is TypeKind.Class or TypeKind.Struct &&
+            !Types.IsFrameworkType(sourceNamed) && !Types.IsFrameworkType(destinationNamed) &&
+            !SymbolEqualityComparer.Default.Equals(sourceNamed, destinationNamed))
+        {
+            EnsureMapping(map, sourceNamed, destinationNamed);
+            AddNestedPairs(map, sourceNamed, destinationNamed, enums, processed);
+        }
+
         // Walk properties to ensure nested user-defined type pairs are present
         var srcProps = TypeProps.Build(src);
         var dstProps = TypeProps.Build(dst);

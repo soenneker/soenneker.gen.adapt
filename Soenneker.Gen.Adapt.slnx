@@ -11,6 +11,7 @@
     <Project Path="src/Soenneker.Gen.Adapt/Soenneker.Gen.Adapt.csproj" />
   </Folder>
   <Folder Name="/test/">
+    <Project Path="test/Soenneker.Gen.Adapt.Generator.Tests/Soenneker.Gen.Adapt.Generator.Tests.csproj" />
     <Project Path="test/Soenneker.Gen.Adapt.Tests.Blazor/Soenneker.Gen.Adapt.Tests.Blazor.csproj" />
     <Project Path="test/Soenneker.Gen.Adapt.Tests.NuGet/Soenneker.Gen.Adapt.Tests.NuGet.csproj" />
     <Project Path="test/Soenneker.Gen.Adapt.Tests.Types/Soenneker.Gen.Adapt.Tests.Types.csproj" />

@@ -26,34 +26,13 @@ internal static class DictionaryEmitter
         {
             if (srcIsConcreteDict)
             {
-                sb.Append(indent).Append("var count = source.Count;").AppendLine();
-                sb.Append(indent).Append("if (count == 0) return new ").Append(dstType).AppendLine("(0, source.Comparer);");
-                sb.Append(indent).Append("var target = new ").Append(dstType).AppendLine("(count, source.Comparer);");
-                sb.Append(indent).Append("foreach (var kv in source)").AppendLine();
-                sb.Append(indent).AppendLine("{");
-                sb.Append(indent)
-                    .Append("\tref var cell = ref CollectionsMarshal.GetValueRefOrAddDefault(target, kv.Key, out _);")
-                    .AppendLine();
-                sb.Append(indent).Append("\tcell = kv.Value;").AppendLine();
-                sb.Append(indent).AppendLine("}");
-                sb.Append(indent).AppendLine("return target;");
+                sb.Append(indent).Append("return new ").Append(dstType).AppendLine("(source, source.Comparer);");
             }
             else if (srcIsIdict || srcIsRoDict)
             {
                 sb.Append(indent).Append("if (source is ").Append(dictOfSrc).AppendLine(" d)");
                 sb.Append(indent).AppendLine("{");
-                sb.Append(indent).Append("\tvar count1 = d.Count;").AppendLine();
-                sb.Append(indent).Append("\tif (count1 == 0) return new ").Append(dstType).AppendLine("(0, d.Comparer);");
-                sb.Append(indent).Append("\tvar __dictTarget = new ").Append(dstType).AppendLine("(count1, d.Comparer);");
-                sb.Append(indent).Append("\tforeach (var kv in d)").AppendLine();
-                sb.Append(indent).AppendLine("\t{");
-                sb.Append(indent)
-                    .Append(
-                        "\t\tref var cell = ref CollectionsMarshal.GetValueRefOrAddDefault(__dictTarget, kv.Key, out _);")
-                    .AppendLine();
-                sb.Append(indent).Append("\t\tcell = kv.Value;").AppendLine();
-                sb.Append(indent).AppendLine("\t}");
-                sb.Append(indent).AppendLine("\treturn __dictTarget;");
+                sb.Append(indent).Append("\treturn new ").Append(dstType).AppendLine("(d, d.Comparer);");
                 sb.Append(indent).AppendLine("}");
 
                 sb.Append(indent).Append("var count2 = source.Count;").AppendLine();

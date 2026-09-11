@@ -37,6 +37,17 @@ internal static class CollectionsEmitter
         sb.AppendLine("\t\t{");
         sb.AppendLine("\t\t\tif (source is null) throw new ArgumentNullException(nameof(source));");
         sb.AppendLine("\t\t\tvar destType = typeof(TDest);");
+        // These branches become constants for closed generic calls. Keep value-type
+        // elements in typed collections instead of boxing through IList/reflection.
+        sb.AppendLine("\t\t\tif (destType == typeof(TSrc[])) return (TDest)(object)System.Linq.Enumerable.ToArray(source);");
+        sb.AppendLine("\t\t\tif (destType == typeof(List<TSrc>) || destType == typeof(IEnumerable<TSrc>) || destType == typeof(IList<TSrc>) || destType == typeof(ICollection<TSrc>) || destType == typeof(IReadOnlyList<TSrc>) || destType == typeof(IReadOnlyCollection<TSrc>)) return (TDest)(object)new List<TSrc>(source);");
+        sb.AppendLine("\t\t\tif (destType == typeof(HashSet<TSrc>)) return (TDest)(object)new HashSet<TSrc>(source);");
+        sb.AppendLine("\t\t\tif (destType == typeof(SortedSet<TSrc>)) return (TDest)(object)new SortedSet<TSrc>(source);");
+        sb.AppendLine("\t\t\tif (destType == typeof(LinkedList<TSrc>)) return (TDest)(object)new LinkedList<TSrc>(source);");
+        sb.AppendLine("\t\t\tif (destType == typeof(Queue<TSrc>)) return (TDest)(object)new Queue<TSrc>(source);");
+        sb.AppendLine("\t\t\tif (destType == typeof(Stack<TSrc>)) return (TDest)(object)new Stack<TSrc>(source);");
+        sb.AppendLine("\t\t\tif (destType == typeof(Collection<TSrc>)) return (TDest)(object)new Collection<TSrc>(new List<TSrc>(source));");
+        sb.AppendLine("\t\t\tif (destType == typeof(ObservableCollection<TSrc>)) return (TDest)(object)new ObservableCollection<TSrc>(source);");
         sb.AppendLine("\t\t\tSystem.Type? destElemType = destType.IsArray ? destType.GetElementType() : (destType.IsGenericType ? destType.GetGenericArguments()[0] : null);");
         sb.AppendLine("\t\t\tif (destElemType is null) throw new NotSupportedException(\"Unsupported Adapt target type: \" + destType.FullName);");
         sb.AppendLine();
@@ -53,13 +64,10 @@ internal static class CollectionsEmitter
         sb.AppendLine("\t\t\t\tSystem.Reflection.MethodInfo? adaptGenericForElem = null;");
         sb.AppendLine("\t\t\t\tforeach (var m in genAdaptMethods)");
         sb.AppendLine("\t\t\t\t{ if (m.Name == \"Adapt\" && m.IsGenericMethodDefinition && m.GetParameters().Length == 1 && m.GetParameters()[0].ParameterType == typeof(TSrc)) { adaptGenericForElem = m; break; } }");
+        sb.AppendLine("\t\t\t\tvar elementAdapter = (adaptGenericForElem ?? adaptViaReflection!).MakeGenericMethod(destElemType);");
         sb.AppendLine("\t\t\t\tforeach (var item in source)");
         sb.AppendLine("\t\t\t\t{");
-        sb.AppendLine("\t\t\t\t\tobject? converted;");
-        sb.AppendLine("\t\t\t\t\tif (adaptGenericForElem != null)");
-        sb.AppendLine("\t\t\t\t\t{ var gm = adaptGenericForElem.MakeGenericMethod(destElemType); converted = gm.Invoke(null, new object?[] { item! }); }");
-        sb.AppendLine("\t\t\t\t\telse");
-        sb.AppendLine("\t\t\t\t\t{ var gm = adaptViaReflection!.MakeGenericMethod(destElemType); converted = gm.Invoke(null, new object?[] { (object)item! }); }");
+        sb.AppendLine("\t\t\t\t\tobject? converted = elementAdapter.Invoke(null, new object?[] { item! });");
         sb.AppendLine("\t\t\t\t\tlist.Add(converted!);");
         sb.AppendLine("\t\t\t\t}");
         sb.AppendLine("\t\t\t}");
