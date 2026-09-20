@@ -52,23 +52,30 @@ Only properties that have a compatible conversion are assigned. Destination-only
 
 Null source references return `null` from generated object mappings. Value-type sources are passed without that check.
 
-## Runtime fallback
+## Generated mappings and runtime fallback
 
-Use `AdaptViaReflection<TDestination>()` when the concrete source type is only known at runtime:
+Known type pairs use direct construction, property access, and typed collection operations. Enum names and flags formatting are generated at compile time. Generic dispatch uses type identity comparisons; these do not inspect members or construct types dynamically.
+
+When a call needs runtime type information, warning `SGA005` identifies the call site. Sources typed as `object`, open generic wrappers, and explicit `AdaptViaReflection<TDestination>()` calls remain supported. The fallback first resolves any available generated mapping for the runtime type pair, then uses reflection if necessary, caching that decision. The fallback is also available to late-generated Razor calls; its cache initializes only when the fallback is used, so ordinary generated mappings do not pay that initialization cost.
+
+To keep a generic wrapper on the generated path, pass an explicit mapper:
 
 ```csharp
-object payload = GetPayload();
-User user = payload.AdaptViaReflection<User>();
+static TDestination Map<TSource, TDestination>(TSource source, Func<TSource, TDestination> mapper)
+    => mapper(source);
+
+User user = Map(dto, static value => value.Adapt<User>());
 ```
 
-The reflection fallback caches a mapper for each runtime source/destination pair. It requires a destination that `Activator.CreateInstance` can construct, copies compatible public properties, and recursively handles supported nested objects and list-like collections. It is less capable and slower than generated mappings; incompatible properties are skipped. Use it with known destination types and acyclic object graphs.
+`Adapt<TDestination, TElement>()` uses typed constructors for collection shape changes with the same element type. Different element types use the warned fallback; prefer concrete `Adapt<TDestination>()` calls for generated element mappings. Runtime object mappings require constructible destination types and acyclic graphs; invalid constructors, throwing accessors, and invalid scalar values can still fail, as they can in handwritten mappings.
 
 ## Diagnostics and limitations
 
 - `SGA002` reports a destination that cannot be constructed.
 - `SGA003` reports a source/destination pair with no mappable properties.
 - `SGA004` warns when a source type cannot be resolved.
-- Mapping is inferred from calls visible during compilation. A generic `Adapt<TDestination>()` invocation cannot be used as an unrestricted runtime mapper; requesting a destination for which no mapping was generated throws `NotSupportedException`.
+- `SGA005` warns that a call can require runtime mapping and explains why. It is a warning, not a compilation error.
+- Mapping is inferred from calls visible during compilation. Use concrete types where possible; generic and runtime-only calls retain fallback support.
 - The generator does not provide configuration profiles, custom member expressions, or after-map hooks. Write explicit mapping code when names or business rules differ.
 - Razor calls are discovered by scanning `.razor` additional files. Complex expressions that cannot be resolved may need to be assigned to a typed local before calling `Adapt`.
 

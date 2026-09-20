@@ -115,9 +115,10 @@ public sealed class AdaptGenerator : IIncrementalGenerator
                 {
                     Expression: MemberAccessExpressionSyntax
                     {
-                        Name: GenericNameSyntax { TypeArgumentList.Arguments.Count: 1 } genericName
+                        Name: GenericNameSyntax genericName
                     }
-                } && genericName.Identifier.ValueText == "Adapt",
+                } && (genericName.Identifier.ValueText == "Adapt" || genericName.Identifier.ValueText == "AdaptViaReflection") &&
+                     genericName.TypeArgumentList.Arguments.Count is 1 or 2,
                 static (ctx, _) => (InvocationExpressionSyntax)ctx.Node);
 
         // Also scan .razor files for Adapt calls

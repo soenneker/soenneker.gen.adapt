@@ -77,7 +77,7 @@ internal static class MappingEmitter
             sb.Append("\t\tpublic static TDest Adapt<TDest>(this ").Append(srcType).AppendLine(" source)");
             sb.AppendLine("\t\t{");
             sb.Append("\t\t\tif (typeof(TDest) != typeof(").Append(dType).AppendLine("))");
-            sb.AppendLine("\t\t\t\tthrow new NotSupportedException(\"Unsupported Adapt target type: \" + typeof(TDest).FullName);");
+            sb.AppendLine("\t\t\t\treturn AdaptViaReflection<TDest>(source);");
             sb.AppendLine();
             if (sourceIsList || sourceIsDict || sourceIsIEnum)
             {
@@ -126,7 +126,7 @@ internal static class MappingEmitter
                 sb.AppendLine("\t\t\t}");
             }
 
-            sb.AppendLine("\t\t\tthrow new NotSupportedException(\"Unsupported Adapt target type: \" + typeof(TDest).FullName);");
+            sb.AppendLine("\t\t\treturn AdaptViaReflection<TDest>(source);");
             sb.AppendLine("\t\t}");
             sb.AppendLine();
 

@@ -98,30 +98,34 @@ internal static class SimpleObjectEmitter
         sb.Append(indent).AppendLine("};");
 
         // Handle complex mappings (lists, dictionaries, special cases)
+        int sourceIndex = 0;
         foreach ((Prop dp, Prop sp) in complexMappings)
         {
+            string sourceValue = "__source" + sourceIndex++;
+            sb.Append(indent).Append("var ").Append(sourceValue).Append(" = source.").Append(sp.Name).AppendLine(";");
             // Handle collection mappings
             if (Types.IsArray(sp.Type, out ITypeSymbol? srcElement) && Types.IsArray(dp.Type, out ITypeSymbol? dstElement))
             {
                 // Array to Array mapping
-                sb.Append(indent).Append("if (source.").Append(sp.Name).Append(" != null)").AppendLine();
+                sb.Append(indent).Append("if (").Append(sourceValue).Append(" != null)").AppendLine();
                 sb.Append(indent).AppendLine("{");
-                sb.Append(indent).Append("\tint n = source.").Append(sp.Name).AppendLine(".Length;");
-                sb.Append(indent).Append("\tvar targetArray = new ").Append(Types.ShortName(dp.Type, requiredNamespaces).Replace("[]", "")).AppendLine("[n];");
+                sb.Append(indent).Append("\tint n = ").Append(sourceValue).AppendLine(".Length;");
+                string elementType = Types.ShortName(dstElement!, requiredNamespaces);
+                sb.Append(indent).Append("\tvar targetArray = n == 0 ? Array.Empty<").Append(elementType)
+                    .Append(">() : new ").Append(elementType).AppendLine("[n];");
                 sb.AppendLine();
-                sb.Append(indent).Append("\tfor (int i = 0; i < n; i++)").AppendLine();
-                sb.Append(indent).AppendLine("\t{");
                 if (SymbolEqualityComparer.Default.Equals(srcElement, dstElement))
                 {
-                    sb.Append(indent).Append("\t\ttargetArray[i] = source.").Append(sp.Name).AppendLine("[i];");
+                    sb.Append(indent).Append('\t').Append(sourceValue).AppendLine(".AsSpan().CopyTo(targetArray);");
                 }
                 else
                 {
-                    string itemExpr = GetConversionExpression("source." + sp.Name + "[i]", srcElement, dstElement, names, requiredNamespaces);
+                    sb.Append(indent).AppendLine("\tfor (int i = 0; i < n; i++)");
+                    sb.Append(indent).AppendLine("\t{");
+                    string itemExpr = GetConversionExpression(sourceValue + "[i]", srcElement, dstElement, names, requiredNamespaces);
                     sb.Append(indent).Append("\t\ttargetArray[i] = ").Append(itemExpr).AppendLine(";");
+                    sb.Append(indent).AppendLine("\t}");
                 }
-
-                sb.Append(indent).AppendLine("\t}");
                 sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = targetArray;").AppendLine();
                 sb.Append(indent).AppendLine("}");
                 sb.Append(indent).AppendLine("else");
@@ -134,9 +138,9 @@ internal static class SimpleObjectEmitter
             else if (Types.IsArray(sp.Type, out ITypeSymbol? srcArrayElement) && Types.IsAnyList(dp.Type, out ITypeSymbol? dstListElement))
             {
                 // Array to List mapping
-                sb.Append(indent).Append("if (source.").Append(sp.Name).Append(" != null)").AppendLine();
+                sb.Append(indent).Append("if (").Append(sourceValue).Append(" != null)").AppendLine();
                 sb.Append(indent).AppendLine("{");
-                sb.Append(indent).Append("\tint n = source.").Append(sp.Name).AppendLine(".Length;");
+                sb.Append(indent).Append("\tint n = ").Append(sourceValue).AppendLine(".Length;");
                 sb.AppendLine();
                 sb.Append(indent).Append("\tvar targetList = new ").Append(Types.ShortName(dp.Type, requiredNamespaces)).AppendLine("(n);");
                 sb.AppendLine();
@@ -144,14 +148,17 @@ internal static class SimpleObjectEmitter
                 {
                     usesCollectionsMarshal = true;
                     sb.Append(indent).Append("\tCollectionsMarshal.SetCount(targetList, n);").AppendLine();
-                    sb.Append(indent).Append("\tsource.").Append(sp.Name).Append(".AsSpan().CopyTo(CollectionsMarshal.AsSpan(targetList));").AppendLine();
+                    sb.Append(indent).Append("\t").Append(sourceValue).Append(".AsSpan().CopyTo(CollectionsMarshal.AsSpan(targetList));").AppendLine();
                 }
                 else
                 {
+                    usesCollectionsMarshal = true;
+                    sb.Append(indent).AppendLine("\tCollectionsMarshal.SetCount(targetList, n);");
+                    sb.Append(indent).AppendLine("\tvar targetSpan = CollectionsMarshal.AsSpan(targetList);");
                     sb.Append(indent).Append("\tfor (int i = 0; i < n; i++)").AppendLine();
                     sb.Append(indent).AppendLine("\t{");
-                    string itemExpr = GetConversionExpression("source." + sp.Name + "[i]", srcArrayElement, dstListElement, names, requiredNamespaces);
-                    sb.Append(indent).Append("\t\ttargetList.Add(").Append(itemExpr).AppendLine(");");
+                    string itemExpr = GetConversionExpression(sourceValue + "[i]", srcArrayElement, dstListElement, names, requiredNamespaces);
+                    sb.Append(indent).Append("\t\ttargetSpan[i] = ").Append(itemExpr).AppendLine(";");
                     sb.Append(indent).AppendLine("\t}");
                 }
 
@@ -166,24 +173,28 @@ internal static class SimpleObjectEmitter
             else if (Types.IsAnyList(sp.Type, out ITypeSymbol? srcListElement) && Types.IsArray(dp.Type, out ITypeSymbol? dstArrayElement))
             {
                 // List to Array mapping
-                sb.Append(indent).Append("if (source.").Append(sp.Name).Append(" != null)").AppendLine();
+                sb.Append(indent).Append("if (").Append(sourceValue).Append(" != null)").AppendLine();
                 sb.Append(indent).AppendLine("{");
-                sb.Append(indent).Append("\tint n = source.").Append(sp.Name).AppendLine(".Count;");
-                sb.Append(indent).Append("\tvar targetArray = new ").Append(Types.ShortName(dp.Type, requiredNamespaces).Replace("[]", "")).AppendLine("[n];");
+                sb.Append(indent).Append("\tint n = ").Append(sourceValue).AppendLine(".Count;");
+                string elementType = Types.ShortName(dstArrayElement!, requiredNamespaces);
+                sb.Append(indent).Append("\tvar targetArray = n == 0 ? Array.Empty<").Append(elementType)
+                    .Append(">() : new ").Append(elementType).AppendLine("[n];");
                 sb.AppendLine();
-                sb.Append(indent).Append("\tfor (int i = 0; i < n; i++)").AppendLine();
-                sb.Append(indent).AppendLine("\t{");
-                if (SymbolEqualityComparer.Default.Equals(srcListElement, dstArrayElement))
+                bool sameElementType = SymbolEqualityComparer.Default.Equals(srcListElement, dstArrayElement);
+                if (sameElementType && Types.IsList(sp.Type, out _))
                 {
-                    sb.Append(indent).Append("\t\ttargetArray[i] = source.").Append(sp.Name).AppendLine("[i];");
+                    usesCollectionsMarshal = true;
+                    sb.Append(indent).Append("\tCollectionsMarshal.AsSpan(").Append(sourceValue).AppendLine(").CopyTo(targetArray);");
                 }
                 else
                 {
-                    string itemExpr = GetConversionExpression("source." + sp.Name + "[i]", srcListElement, dstArrayElement, names, requiredNamespaces);
+                    sb.Append(indent).AppendLine("\tfor (int i = 0; i < n; i++)");
+                    sb.Append(indent).AppendLine("\t{");
+                    string itemExpr = sameElementType ? sourceValue + "[i]" :
+                        GetConversionExpression(sourceValue + "[i]", srcListElement!, dstArrayElement!, names, requiredNamespaces);
                     sb.Append(indent).Append("\t\ttargetArray[i] = ").Append(itemExpr).AppendLine(";");
+                    sb.Append(indent).AppendLine("\t}");
                 }
-
-                sb.Append(indent).AppendLine("\t}");
                 sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = targetArray;").AppendLine();
                 sb.Append(indent).AppendLine("}");
                 sb.Append(indent).AppendLine("else");
@@ -202,17 +213,17 @@ internal static class SimpleObjectEmitter
                 if (sameListType && sameElementType)
                 {
                     // Same type - just assign directly, no copying needed, no null check needed
-                    sb.Append(indent).Append("target.").Append(dp.Name).Append(" = source.").Append(sp.Name).AppendLine(";");
+                    sb.Append(indent).Append("target.").Append(dp.Name).Append(" = ").Append(sourceValue).AppendLine(";");
                 }
                 else
                 {
-                    sb.Append(indent).Append("if (source.").Append(sp.Name).Append(" != null)").AppendLine();
+                    sb.Append(indent).Append("if (").Append(sourceValue).Append(" != null)").AppendLine();
                     sb.Append(indent).AppendLine("{");
 
                     if (Types.IsList(sp.Type, out _))
                 {
                     usesCollectionsMarshal = true;
-                    sb.Append(indent).Append("\tvar src = CollectionsMarshal.AsSpan(source.").Append(sp.Name).AppendLine(");");
+                    sb.Append(indent).Append("\tvar src = CollectionsMarshal.AsSpan(").Append(sourceValue).AppendLine(");");
                     sb.Append(indent).Append("\tint n = src.Length;").AppendLine();
                     sb.AppendLine();
                     sb.Append(indent).Append("\tvar targetList = new ").Append(Types.ShortName(dp.Type, requiredNamespaces)).AppendLine("(n);");
@@ -240,7 +251,7 @@ internal static class SimpleObjectEmitter
                 {
                     // Handle IEnumerable<T> and other collection types
                     // Optimize by pre-sizing the collection when possible
-                    sb.Append(indent).Append("\tvar sourceCollection = source.").Append(sp.Name).AppendLine(";");
+                    sb.Append(indent).Append("\tvar sourceCollection = ").Append(sourceValue).AppendLine(";");
                     sb.Append(indent).Append("\tif (sourceCollection is ICollection<").Append(Types.ShortName(srcListToElement, requiredNamespaces))
                         .AppendLine("> coll && coll.Count > 0)");
                     sb.Append(indent).AppendLine("\t{");
@@ -331,12 +342,16 @@ internal static class SimpleObjectEmitter
             if (Types.IsAnyDictionary(sp.Type, out ITypeSymbol? srcKey, out ITypeSymbol? srcValue) &&
                 Types.IsAnyDictionary(dp.Type, out ITypeSymbol? dstKey, out ITypeSymbol? dstValue))
             {
-                sb.Append(indent).Append("if (source.").Append(sp.Name).Append(" != null)").AppendLine();
+                sb.Append(indent).Append("if (").Append(sourceValue).Append(" != null)").AppendLine();
                 sb.Append(indent).AppendLine("{");
 
                 // Generate proper dictionary mapping logic
-                sb.Append(indent).Append("\tvar targetDict = new ").Append(Types.ShortName(dp.Type, requiredNamespaces)).AppendLine("();");
-                sb.Append(indent).Append("\tforeach (var kvp in source.").Append(sp.Name).AppendLine(")");
+                sb.Append(indent).Append("\tvar targetDict = new ").Append(Types.ShortName(dp.Type, requiredNamespaces));
+                if (Types.IsDictionary(dp.Type, out _, out _))
+                    sb.Append('(').Append(sourceValue).AppendLine(".Count);");
+                else
+                    sb.AppendLine("();");
+                sb.Append(indent).Append("\tforeach (var kvp in ").Append(sourceValue).AppendLine(")");
                 sb.Append(indent).AppendLine("\t{");
 
                 string keyExpr = SymbolEqualityComparer.Default.Equals(srcKey, dstKey)
@@ -370,16 +385,16 @@ internal static class SimpleObjectEmitter
                 // Only generate null checks for reference types (classes), not value types (structs)
                 if (srcNamed.TypeKind == TypeKind.Class)
                 {
-                    sb.Append(indent).Append("if (source.").Append(sp.Name).AppendLine(" is not null)");
+                    sb.Append(indent).Append("if (").Append(sourceValue).AppendLine(" is not null)");
                     sb.Append(indent).AppendLine("{");
                     sb.Append(indent).Append("\ttarget.").Append(dp.Name).Append(" = Map_").Append(srcSanLocal).Append("_To_").Append(dstSanLocal).Append('(')
-                        .Append("source.").Append(sp.Name).AppendLine(");");
+                        .Append("").Append(sourceValue).AppendLine(");");
                     sb.Append(indent).AppendLine("}");
                 }
                 else // Struct
                 {
                     sb.Append(indent).Append("target.").Append(dp.Name).Append(" = Map_").Append(srcSanLocal).Append("_To_").Append(dstSanLocal).Append('(')
-                        .Append("source.").Append(sp.Name).AppendLine(");");
+                        .Append("").Append(sourceValue).AppendLine(");");
                 }
 
                 continue;
@@ -388,7 +403,7 @@ internal static class SimpleObjectEmitter
             // Special case: string -> Guid with TryParse
             if (Types.IsString(sp.Type) && Types.IsGuid(dp.Type))
             {
-                sb.Append(indent).Append("if (global::System.Guid.TryParse(source.").Append(sp.Name).AppendLine(", out var g))");
+                sb.Append(indent).Append("if (global::System.Guid.TryParse(").Append(sourceValue).AppendLine(", out var g))");
                 sb.Append(indent).Append("\ttarget.").Append(dp.Name).AppendLine(" = g;");
             }
         }
@@ -455,10 +470,10 @@ internal static class SimpleObjectEmitter
 
         // Handle enum conversions
         if (fromType.TypeKind == TypeKind.Enum && Types.IsString(toType))
-            return expr + ".ToString()";
+            return "GenAdapt_EnumParsers.Format_" + names.Sanitized(fromType) + "(" + expr + ")";
 
         if (Types.IsString(fromType) && toType.TypeKind == TypeKind.Enum)
-            return "GenAdapt_EnumParsers.Parse_" + San((INamedTypeSymbol)toType) + "(" + expr + ")";
+            return "GenAdapt_EnumParsers.Parse_" + names.Sanitized(toType) + "(" + expr + ")";
 
         if (fromType.TypeKind == TypeKind.Enum && Types.IsInt(toType))
             return "(int)" + expr;
@@ -524,9 +539,4 @@ internal static class SimpleObjectEmitter
         return "(" + Types.ShortName(toType, requiredNamespaces) + ")" + expr;
     }
 
-    private static string San(INamedTypeSymbol type)
-    {
-        // Simple sanitization for enum parser names
-        return type.Name.Replace(".", "_").Replace("`", "_");
-    }
 }

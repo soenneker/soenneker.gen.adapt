@@ -23,7 +23,7 @@ internal static class Assignment
 
         // enum -> string
         if (srcType.TypeKind == TypeKind.Enum && Types.IsString(dstType))
-            return srcExpr + ".ToString()";
+            return "GenAdapt_EnumParsers.Format_" + San((INamedTypeSymbol)srcType) + "(" + srcExpr + ")";
 
         // string -> enum
         if (Types.IsString(srcType) && dstType.TypeKind == TypeKind.Enum)

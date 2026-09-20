@@ -10,10 +10,10 @@ internal static class CollectionMappingHelper
             return expr;
 
         if (fromType.TypeKind == TypeKind.Enum && Types.IsString(toType))
-            return expr + ".ToString()";
+            return "GenAdapt_EnumParsers.Format_" + names.Sanitized(fromType) + "(" + expr + ")";
 
         if (Types.IsString(fromType) && toType.TypeKind == TypeKind.Enum)
-            return "GenAdapt_EnumParsers.Parse_" + San((INamedTypeSymbol)toType) + "(" + expr + ")";
+            return "GenAdapt_EnumParsers.Parse_" + names.Sanitized(toType) + "(" + expr + ")";
 
         if (fromType.TypeKind == TypeKind.Enum && Types.IsInt(toType))
             return "(int)" + expr;
@@ -62,8 +62,4 @@ internal static class CollectionMappingHelper
         return "(" + Types.ShortName(toType) + ")" + expr;
     }
 
-    private static string San(INamedTypeSymbol type)
-    {
-        return type.Name.Replace(".", "_").Replace("`", "_");
-    }
 }

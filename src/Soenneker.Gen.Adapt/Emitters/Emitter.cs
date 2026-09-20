@@ -36,6 +36,12 @@ internal static class Emitter
     {
         // Get the namespace from the compilation (use assembly name as fallback)
         string targetNamespace = GetTargetNamespace(compilation);
+        foreach (InvocationExpressionSyntax invocation in invocations)
+        {
+            string? reason = FallbackAnalysis.Reason(compilation.GetSemanticModel(invocation.SyntaxTree), invocation);
+            if (reason is not null)
+                context.ReportDiagnostic(Diagnostic.Create(FallbackAnalysis.Warning, invocation.GetLocation(), reason));
+        }
 
         // Extract type pairs from Adapt() invocations
         var typePairs = new List<TypePair>();
@@ -80,6 +86,39 @@ internal static class Emitter
 
         // Emit source mappers
         EmitSourceMappers(context, compilation, map, enumList, nameCache, targetNamespace, referencedPairs);
+        EmitRuntimeDispatch(context, map, nameCache, targetNamespace);
+    }
+
+    private static void EmitRuntimeDispatch(SourceProductionContext context, Dictionary<INamedTypeSymbol, List<INamedTypeSymbol>> map,
+        NameCache names, string targetNamespace)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("#nullable enable");
+        sb.Append("namespace ").AppendLine(targetNamespace);
+        sb.AppendLine("{");
+        sb.AppendLine("public static partial class GenAdapt");
+        sb.AppendLine("{");
+        sb.AppendLine("static partial void __TryGetGeneratedMapper(global::System.Type source, global::System.Type destination, ref global::System.Func<object, object>? mapper)");
+        sb.AppendLine("{");
+        foreach (var pair in map)
+        {
+            sb.Append("if (source == typeof(").Append(names.FullyQualified(pair.Key)).AppendLine("))");
+            sb.AppendLine("{");
+            foreach (INamedTypeSymbol destination in pair.Value)
+            {
+                string target = names.FullyQualified(destination);
+                sb.Append("if (destination == typeof(").Append(target).AppendLine("))");
+                sb.AppendLine("{");
+                sb.Append("mapper = static value => Adapt<").Append(target).Append(">((").Append(names.FullyQualified(pair.Key)).AppendLine(")value)!;");
+                sb.AppendLine("return;");
+                sb.AppendLine("}");
+            }
+            sb.AppendLine("}");
+        }
+        sb.AppendLine("}");
+        sb.AppendLine("}");
+        sb.AppendLine("}");
+        Add(context, "Adapt.RuntimeDispatch.g.cs", sb);
     }
 
     private static void ProcessInvocations(ImmutableArray<InvocationExpressionSyntax> invocations, ImmutableArray<string> razorCalls,
@@ -103,6 +142,9 @@ internal static class Emitter
                 model = compilation.GetSemanticModel(invocation.SyntaxTree);
                 semanticModels.Add(invocation.SyntaxTree, model);
             }
+            if (FallbackAnalysis.Reason(model, invocation) is not null ||
+                invocation.Expression is MemberAccessExpressionSyntax { Name: GenericNameSyntax { TypeArgumentList.Arguments.Count: 2 } })
+                continue;
             // Get the source type (the type the Adapt method is called on)
             INamedTypeSymbol? sourceType = null;
             INamedTypeSymbol? destType = null;
@@ -354,7 +396,7 @@ internal static class Emitter
 
     internal static void EmitReflectionAdapter(SourceProductionContext context, string targetNamespace)
     {
-        var sb = new StringBuilder(2048);
+        var sb = new StringBuilder(8192);
         ReflectionEmitter.EmitReflectionAdapter(sb, targetNamespace);
         Add(context, "Adapt.ReflectionAdapter.g.cs", sb);
     }
