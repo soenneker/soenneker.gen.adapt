@@ -111,14 +111,10 @@ public sealed class AdaptGenerator : IIncrementalGenerator
         // Find all Adapt invocations early to cut down on semantic model work for other calls
         IncrementalValuesProvider<InvocationExpressionSyntax> adaptInvocations =
             context.SyntaxProvider.CreateSyntaxProvider(
-                static (node, _) => node is InvocationExpressionSyntax
-                {
-                    Expression: MemberAccessExpressionSyntax
-                    {
-                        Name: GenericNameSyntax genericName
-                    }
-                } && (genericName.Identifier.ValueText == "Adapt" || genericName.Identifier.ValueText == "AdaptViaReflection") &&
-                     genericName.TypeArgumentList.Arguments.Count is 1 or 2,
+                static (node, _) => node is InvocationExpressionSyntax call &&
+                    AdaptInvocation.GetName(call) is GenericNameSyntax genericName &&
+                    (genericName.Identifier.ValueText == "Adapt" || genericName.Identifier.ValueText == "AdaptViaReflection") &&
+                    genericName.TypeArgumentList.Arguments.Count is 1 or 2,
                 static (ctx, _) => (InvocationExpressionSyntax)ctx.Node);
 
         // Also scan .razor files for Adapt calls

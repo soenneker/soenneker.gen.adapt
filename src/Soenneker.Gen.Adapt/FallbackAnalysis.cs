@@ -26,14 +26,14 @@ internal static class FallbackAnalysis
 
     internal static string? Reason(SemanticModel model, InvocationExpressionSyntax call)
     {
-        if (call.Expression is not MemberAccessExpressionSyntax { Name: GenericNameSyntax name } member)
+        if (AdaptInvocation.GetName(call) is not GenericNameSyntax name || AdaptInvocation.GetReceiver(call) is not ExpressionSyntax receiver)
             return null;
         if (model.GetSymbolInfo(call).Symbol is IMethodSymbol { ContainingType: { } owner } && owner.ToDisplayString() == "Mapster.TypeAdapter")
             return null;
         if (name.Identifier.ValueText == "AdaptViaReflection")
             return "AdaptViaReflection was explicitly requested";
         if (name.Identifier.ValueText != "Adapt") return null;
-        ITypeSymbol? source = model.GetTypeInfo(member.Expression).Type;
+        ITypeSymbol? source = model.GetTypeInfo(receiver).Type;
         ITypeSymbol? destination = model.GetTypeInfo(name.TypeArgumentList.Arguments[0]).Type;
         if (name.TypeArgumentList.Arguments.Count == 2)
         {

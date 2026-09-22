@@ -7,6 +7,39 @@ namespace Soenneker.Gen.Adapt.Generator.Tests;
 public sealed class ReflectionFreeTests
 {
     [Test]
+    public void Conditional_access_generates_typed_mappings_and_preserves_null_behavior()
+    {
+        foreach (string expression in new[] { "source?.Adapt<Destination>()", "holder.Value?.Adapt<Destination>()", "holder?.Value?.Adapt<Destination>()", "source?.Adapt<Source>()?.Adapt<Destination>()", "optional?.Adapt<Destination>()" })
+        {
+            var (output, diagnostics, _) = Generate("""
+                using Probe;
+                public class Source { public int Value { get; set; } }
+                public struct ValueSource { public int Value { get; set; } }
+                public class Destination { public int Value { get; set; } }
+                public class Holder { public Source Value { get; set; } }
+                public static class Calls
+                {
+                    public static int Map(bool present)
+                    {
+                        Source source = present ? new Source { Value = 42 } : null;
+                        Holder holder = new Holder { Value = source };
+                        ValueSource? optional = present ? new ValueSource { Value = 42 } : null;
+                """ + "return (" + expression + " ?? new Destination()).Value; } }");
+            AssertNoErrors(output, diagnostics);
+            if (diagnostics.Concat(output.GetDiagnostics()).Any(d => d.Id == "SGA005"))
+                throw new InvalidOperationException("Conditional mapping unexpectedly warned: " + expression);
+            using var stream = new MemoryStream();
+            var result = output.Emit(stream);
+            if (!result.Success)
+                throw new InvalidOperationException(string.Join(Environment.NewLine, result.Diagnostics));
+            var assembly = System.Reflection.Assembly.Load(stream.ToArray());
+            var map = assembly.GetType("Calls")!.GetMethod("Map")!;
+            if (!Equals(map.Invoke(null, [true]), 42) || !Equals(map.Invoke(null, [false]), 0))
+                throw new InvalidOperationException("Conditional mapping changed value/null behavior: " + expression);
+        }
+    }
+
+    [Test]
     public void Generated_mapping_paths_keep_metadata_inspection_in_the_fallback()
     {
         var (output, diagnostics, run) = Generate("""
@@ -46,6 +79,9 @@ public sealed class ReflectionFreeTests
         foreach (string call in new[]
         {
             "public static Destination Map(object value) => value.Adapt<Destination>();",
+            "public static Destination Map(object value) => value?.Adapt<Destination>();",
+            "public static Destination Map(Source value) => value?.AdaptViaReflection<Destination>();",
+            "public static TDest Map<TSource, TDest>(TSource value) where TSource : class where TDest : class => value?.Adapt<TDest>();",
             "public static TDest Map<TSource, TDest>(TSource value) => value.Adapt<TDest>();",
             "public static Destination Map(Source value) => value.AdaptViaReflection<Destination>();"
         })

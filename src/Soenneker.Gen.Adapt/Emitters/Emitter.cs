@@ -143,19 +143,19 @@ internal static class Emitter
                 semanticModels.Add(invocation.SyntaxTree, model);
             }
             if (FallbackAnalysis.Reason(model, invocation) is not null ||
-                invocation.Expression is MemberAccessExpressionSyntax { Name: GenericNameSyntax { TypeArgumentList.Arguments.Count: 2 } })
+                AdaptInvocation.GetName(invocation) is GenericNameSyntax { TypeArgumentList.Arguments.Count: 2 })
                 continue;
             // Get the source type (the type the Adapt method is called on)
             INamedTypeSymbol? sourceType = null;
             INamedTypeSymbol? destType = null;
 
             // Check if it's an Adapt call
-            if (invocation.Expression is MemberAccessExpressionSyntax memberAccess)
+            if (AdaptInvocation.GetReceiver(invocation) is ExpressionSyntax receiver)
             {
                 // Check if the method name is "Adapt"
-                string methodName = memberAccess.Name is GenericNameSyntax genericName
+                string methodName = AdaptInvocation.GetName(invocation) is GenericNameSyntax genericName
                     ? genericName.Identifier.Text
-                    : (memberAccess.Name as IdentifierNameSyntax)?.Identifier.Text ?? "";
+                    : (AdaptInvocation.GetName(invocation) as IdentifierNameSyntax)?.Identifier.Text ?? "";
 
                 if (methodName != "Adapt")
                 {
@@ -173,14 +173,14 @@ internal static class Emitter
                     continue;
 
                 // Also exclude when the left side is the TypeAdapter type
-                ISymbol? lhsSymbol = model.GetSymbolInfo(memberAccess.Expression).Symbol;
+                ISymbol? lhsSymbol = model.GetSymbolInfo(receiver).Symbol;
                 if (lhsSymbol is INamedTypeSymbol lhsType && lhsType.ToDisplayString() == "Mapster.TypeAdapter")
                     continue;
 
                 adaptMethodCount++;
 
                 // Get destination type from generic argument first (this is always available)
-                if (memberAccess.Name is GenericNameSyntax { TypeArgumentList.Arguments.Count: > 0 } gn)
+                if (AdaptInvocation.GetName(invocation) is GenericNameSyntax { TypeArgumentList.Arguments.Count: > 0 } gn)
                 {
                     TypeSyntax destTypeSyntax = gn.TypeArgumentList.Arguments[0];
                     ITypeSymbol? destTypeSymbol = model.GetTypeInfo(destTypeSyntax).Type;
@@ -188,13 +188,19 @@ internal static class Emitter
                 }
 
                 // Try GetTypeInfo first, fallback to SymbolInfo if needed
-                TypeInfo typeInfo = model.GetTypeInfo(memberAccess.Expression);
+                TypeInfo typeInfo = model.GetTypeInfo(receiver);
                 ITypeSymbol? expressionType = typeInfo.Type ?? typeInfo.ConvertedType;
+
+                // A preceding Adapt call may not bind until its generated overload exists.
+                if (expressionType is null or { TypeKind: TypeKind.Error } &&
+                    receiver is InvocationExpressionSyntax preceding &&
+                    AdaptInvocation.GetName(preceding) is GenericNameSyntax { Identifier.ValueText: "Adapt" } precedingName)
+                    expressionType = model.GetTypeInfo(precedingName.TypeArgumentList.Arguments[0]).Type;
 
                 // If still null, try to get from symbol info
                 if (expressionType is null)
                 {
-                    SymbolInfo symbolInfo = model.GetSymbolInfo(memberAccess.Expression);
+                    SymbolInfo symbolInfo = model.GetSymbolInfo(receiver);
 
                     if (symbolInfo.Symbol is ILocalSymbol local)
                     {
@@ -213,6 +219,11 @@ internal static class Emitter
                         expressionType = field.Type;
                     }
                 }
+
+                // Conditional access invokes the method on the underlying nullable value.
+                if (invocation.Expression is MemberBindingExpressionSyntax &&
+                    expressionType is INamedTypeSymbol { OriginalDefinition.SpecialType: SpecialType.System_Nullable_T } nullable)
+                    expressionType = nullable.TypeArguments[0];
 
                 sourceType = expressionType as INamedTypeSymbol;
 
@@ -370,7 +381,7 @@ internal static class Emitter
         // We trace x back to its assignment and see it's B, so we add B -> C mapping
         foreach ((InvocationExpressionSyntax invocation, SemanticModel model, INamedTypeSymbol destType) in deferredCalls)
         {
-            if (invocation.Expression is MemberAccessExpressionSyntax { Expression: IdentifierNameSyntax identifier })
+            if (AdaptInvocation.GetReceiver(invocation) is IdentifierNameSyntax identifier)
             {
                 // Find the source type by tracing the identifier back to its definition
                 INamedTypeSymbol? sourceType = TypeResolver.TraceIdentifierToAdaptCall(identifier, model);
