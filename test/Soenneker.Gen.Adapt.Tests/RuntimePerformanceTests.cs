@@ -77,11 +77,14 @@ public sealed class RuntimePerformanceTests
     }
 
     [Test]
-    public void Cross_shape_mapping_supports_runtime_element_conversion_and_enumerates_once()
+    public void Cross_shape_runtime_element_conversion_requires_explicit_reflection_and_enumerates_once()
     {
         int enumerations = 0;
         IEnumerable<int> Values() { enumerations++; yield return 1; }
-        Values().Adapt<List<string>, int>().Should().Equal("1");
+        Action generated = () => Values().Adapt<List<string>, int>();
+        generated.Should().Throw<NotSupportedException>();
+        enumerations.Should().Be(0);
+        Values().AdaptViaReflection<List<string>>().Should().Equal("1");
         enumerations.Should().Be(1);
     }
 
@@ -99,9 +102,12 @@ public sealed class RuntimePerformanceTests
     }
 
     [Test]
-    public void Generic_wrapper_can_use_a_generated_source_overload_with_an_unknown_destination()
+    public void Generic_wrapper_with_an_unknown_destination_requires_explicit_reflection()
     {
-        MapKnownSource<RuntimeOnlyDestination>(new EnumerableMapSource { Id = 12 }).Id.Should().Be(12);
+        var source = new EnumerableMapSource { Id = 12 };
+        Action generated = () => MapKnownSource<RuntimeOnlyDestination>(source);
+        generated.Should().Throw<NotSupportedException>();
+        source.AdaptViaReflection<RuntimeOnlyDestination>().Id.Should().Be(12);
     }
 
     private static TDestination MapRuntime<TSource, TDestination>(TSource source) => source.Adapt<TDestination>();

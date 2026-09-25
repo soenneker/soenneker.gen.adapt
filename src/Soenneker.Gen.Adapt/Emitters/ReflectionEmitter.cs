@@ -16,6 +16,7 @@ internal static class ReflectionEmitter
         sb.AppendLine("using System.Collections.ObjectModel;");
         sb.AppendLine("using System.Reflection;");
         sb.AppendLine("using System.Linq;");
+        sb.AppendLine("using System.Diagnostics.CodeAnalysis;");
         sb.AppendLine("public static partial class GenAdapt");
         sb.AppendLine("{");
         sb.AppendLine("""
@@ -24,7 +25,18 @@ internal static class ReflectionEmitter
                 internal static readonly ConcurrentDictionary<(Type Source, Type Destination), Func<object, object>> Mappers = new();
             }
 
-            /// <summary>Maps a runtime source type, preferring any available generated mapping and otherwise using a cached reflection mapper.</summary>
+            private static TDest __AdaptGenerated<TDest>(object source)
+            {
+                ArgumentNullException.ThrowIfNull(source);
+                Func<object, object>? mapper = null;
+                __TryGetGeneratedMapper(source.GetType(), typeof(TDest), ref mapper);
+                if (mapper is not null) return (TDest)mapper(source);
+                throw new NotSupportedException($"No generated mapping from {source.GetType()} to {typeof(TDest)}. Add a statically typed Adapt call, or explicitly use AdaptViaReflection in an untrimmed JIT application.");
+            }
+
+            /// <summary>Maps a runtime source type using reflection. Not supported with trimming or Native AOT; use statically typed Adapt calls instead.</summary>
+            [RequiresUnreferencedCode("Runtime mapping requires properties and constructors that trimming may remove.")]
+            [RequiresDynamicCode("Runtime mapping constructs generic collection mappers dynamically. Use generated Adapt mappings for Native AOT.")]
             public static TDest AdaptViaReflection<TDest>(this object source)
             {
                 ArgumentNullException.ThrowIfNull(source);
@@ -33,8 +45,12 @@ internal static class ReflectionEmitter
 
             /// <summary>Maps a source whose concrete type is unavailable at compile time.</summary>
             [Obsolete("No compile-time mapping was available for this call. The runtime fallback may use reflection.", DiagnosticId = "SGA005")]
+            [RequiresUnreferencedCode("No generated mapping is available. Use a statically typed source and destination.")]
+            [RequiresDynamicCode("No generated mapping is available. Use a statically typed source and destination.")]
             public static TDest Adapt<TDest>(this object source) => AdaptViaReflection<TDest>(source);
 
+            [RequiresUnreferencedCode("Runtime reflection mapping.")]
+            [RequiresDynamicCode("Runtime reflection mapping.")]
             private static object __AdaptRuntime(object source, Type destination, bool copy = false)
             {
                 destination = Nullable.GetUnderlyingType(destination) ?? destination;
@@ -45,6 +61,8 @@ internal static class ReflectionEmitter
             // Removed by the compiler when there are no generated pairs to dispatch.
             static partial void __TryGetGeneratedMapper(Type source, Type destination, ref Func<object, object>? mapper);
 
+            [RequiresUnreferencedCode("Runtime reflection mapping.")]
+            [RequiresDynamicCode("Runtime reflection mapping.")]
             private static Func<object, object> __BuildRuntimeMapper(Type source, Type destination)
             {
                 Func<object, object>? generated = null;
@@ -117,6 +135,7 @@ internal static class ReflectionEmitter
                     !source.IsEnum && !destination.IsEnum;
             }
 
+            [RequiresUnreferencedCode("Runtime interface discovery.")]
             private static Type? __FindGenericInterface(Type type, Type definition)
             {
                 if (type.IsGenericType && type.GetGenericTypeDefinition() == definition) return type;
@@ -125,6 +144,8 @@ internal static class ReflectionEmitter
                 return null;
             }
 
+            [RequiresUnreferencedCode("Runtime reflection mapping.")]
+            [RequiresDynamicCode("Runtime reflection mapping.")]
             private static Func<object, object> __CreateCollectionMapper<TElement>(Type destination)
             {
                 // Resolve the shape once. Element loops use typed storage and never
@@ -159,6 +180,8 @@ internal static class ReflectionEmitter
                 };
             }
 
+            [RequiresUnreferencedCode("Runtime reflection mapping.")]
+            [RequiresDynamicCode("Runtime reflection mapping.")]
             private static Func<object, object> __CreateDictionaryMapper<TSourceKey, TSourceValue, TKey, TValue>(Type destination) where TKey : notnull
             {
                 return value =>

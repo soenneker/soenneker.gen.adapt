@@ -48,7 +48,7 @@ internal static class CollectionsEmitter
         sb.AppendLine("\t\t\tif (destType == typeof(Stack<TSrc>)) return (TDest)(object)new Stack<TSrc>(source);");
         sb.AppendLine("\t\t\tif (destType == typeof(Collection<TSrc>)) return (TDest)(object)new Collection<TSrc>(new List<TSrc>(source));");
         sb.AppendLine("\t\t\tif (destType == typeof(ObservableCollection<TSrc>)) return (TDest)(object)new ObservableCollection<TSrc>(source);");
-        sb.AppendLine("\t\t\treturn AdaptViaReflection<TDest>(source);");
+        sb.AppendLine("\t\t\treturn __AdaptGenerated<TDest>(source);");
         sb.AppendLine("\t\t}");
         sb.AppendLine();
 
