@@ -22,7 +22,7 @@
         <PackageReference Include="AutoMapper" Version="16.2.0" />
         <PackageReference Include="Facet.Extensions" Version="6.6.12" />
         <PackageReference Include="Riok.Mapperly" Version="4.3.1" />
-        <PackageReference Include="Soenneker.Enums.DayOfWeek" Version="4.0.774" />
+        <PackageReference Include="Soenneker.Enums.DayOfWeek" Version="4.0.777" />
         <PackageReference Include="Soenneker.Tests.Attributes.Local" Version="4.0.118" />
         <PackageReference Include="Soenneker.Tests.Benchmark" Version="4.0.166" />
         <PackageReference Include="Soenneker.Documents.Audit" Version="4.0.2607" />
