@@ -1,4 +1,5 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Text;
 using Soenneker.Gen.Adapt.Adapters;
@@ -36,6 +37,15 @@ internal static class Emitter
     {
         // Get the namespace from the compilation (use assembly name as fallback)
         string targetNamespace = GetTargetNamespace(compilation);
+        // Other generator outputs are not visible during discovery. Supply only the
+        // public signatures in a private compilation so Roslyn can infer downstream
+        // locals, member accesses, foreach variables and lambda parameters normally.
+        // This tree is never emitted into the user's compilation.
+        compilation = compilation.AddSyntaxTrees(CSharpSyntaxTree.ParseText(
+            "namespace " + targetNamespace + " { public static partial class GenAdapt { " +
+            "public static TDestination Adapt<TDestination>(this object source) => throw null; " +
+            "public static TDestination Adapt<TDestination, TElement>(this System.Collections.Generic.IEnumerable<TElement> source) => throw null; " +
+            "} }", compilation.SyntaxTrees.FirstOrDefault()?.Options as CSharpParseOptions));
         foreach (InvocationExpressionSyntax invocation in invocations)
         {
             string? reason = FallbackAnalysis.Reason(compilation.GetSemanticModel(invocation.SyntaxTree), invocation);
@@ -48,13 +58,9 @@ internal static class Emitter
         var pairSet = new HashSet<(INamedTypeSymbol Source, INamedTypeSymbol Destination)>(TypePairEqualityComparer.Instance);
         var allTypes = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
         var enums = new HashSet<INamedTypeSymbol>(SymbolEqualityComparer.Default);
-        var deferredCalls = new List<(InvocationExpressionSyntax invocation, SemanticModel model, INamedTypeSymbol destType)>();
 
         // Process invocations and build type pairs
-        ProcessInvocations(invocations, razorCalls, compilation, typePairs, pairSet, allTypes, enums, deferredCalls, context);
-
-        // Try to resolve deferred calls by tracing back through syntax
-        ProcessDeferredCalls(deferredCalls, typePairs, pairSet, allTypes);
+        ProcessInvocations(invocations, razorCalls, compilation, typePairs, pairSet, allTypes, enums, context);
 
         // Report diagnostic information
         ReportDiagnosticInfo(context, invocations, razorCalls, typePairs, compilation, targetNamespace);
@@ -123,8 +129,7 @@ internal static class Emitter
 
     private static void ProcessInvocations(ImmutableArray<InvocationExpressionSyntax> invocations, ImmutableArray<string> razorCalls,
         Compilation compilation, List<TypePair> typePairs, HashSet<(INamedTypeSymbol Source, INamedTypeSymbol Destination)> pairSet,
-        HashSet<INamedTypeSymbol> allTypes, HashSet<INamedTypeSymbol> enums,
-        List<(InvocationExpressionSyntax invocation, SemanticModel model, INamedTypeSymbol destType)> deferredCalls, SourceProductionContext context)
+        HashSet<INamedTypeSymbol> allTypes, HashSet<INamedTypeSymbol> enums, SourceProductionContext context)
     {
         // Process Razor-extracted Adapt calls
         ProcessRazorCalls(context, razorCalls, compilation, typePairs, pairSet, allTypes);
@@ -260,17 +265,9 @@ internal static class Emitter
                     }
                 }
             }
-            else if (sourceType is null && destType is not null)
-            {
-                // Defer this call - we might be able to resolve it after generating initial mappings
-                // This handles cases like: var x = a.Adapt<B>(); var y = x.Adapt<C>();
-                // where x's type depends on a.Adapt<B>() being generated first
-                deferredCalls.Add((invocation, model, destType));
-                allTypes.Add(destType);
-            }
             else
             {
-                // Report diagnostic for type resolution failures only if we also can't get dest type
+                // Do not silently discard calls whose mapping could not be discovered.
                 string sourceTypeName = sourceType?.ToDisplayString() ?? "unknown";
                 string destTypeName = destType?.ToDisplayString() ?? "unknown";
 
@@ -367,40 +364,6 @@ internal static class Emitter
                 {
                     AddTypePair(typePairs, pairSet, allTypes, dictSrc, dictDst, Location.None);
                 }
-            }
-        }
-    }
-
-    private static void ProcessDeferredCalls(List<(InvocationExpressionSyntax invocation, SemanticModel model, INamedTypeSymbol destType)> deferredCalls,
-        List<TypePair> typePairs, HashSet<(INamedTypeSymbol Source, INamedTypeSymbol Destination)> pairSet, HashSet<INamedTypeSymbol> allTypes)
-    {
-        var failedToResolveSource = 0;
-
-        // Try to resolve deferred calls by tracing back through syntax
-        // If someone does: var x = a.Adapt<B>(); var y = x.Adapt<C>();
-        // We trace x back to its assignment and see it's B, so we add B -> C mapping
-        foreach ((InvocationExpressionSyntax invocation, SemanticModel model, INamedTypeSymbol destType) in deferredCalls)
-        {
-            if (AdaptInvocation.GetReceiver(invocation) is IdentifierNameSyntax identifier)
-            {
-                // Find the source type by tracing the identifier back to its definition
-                INamedTypeSymbol? sourceType = TypeResolver.TraceIdentifierToAdaptCall(identifier, model);
-
-                // Filter out error types
-                if (sourceType is { TypeKind: TypeKind.Error })
-                {
-                    sourceType = null;
-                }
-
-                if (sourceType is not null)
-                {
-                    AddTypePair(typePairs, pairSet, allTypes, sourceType, destType, invocation.GetLocation());
-                    // Successfully resolved - don't report any diagnostic
-                    continue;
-                }
-
-                // Still couldn't resolve
-                failedToResolveSource++;
             }
         }
     }

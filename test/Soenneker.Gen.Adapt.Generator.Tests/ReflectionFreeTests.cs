@@ -7,6 +7,113 @@ namespace Soenneker.Gen.Adapt.Generator.Tests;
 public sealed class ReflectionFreeTests
 {
     [Test]
+    public void Inferred_mapping_chains_execute_without_a_reflection_helper()
+    {
+        string[] bodies =
+        [
+            "var entity = document.Adapt<Entity>(); var alias = entity.Metadata; return alias.Adapt<Metadata>().Name;",
+            "var entity = document?.Adapt<Entity>(); return entity.Metadata.Adapt<Metadata>().Name;",
+            "var entity = document?.Adapt<Entity>(); return entity?.Metadata?.Adapt<Metadata>()?.Name;",
+            "document = null; var entity = document?.Adapt<Entity>(); return entity?.Metadata?.Adapt<Metadata>()?.Name ?? \"lead\";",
+            "var entities = documents.Adapt<List<Entity>>(); return entities[0].Metadata.Adapt<Metadata>().Name;",
+            "var entities = documents.Adapt<List<Entity>>(); foreach (var entity in entities) return entity.Metadata.Adapt<Metadata>().Name; return null;",
+            "var entities = documents.Adapt<List<Entity>>(); return entities.Select(entity => entity.Metadata.Adapt<Metadata>().Name).First();",
+            "var entities = documents.Adapt<List<Entity>>(); return entities.Where(entity => entity.Metadata.Name != null).Select(entity => entity.Metadata.Adapt<Metadata>().Name).First();",
+            "var entities = documents.Adapt<List<Entity>>(); var entity = entities.First(); return entity.Metadata.Adapt<Metadata>().Name;",
+            "var entity = document.Adapt<Entity>(); var alias = entity; var metadata = alias.Metadata; return metadata.Adapt<Metadata>().Name;"
+        ];
+        foreach (string body in bodies)
+        {
+            var (output, diagnostics, run) = Generate("""
+                using System.Collections.Generic;
+                using System.Linq;
+                using Probe;
+                public class MetadataDocument { public string Name { get; set; } }
+                public class Metadata { public string Name { get; set; } }
+                public class Document { public MetadataDocument Metadata { get; set; } }
+                public class Entity { public Metadata Metadata { get; set; } }
+                public static class Calls
+                {
+                    public static string Map()
+                    {
+                        var document = new Document { Metadata = new MetadataDocument { Name = "lead" } };
+                        var documents = new List<Document> { document };
+                """ + body + " } }");
+            AssertNoErrors(output, diagnostics);
+            if (diagnostics.Concat(output.GetDiagnostics()).Any(d => d.Id is "SGA004" or "SGA005"))
+                throw new InvalidOperationException("Mapping discovery failed: " + body);
+            var reflection = run.Results.Single().GeneratedSources.Single(s => s.HintName == "Adapt.ReflectionAdapter.g.cs");
+            var withoutReflection = output.RemoveSyntaxTrees(reflection.SyntaxTree).AddSyntaxTrees(CSharpSyntaxTree.ParseText("""
+                namespace Probe;
+                public static partial class GenAdapt
+                {
+                    private static T __AdaptGenerated<T>(object source) => throw new System.NotSupportedException();
+                    static partial void __TryGetGeneratedMapper(System.Type source, System.Type destination, ref System.Func<object, object> mapper);
+                }
+                """));
+            AssertNoErrors(withoutReflection, diagnostics);
+            using var stream = new MemoryStream();
+            var result = withoutReflection.Emit(stream);
+            if (!result.Success)
+                throw new InvalidOperationException(string.Join(Environment.NewLine, result.Diagnostics));
+            var assembly = System.Reflection.Assembly.Load(stream.ToArray());
+            if (!Equals(assembly.GetType("Calls")!.GetMethod("Map")!.Invoke(null, null), "lead"))
+                throw new InvalidOperationException("Mapping changed the value: " + body);
+        }
+    }
+
+    [Test]
+    public void Unresolved_source_reports_a_discovery_warning()
+    {
+        var (_, diagnostics, _) = Generate("""
+            using Probe;
+            public class Destination { public string Name { get; set; } }
+            public static class Calls
+            {
+                public static Destination Map() => MissingSource().Adapt<Destination>();
+            }
+            """);
+        if (!diagnostics.Any(d => d.Id == "SGA004" && d.Severity == DiagnosticSeverity.Warning && d.Location.IsInSource))
+            throw new InvalidOperationException("Unresolved source was silently skipped.");
+    }
+
+    [Test]
+    public void Members_of_inferred_adapt_results_generate_without_reflection()
+    {
+        foreach (string receiver in new[] { "entity.Metadata", "(entity.Metadata)", "entity!.Metadata", "document.Adapt<Entity>().Metadata" })
+        {
+            var (output, diagnostics, run) = Generate("""
+                using Probe;
+                public class MetadataDocument { public string Name { get; set; } }
+                public class Metadata { public string Name { get; set; } }
+                public class Document { public MetadataDocument Metadata { get; set; } }
+                public class EntityBase { public Metadata Metadata { get; set; } }
+                public class Entity : EntityBase { }
+                public static class Calls
+                {
+                    public static Metadata Map(Document document)
+                    {
+                        var entity = document.Adapt<Entity>();
+                """ + "return " + receiver + ".Adapt<Metadata>(); } }");
+            AssertNoErrors(output, diagnostics);
+            if (diagnostics.Concat(output.GetDiagnostics()).Any(d => d.Id == "SGA005"))
+                throw new InvalidOperationException("Member mapping used the reflection fallback: " + receiver);
+
+            // The mapping must still compile when the reflection helper is removed entirely.
+            var reflection = run.Results.Single().GeneratedSources.Single(s => s.HintName == "Adapt.ReflectionAdapter.g.cs");
+            var withoutReflection = output.RemoveSyntaxTrees(reflection.SyntaxTree).AddSyntaxTrees(CSharpSyntaxTree.ParseText("""
+                namespace Probe;
+                public static partial class GenAdapt
+                {
+                    private static T __AdaptGenerated<T>(object source) => throw new System.NotSupportedException();
+                    static partial void __TryGetGeneratedMapper(System.Type source, System.Type destination, ref System.Func<object, object> mapper);
+                }
+                """));
+            AssertNoErrors(withoutReflection, diagnostics);
+        }
+    }
+
+    [Test]
     public void Conditional_access_generates_typed_mappings_and_preserves_null_behavior()
     {
         foreach (string expression in new[] { "source?.Adapt<Destination>()", "holder.Value?.Adapt<Destination>()", "holder?.Value?.Adapt<Destination>()", "source?.Adapt<Source>()?.Adapt<Destination>()", "optional?.Adapt<Destination>()" })
