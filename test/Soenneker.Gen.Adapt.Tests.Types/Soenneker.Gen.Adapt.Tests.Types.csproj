@@ -6,6 +6,6 @@
         <IsPackable>false</IsPackable>
     </PropertyGroup>
     <ItemGroup>
-      <PackageReference Include="Soenneker.Dtos.Results.Operation" Version="4.0.69" />
+      <PackageReference Include="Soenneker.Dtos.Results.Operation" Version="4.0.72" />
     </ItemGroup>
 </Project>
