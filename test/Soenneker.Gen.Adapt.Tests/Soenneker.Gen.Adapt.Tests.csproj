@@ -22,14 +22,14 @@
         <PackageReference Include="AutoMapper" Version="16.2.0" />
         <PackageReference Include="Facet.Extensions" Version="6.6.14" />
         <PackageReference Include="Riok.Mapperly" Version="4.3.1" />
-        <PackageReference Include="Soenneker.Enums.DayOfWeek" Version="4.0.782" />
-        <PackageReference Include="Soenneker.Tests.Attributes.Local" Version="4.0.135" />
-        <PackageReference Include="Soenneker.Tests.Benchmark" Version="4.0.191" />
-        <PackageReference Include="Soenneker.Documents.Audit" Version="4.0.2623" />
-        <PackageReference Include="Soenneker.Dtos.IdNamePair" Version="4.0.734" />
-        <PackageReference Include="Soenneker.Utils.Test" Version="4.0.332" />
-        <PackageReference Include="Soenneker.Tests.Unit" Version="4.0.1373" />
-        <PackageReference Include="TUnit" Version="1.74.0" />
+        <PackageReference Include="Soenneker.Enums.DayOfWeek" Version="4.0.785" />
+        <PackageReference Include="Soenneker.Tests.Attributes.Local" Version="4.0.139" />
+        <PackageReference Include="Soenneker.Tests.Benchmark" Version="4.0.195" />
+        <PackageReference Include="Soenneker.Documents.Audit" Version="4.0.2624" />
+        <PackageReference Include="Soenneker.Dtos.IdNamePair" Version="4.0.737" />
+        <PackageReference Include="Soenneker.Utils.Test" Version="4.0.334" />
+        <PackageReference Include="Soenneker.Tests.Unit" Version="4.0.1379" />
+        <PackageReference Include="TUnit" Version="1.75.0" />
     </ItemGroup>
 
     <ItemGroup>
