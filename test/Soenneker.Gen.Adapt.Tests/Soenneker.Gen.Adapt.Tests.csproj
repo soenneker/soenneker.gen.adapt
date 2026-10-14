@@ -26,7 +26,7 @@
         <PackageReference Include="Soenneker.Tests.Attributes.Local" Version="4.0.139" />
         <PackageReference Include="Soenneker.Tests.Benchmark" Version="4.0.195" />
         <PackageReference Include="Soenneker.Documents.Audit" Version="4.0.2624" />
-        <PackageReference Include="Soenneker.Dtos.IdNamePair" Version="4.0.737" />
+        <PackageReference Include="Soenneker.Dtos.IdNamePair" Version="4.0.740" />
         <PackageReference Include="Soenneker.Utils.Test" Version="4.0.334" />
         <PackageReference Include="Soenneker.Tests.Unit" Version="4.0.1379" />
         <PackageReference Include="TUnit" Version="1.75.0" />
