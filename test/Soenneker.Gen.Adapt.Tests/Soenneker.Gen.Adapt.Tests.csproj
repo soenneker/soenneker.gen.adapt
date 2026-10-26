@@ -24,11 +24,11 @@
         <PackageReference Include="Riok.Mapperly" Version="4.3.1" />
         <PackageReference Include="Soenneker.Enums.DayOfWeek" Version="11.0.800" />
         <PackageReference Include="Soenneker.Tests.Attributes.Local" Version="11.0.153" />
-        <PackageReference Include="Soenneker.Tests.Benchmark" Version="11.0.214" />
+        <PackageReference Include="Soenneker.Tests.Benchmark" Version="11.0.215" />
         <PackageReference Include="Soenneker.Documents.Audit" Version="11.0.2645" />
         <PackageReference Include="Soenneker.Dtos.IdNamePair" Version="11.0.746" />
         <PackageReference Include="Soenneker.Utils.Test" Version="11.0.343" />
-        <PackageReference Include="Soenneker.Tests.Unit" Version="11.0.1409" />
+        <PackageReference Include="Soenneker.Tests.Unit" Version="11.0.1410" />
         <PackageReference Include="TUnit" Version="1.76.28" />
     </ItemGroup>
 
