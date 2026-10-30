@@ -7,6 +7,18 @@ namespace Soenneker.Gen.Adapt.Emitters;
 
 internal static class SimpleObjectEmitter
 {
+    private static string GetListImplementationType(ITypeSymbol type, HashSet<string> requiredNamespaces)
+    {
+        if (Types.IsIReadOnlyList(type, out ITypeSymbol? element) || Types.IsIReadOnlyCollection(type, out element) ||
+            Types.IsIList(type, out element) || Types.IsICollection(type, out element))
+        {
+            requiredNamespaces.Add("System.Collections.Generic");
+            return "List<" + Types.ShortName(element!, requiredNamespaces) + ">";
+        }
+
+        return Types.ShortName(type, requiredNamespaces);
+    }
+
     /// <summary>
     /// Handles mapping body generation for simple object-to-object mappings
     /// </summary>
@@ -142,7 +154,7 @@ internal static class SimpleObjectEmitter
                 sb.Append(indent).AppendLine("{");
                 sb.Append(indent).Append("\tint n = ").Append(sourceValue).AppendLine(".Length;");
                 sb.AppendLine();
-                sb.Append(indent).Append("\tvar targetList = new ").Append(Types.ShortName(dp.Type, requiredNamespaces)).AppendLine("(n);");
+                sb.Append(indent).Append("\tvar targetList = new ").Append(GetListImplementationType(dp.Type, requiredNamespaces)).AppendLine("(n);");
                 sb.AppendLine();
                 if (SymbolEqualityComparer.Default.Equals(srcArrayElement, dstListElement))
                 {
@@ -226,7 +238,7 @@ internal static class SimpleObjectEmitter
                     sb.Append(indent).Append("\tvar src = CollectionsMarshal.AsSpan(").Append(sourceValue).AppendLine(");");
                     sb.Append(indent).Append("\tint n = src.Length;").AppendLine();
                     sb.AppendLine();
-                    sb.Append(indent).Append("\tvar targetList = new ").Append(Types.ShortName(dp.Type, requiredNamespaces)).AppendLine("(n);");
+                    sb.Append(indent).Append("\tvar targetList = new ").Append(GetListImplementationType(dp.Type, requiredNamespaces)).AppendLine("(n);");
                     sb.AppendLine();
                     if (sameElementType)
                     {
@@ -256,7 +268,7 @@ internal static class SimpleObjectEmitter
                         .AppendLine("> coll && coll.Count > 0)");
                     sb.Append(indent).AppendLine("\t{");
                     sb.Append(indent).Append("\t\tint count = coll.Count;").AppendLine();
-                    sb.Append(indent).Append("\t\tvar targetList = new ").Append(Types.ShortName(dp.Type, requiredNamespaces)).AppendLine("(count);");
+                    sb.Append(indent).Append("\t\tvar targetList = new ").Append(GetListImplementationType(dp.Type, requiredNamespaces)).AppendLine("(count);");
                     // Only use CollectionsMarshal optimization for List<T> destinations
                     if (dp.Type.Name == "List`1")
                     {
@@ -302,7 +314,7 @@ internal static class SimpleObjectEmitter
                     sb.Append(indent).AppendLine("\t}");
                     sb.Append(indent).Append("\telse").AppendLine();
                     sb.Append(indent).AppendLine("\t{");
-                    sb.Append(indent).Append("\t\tvar targetList = new ").Append(Types.ShortName(dp.Type, requiredNamespaces)).AppendLine("();");
+                    sb.Append(indent).Append("\t\tvar targetList = new ").Append(GetListImplementationType(dp.Type, requiredNamespaces)).AppendLine("();");
                     sb.Append(indent).Append("\t\tforeach (var item in sourceCollection)").AppendLine();
                     sb.Append(indent).AppendLine("\t\t{");
                     if (SymbolEqualityComparer.Default.Equals(srcListToElement, dstListToElement))

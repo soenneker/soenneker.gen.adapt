@@ -248,6 +248,38 @@ public sealed class ReflectionFreeTests
         }
     }
 
+    [Test]
+    public void Collection_properties_with_list_interface_destinations_compile()
+    {
+        foreach (string sourceType in new[] { "List", "Array", "IReadOnlyList" })
+        foreach (string destinationType in new[] { "IReadOnlyList", "IReadOnlyCollection", "IList", "ICollection" })
+        {
+            string SourceType(string element) => sourceType == "Array" ? element + "[]" : sourceType + "<" + element + ">";
+            var (output, diagnostics, _) = Generate($$"""
+                using System;
+                using System.Collections.Generic;
+                using Probe;
+                public class Source
+                {
+                    public {{SourceType("DateOnly")}} Dates { get; set; }
+                    public {{SourceType("Uri")}} Links { get; set; }
+                    public {{SourceType("int")}} Numbers { get; set; }
+                }
+                public class Destination
+                {
+                    public {{destinationType}}<DateOnly> Dates { get; set; }
+                    public {{destinationType}}<Uri> Links { get; set; }
+                    public {{destinationType}}<long> Numbers { get; set; }
+                }
+                public static class Calls
+                {
+                    public static Destination Map(Source source) => source.Adapt<Destination>();
+                }
+                """);
+            AssertNoErrors(output, diagnostics);
+        }
+    }
+
     private static (Compilation Output, System.Collections.Immutable.ImmutableArray<Diagnostic> Diagnostics, GeneratorDriverRunResult Run) Generate(string source)
     {
         var references = ((string)AppContext.GetData("TRUSTED_PLATFORM_ASSEMBLIES")!).Split(Path.PathSeparator)
