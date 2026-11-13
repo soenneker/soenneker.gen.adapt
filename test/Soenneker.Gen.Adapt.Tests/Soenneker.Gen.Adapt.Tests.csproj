@@ -29,7 +29,7 @@
         <PackageReference Include="Soenneker.Documents.Audit" Version="11.0.2660" />
         <PackageReference Include="Soenneker.Dtos.IdNamePair" Version="11.0.750" />
         <PackageReference Include="Soenneker.Utils.Test" Version="11.0.347" />
-        <PackageReference Include="Soenneker.Tests.Unit" Version="11.0.1434" />
+        <PackageReference Include="Soenneker.Tests.Unit" Version="11.0.1435" />
         <PackageReference Include="TUnit" Version="1.84.0" />
     </ItemGroup>
 
