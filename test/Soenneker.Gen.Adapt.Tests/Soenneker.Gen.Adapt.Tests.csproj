@@ -25,7 +25,7 @@
         <PackageReference Include="Riok.Mapperly" Version="4.3.1" />
         <PackageReference Include="Soenneker.Enums.DayOfWeek" Version="11.0.809" />
         <PackageReference Include="Soenneker.Tests.Attributes.Local" Version="11.0.184" />
-        <PackageReference Include="Soenneker.Tests.Benchmark" Version="11.0.249" />
+        <PackageReference Include="Soenneker.Tests.Benchmark" Version="11.0.250" />
         <PackageReference Include="Soenneker.Documents.Audit" Version="11.0.2667" />
         <PackageReference Include="Soenneker.Dtos.IdNamePair" Version="11.0.750" />
         <PackageReference Include="Soenneker.Utils.Test" Version="11.0.348" />
